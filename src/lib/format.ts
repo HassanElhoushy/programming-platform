@@ -1,0 +1,156 @@
+/**
+ * التسمية والتنسيق العربي المستخدم في كل المنصة.
+ *
+ * قاعدة ثابتة: نكتب دائماً "الفصل الأول · الدرس الثاني" ولا نكتب "1-2".
+ */
+
+const ORDINALS = [
+  "",
+  "الأول",
+  "الثاني",
+  "الثالث",
+  "الرابع",
+  "الخامس",
+  "السادس",
+  "السابع",
+  "الثامن",
+  "التاسع",
+  "العاشر",
+  "الحادي عشر",
+  "الثاني عشر",
+  "الثالث عشر",
+  "الرابع عشر",
+  "الخامس عشر",
+  "السادس عشر",
+  "السابع عشر",
+  "الثامن عشر",
+  "التاسع عشر",
+  "العشرون",
+];
+
+export function ordinal(n: number): string {
+  return ORDINALS[n] ?? `رقم ${n}`;
+}
+
+export function chapterName(position: number): string {
+  return `الفصل ${ordinal(position)}`;
+}
+
+export function lessonName(position: number): string {
+  return `الدرس ${ordinal(position)}`;
+}
+
+/** "الفصل الأول · الدرس الثاني" */
+export function lessonPath(chapterPosition: number, lessonPosition: number): string {
+  return `${chapterName(chapterPosition)} · ${lessonName(lessonPosition)}`;
+}
+
+/*
+ * المنطقة الزمنية مثبّتة على القاهرة عمداً: بدونها يُنسّق الخادم التاريخ
+ * بتوقيت UTC ويُنسّقه المتصفح بتوقيت الجهاز، فيختلف النصّان ويشتكي React
+ * من عدم تطابق الـ hydration.
+ */
+const DATE_OPTS: Intl.DateTimeFormatOptions = {
+  timeZone: "Africa/Cairo",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+};
+
+const DATETIME_OPTS: Intl.DateTimeFormatOptions = {
+  ...DATE_OPTS,
+  hour: "numeric",
+  minute: "2-digit",
+};
+
+const LOCALE = "ar-EG-u-nu-latn";
+
+export function formatDate(value: string | Date | null | undefined): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat(LOCALE, DATE_OPTS).format(new Date(value));
+}
+
+export function formatDateTime(value: string | Date | null | undefined): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat(LOCALE, DATETIME_OPTS).format(new Date(value));
+}
+
+/** "٢٣ دقيقة و ١٢ ثانية" بصيغة مختصرة مناسبة للجداول */
+export function formatDuration(seconds: number | null | undefined): string {
+  if (seconds == null) return "—";
+  if (seconds < 60) return `${seconds} ثانية`;
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+
+  if (mins < 60) {
+    return secs === 0 ? `${mins} دقيقة` : `${mins} دقيقة و ${secs} ثانية`;
+  }
+
+  const hours = Math.floor(mins / 60);
+  const restMins = mins % 60;
+  return restMins === 0 ? `${hours} ساعة` : `${hours} ساعة و ${restMins} دقيقة`;
+}
+
+/** عدّاد الحل: mm:ss أو h:mm:ss */
+export function formatClock(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+
+/** يحذف الأصفار العشرية غير المفيدة: 7.50 -> "7.5" و 7.00 -> "7" */
+export function formatPoints(value: number | string | null | undefined): string {
+  if (value == null) return "—";
+  const n = typeof value === "string" ? Number(value) : value;
+  if (Number.isNaN(n)) return "—";
+  return String(Math.round(n * 100) / 100);
+}
+
+export function formatScore(
+  earned: number | null | undefined,
+  total: number | null | undefined,
+): string {
+  if (earned == null || total == null) return "—";
+  return `${formatPoints(earned)} من ${formatPoints(total)}`;
+}
+
+export function percentage(
+  earned: number | null | undefined,
+  total: number | null | undefined,
+): string {
+  if (earned == null || !total) return "—";
+  return `${Math.round((Number(earned) / Number(total)) * 100)}%`;
+}
+
+export function formatFileSize(bytes: number | null | undefined): string {
+  if (!bytes) return "—";
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;
+}
+
+/*
+ * المسمّيات العربية. الدوال تقبل string لأن الحقول العائدة من Supabase بلا
+ * أنواع مولّدة، فتصل كسلاسل عامة؛ والبحث الآمن أوضح من نثر التحويلات
+ * في كل موضع استدعاء.
+ */
+export const QUESTION_TYPE_LABELS: Record<string, string> = {
+  mcq_single: "اختيار من متعدد",
+  mcq_multi: "اختر كل ما ينطبق",
+  true_false: "صح أو خطأ",
+  fill_blank: "إكمال فراغات",
+  essay: "سؤال مقالي",
+};
+
+export const EXAM_LEVEL_LABELS: Record<string, string> = {
+  basic: "أساسي",
+  advanced: "متقدم",
+};
+
+export const FILE_KIND_LABELS: Record<string, string> = {
+  explanation: "شرح",
+  slides: "سلايدز",
+};
