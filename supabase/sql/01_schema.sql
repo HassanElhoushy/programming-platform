@@ -296,6 +296,39 @@ create trigger on_auth_user_created
 
 
 -- ---------------------------------------------------------------------------
+-- استكمال بأثر رجعي.
+--
+-- الـ trigger أعلاه لا يعمل إلا على التسجيلات الجديدة. فلو حاول أحد التسجيل
+-- قبل تنفيذ هذا الملف، يكون قد بقي له حساب في auth.users بلا صف في profiles،
+-- وهي حالة تُدخل التطبيق في تحويل لا ينتهي بين الصفحة الرئيسية وصفحة الدخول.
+-- هذا الاستعلام يعطي كل مستخدم بلا ملف صفَّه.
+--
+-- الاسم والهاتف يؤخذان من بيانات التسجيل إن وُجدت. وإن لم تُوجد يُركَّب رقم
+-- صناعي بادئته 01099 ليمر من قيد الصيغة ويبقى مميزاً، فيغيّره المدرّس بعدها.
+-- ---------------------------------------------------------------------------
+insert into public.profiles (id, full_name, phone)
+select
+  s.id,
+  s.full_name,
+  case
+    when s.phone ~ '^01[0125][0-9]{8}$'
+     and not exists (select 1 from public.profiles p where p.phone = s.phone)
+    then s.phone
+    else '01099' || lpad(s.rn::text, 6, '0')
+  end
+from (
+  select
+    u.id,
+    coalesce(nullif(trim(u.raw_user_meta_data ->> 'full_name'), ''), 'مستخدم') as full_name,
+    nullif(trim(u.raw_user_meta_data ->> 'phone'), '') as phone,
+    row_number() over (order by u.created_at) as rn
+  from auth.users u
+  where not exists (select 1 from public.profiles p where p.id = u.id)
+) s
+on conflict (id) do nothing;
+
+
+-- ---------------------------------------------------------------------------
 -- جدول صغير للـ keep-alive cron (GitHub Actions يقرأ منه كل يومين).
 -- ---------------------------------------------------------------------------
 create table if not exists public.heartbeat (
