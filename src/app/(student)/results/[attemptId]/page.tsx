@@ -103,6 +103,21 @@ export default async function ResultPage({
 
       <div className="card mb-8 px-4 py-2 sm:px-5">
         <div className="divide-y-[0.5px] divide-line">
+          <DataRow label="الدرجة النهائية">
+            {graded ? (
+              <>
+                {formatScore(earned, attempt.total_points)}{" "}
+                <span className="text-ink-2">
+                  ({percentage(earned, attempt.total_points)})
+                </span>
+              </>
+            ) : (
+              <span className="font-normal text-ink-2">
+                هتكتمل بعد تصحيح المقالي
+              </span>
+            )}
+          </DataRow>
+
           {objectiveQuestions.length > 0 ? (
             <DataRow label="الأسئلة الموضوعية">
               {formatScore(attempt.auto_score ?? 0, objectiveTotal)}
@@ -118,21 +133,6 @@ export default async function ResultPage({
               )}
             </DataRow>
           ) : null}
-
-          <DataRow label="الدرجة النهائية">
-            {graded ? (
-              <>
-                {formatScore(earned, attempt.total_points)}{" "}
-                <span className="text-ink-2">
-                  ({percentage(earned, attempt.total_points)})
-                </span>
-              </>
-            ) : (
-              <span className="font-normal text-ink-2">
-                هتكتمل بعد تصحيح المقالي
-              </span>
-            )}
-          </DataRow>
 
           <DataRow label="وقت التسليم">{formatDateTime(attempt.submitted_at)}</DataRow>
           <DataRow label="الوقت المستغرق">
