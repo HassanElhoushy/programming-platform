@@ -205,7 +205,7 @@ begin
   end loop;
 
   update public.exam_attempts set
-    status             = case when v_has_essay then 'submitted' else 'graded' end,
+    status             = case when v_has_essay then 'submitted' else 'graded' end::public.attempt_status,
     submitted_at       = now(),
     time_spent_seconds = v_elapsed,
     exceeded_duration  = v_exceeded,
@@ -409,7 +409,7 @@ begin
 
   update public.exam_attempts set
     manual_score = v_manual,
-    status       = case when v_pending = 0 then 'graded' else 'submitted' end
+    status       = case when v_pending = 0 then 'graded' else 'submitted' end::public.attempt_status
   where id = p_attempt_id;
 
   return jsonb_build_object(

@@ -289,6 +289,11 @@ begin
 end;
 $$;
 
+-- هذه دالة trigger فقط. بدون هذا السطر تصبح نقطة نداء عامة على
+-- /rest/v1/rpc/handle_new_user لأن Postgres يمنح EXECUTE لـ PUBLIC افتراضياً.
+-- المنع لا يؤثر على الـ trigger: صلاحية التنفيذ تُفحص عند إنشائه لا عند إطلاقه.
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users

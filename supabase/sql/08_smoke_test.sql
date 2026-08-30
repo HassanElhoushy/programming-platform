@@ -49,6 +49,7 @@ declare
   v_graded   jsonb;
 
   v_status   text;
+  v_post     text;   -- الحالة لحظة التسليم، قبل تصحيح المقالي
   v_manual   numeric;
   v_hidden   integer;
   v_shown    integer;
@@ -192,6 +193,9 @@ begin
 
   v_submit := public.submit_exam(v_attempt);
 
+  select a.status::text into v_post
+  from public.exam_attempts a where a.id = v_attempt;
+
   -- المراجعة والإظهار مقفول
   v_review := public.get_attempt_review(v_attempt);
 
@@ -201,7 +205,7 @@ begin
     and q -> 'correct' = 'null'::jsonb
     and q -> 'is_correct' = 'null'::jsonb;
 
-  select (q -> 'awarded_points')::numeric into v_essay_pts
+  select (q ->> 'awarded_points')::numeric into v_essay_pts
   from jsonb_array_elements(v_review -> 'questions') as q
   where q ->> 'type' = 'essay';
 
@@ -280,10 +284,8 @@ begin
      (public.normalize_ar('  الذكاء   الإصطناعى ') = public.normalize_ar('الذكاء الاصطناعي'))::text,
      public.normalize_ar('  الذكاء   الإصطناعى ') = public.normalize_ar('الذكاء الاصطناعي')),
 
-    ('الحالة بعد التسليم مع وجود مقالي',
-     'submitted',
-     (select a.status::text from public.exam_attempts a where a.id = v_attempt),
-     (v_submit ->> 'has_essay')::boolean),
+    ('الحالة لحظة التسليم مع وجود مقالي',
+     'submitted', v_post, v_post = 'submitted'),
 
     ('الإجابات الصحيحة محجوبة قبل فتح المدرّس (٤ أسئلة موضوعية)',
      '4', v_hidden::text, v_hidden = 4),
