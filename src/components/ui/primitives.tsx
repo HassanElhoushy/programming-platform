@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import { AlertTriangle, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -90,6 +90,38 @@ export function Badge({
 }) {
   return (
     <span className={cn("badge", `badge-${tone}`, className)}>{children}</span>
+  );
+}
+
+/**
+ * فشل استعلام يُعرض كفشل.
+ *
+ * البديل الصامت — عرض قائمة فارغة عند الخطأ — أخطر من الخطأ نفسه: يقول
+ * للمدرّس إن لا شيء ينتظر التصحيح بينما هناك تسليم فعلاً.
+ */
+export function QueryError({ message }: { message?: string }) {
+  return (
+    <div className="card px-4 py-6 sm:px-5">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-ink-3" strokeWidth={1.5} />
+        <div>
+          <p className="text-sm font-medium text-ink">تعذّر تحميل البيانات</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-2">
+            حصلت مشكلة في قراءة البيانات، فالصفحة دي مش بتعرض كل اللي عندك.
+            حدّث الصفحة، ولو المشكلة فضلت اتصرف على أساس إن فيه بيانات مش
+            ظاهرة هنا.
+          </p>
+          {message ? (
+            <p
+              dir="ltr"
+              className="mt-3 overflow-x-auto rounded-[6px] border-[0.5px] border-line bg-page px-3 py-2 text-left font-mono text-xs text-ink-3"
+            >
+              {message}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }
 

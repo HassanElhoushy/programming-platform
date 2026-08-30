@@ -124,11 +124,26 @@ export function validateImport(file: ImportFile): string[] {
     }
 
     if (q.type === "fill_blank") {
-      const markers = countBlankMarkers(q.body);
-      if (markers !== q.blanks.length) {
+      const markers = blankMarkerNumbers(q.body);
+
+      if (markers.length !== q.blanks.length) {
         errors.push(
-          `السؤال ${n}: النص فيه ${markers} فراغاً بينما المفتاح فيه ${q.blanks.length}. استخدم [1] و [2] لتحديد الفراغات في نص السؤال.`,
+          `السؤال ${n}: النص فيه ${markers.length} فراغاً بينما المفتاح فيه ${q.blanks.length}. استخدم [1] و [2] لتحديد الفراغات في نص السؤال.`,
         );
+      } else {
+        /*
+         * الترقيم لازم يكون 1..N بالترتيب بلا قفزات. الواجهة تستعمل رقم
+         * العلامة فهرساً في مصفوفة إجابات الطالب، فعلامة [3] في سؤال بفراغين
+         * تكتب خارج المصفوفة: يكتب الطالب إجابته ولا تُحفظ، ولا يظهر خطأ.
+         */
+        const expected = Array.from({ length: q.blanks.length }, (_, i) => i + 1);
+        if (markers.some((m, i) => m !== expected[i])) {
+          errors.push(
+            `السؤال ${n}: ترقيم الفراغات لازم يبدأ من [1] ويتسلسل بلا قفزات. الموجود: ${markers
+              .map((m) => `[${m}]`)
+              .join(" ")}`,
+          );
+        }
       }
     }
   });
@@ -136,8 +151,14 @@ export function validateImport(file: ImportFile): string[] {
   return errors;
 }
 
-/** يعدّ علامات الفراغات [1] [2] [3] داخل نص السؤال */
+/** أرقام علامات الفراغات [1] [2] [3] الموجودة في النص، مرتبةً وبلا تكرار */
+export function blankMarkerNumbers(body: string): number[] {
+  const matches = body.match(/\[\d+\]/g) ?? [];
+  const numbers = matches.map((m) => Number(m.slice(1, -1)));
+  return [...new Set(numbers)].sort((a, b) => a - b);
+}
+
+/** عدد الفراغات المميزة في نص السؤال */
 export function countBlankMarkers(body: string): number {
-  const matches = body.match(/\[\d+\]/g);
-  return matches ? new Set(matches).size : 0;
+  return blankMarkerNumbers(body).length;
 }

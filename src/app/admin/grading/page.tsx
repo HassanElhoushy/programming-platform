@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ClipboardCheck } from "lucide-react";
 
-import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
+import { Badge, EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
 import { formatDateTime, formatDuration, lessonPath } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,14 +16,35 @@ interface ExamRef {
 export default async function GradingPage() {
   const supabase = await createClient();
 
-  const { data } = await supabase
+  /*
+   * لا بد من تسمية المفتاح الأجنبي صراحةً: exam_attempts مرتبط بـ profiles
+   * مرتين، عبر student_id وعبر voided_by. وبدون التسمية يرد PostgREST بخطأ
+   * PGRST201 بدل البيانات.
+   */
+  const { data, error } = await supabase
     .from("exam_attempts")
     .select(
-      "id, status, submitted_at, time_spent_seconds, exceeded_duration, profiles(full_name), exams(title, lessons(position, chapters(position)))",
+      "id, status, submitted_at, time_spent_seconds, exceeded_duration, profiles!exam_attempts_student_id_fkey(full_name), exams(title, lessons(position, chapters(position)))",
     )
     .eq("status", "submitted")
     .is("voided_at", null)
     .order("submitted_at", { ascending: true });
+
+  /*
+   * فشل الاستعلام يجب أن يظهر كفشل. عرض قائمة فارغة هنا يعني إخبار المدرّس
+   * أن لا شيء ينتظر التصحيح بينما هناك تسليمات فعلاً — وهو أسوأ من خطأ ظاهر.
+   */
+  if (error) {
+    return (
+      <>
+        <PageHeader
+          title="تصحيح الامتحانات"
+          subtitle="التسليمات اللي فيها أسئلة مقالية لسه ما اتصححتش"
+        />
+        <QueryError message={error.message} />
+      </>
+    );
+  }
 
   const attempts = data ?? [];
 

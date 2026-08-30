@@ -3,7 +3,8 @@ import { requireAdmin } from "@/lib/auth";
 
 const NAV = [
   { href: "/admin", label: "نظرة عامة" },
-  { href: "/admin/content", label: "المحتوى" },
+  // صفحة الامتحان تُفتح من داخل الدرس، فتبقى "المحتوى" هي التبويب النشط فيها
+  { href: "/admin/content", label: "المحتوى", alsoUnder: ["/admin/exams"] },
   { href: "/admin/grading", label: "تصحيح الامتحانات" },
   { href: "/admin/students", label: "الطلاب" },
 ];

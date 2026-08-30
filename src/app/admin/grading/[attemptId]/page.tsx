@@ -31,9 +31,11 @@ export default async function GradeAttemptPage({
   const review = data as AttemptReview;
   const { attempt, exam, questions } = review;
 
+  // تسمية المفتاح إجبارية: exam_attempts مرتبط بـ profiles عبر student_id
+  // وعبر voided_by، فترك الاسم مجرداً يجعل PostgREST يرفض الاستعلام.
   const { data: student } = await supabase
     .from("exam_attempts")
-    .select("student_id, profiles(full_name, phone)")
+    .select("student_id, profiles!exam_attempts_student_id_fkey(full_name, phone)")
     .eq("id", attemptId)
     .maybeSingle();
 

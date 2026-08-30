@@ -8,10 +8,38 @@ import { cn } from "@/lib/utils";
 export interface NavItem {
   href: string;
   label: string;
+  /** مسارات إضافية يُعدّ هذا التبويب نشطاً داخلها، لصفحات لا تقع تحت href */
+  alsoUnder?: string[];
+}
+
+function covers(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * التبويب النشط هو صاحب أطول مسار مطابق، لا أول مطابقة.
+ *
+ * بدون ذلك يبتلع "/admin" كلَّ ما تحته: تقف في /admin/content فيضيء
+ * "نظرة عامة" لأن مساره بادئة لكل مسارات اللوحة.
+ */
+function activeHref(pathname: string, items: NavItem[]): string | null {
+  let best: { href: string; depth: number } | null = null;
+
+  for (const item of items) {
+    for (const prefix of [item.href, ...(item.alsoUnder ?? [])]) {
+      if (!covers(pathname, prefix)) continue;
+      if (!best || prefix.length > best.depth) {
+        best = { href: item.href, depth: prefix.length };
+      }
+    }
+  }
+
+  return best?.href ?? null;
 }
 
 export function Nav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  const current = activeHref(pathname, items);
 
   return (
     <nav
@@ -20,8 +48,7 @@ export function Nav({ items }: { items: NavItem[] }) {
     >
       <ul className="flex min-w-max items-center gap-1">
         {items.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === current;
 
           return (
             <li key={item.href}>
