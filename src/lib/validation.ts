@@ -73,6 +73,11 @@ const fillBlank = z.object({
 const essay = z.object({
   ...baseQuestion,
   type: z.literal("essay"),
+  /*
+   * الإجابة النموذجية اختيارية، وتُخزَّن في جدول المفاتيح المحمي لا مع نص
+   * السؤال، ولا تصل الطالب إلا بعد أن يفتح المدرّس إظهار الإجابات.
+   */
+  model_answer: z.string().trim().min(1).optional(),
 });
 
 export const importQuestionSchema = z.discriminatedUnion("type", [

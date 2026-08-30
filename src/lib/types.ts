@@ -168,4 +168,6 @@ export interface ReviewQuestion {
   awarded_points: number | null;
   is_correct: boolean | null;
   correct: CorrectKey;
+  /** الإجابة النموذجية للمقالي — تصل null ما لم يفتح المدرّس إظهار الإجابات */
+  model_answer: string | null;
 }

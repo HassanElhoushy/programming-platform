@@ -151,6 +151,18 @@ export function GradingForm({
                 ) : null}
               </div>
 
+              {/* المدرّس يراها دائماً — تعينه على التصحيح وهو ينظر لإجابة الطالب */}
+              {question.model_answer ? (
+                <div className="divider pt-4">
+                  <p className="mb-1 text-xs font-medium text-accent">
+                    الإجابة النموذجية
+                  </p>
+                  <p className="whitespace-pre-wrap rounded-[6px] border-[0.5px] border-accent-line bg-accent-bg px-3 py-2.5 text-sm leading-relaxed text-ink">
+                    {question.model_answer}
+                  </p>
+                </div>
+              ) : null}
+
               <div className="divider grid gap-3 pt-4 sm:grid-cols-[8rem_1fr]">
                 <div>
                   <label className="label" htmlFor={`points-${question.id}`}>

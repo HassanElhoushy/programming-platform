@@ -258,6 +258,20 @@ function EssayReview({
       {!text && !question.image_path ? (
         <p className="text-sm text-ink-3">ما جاوبتش على السؤال ده.</p>
       ) : null}
+
+      {/*
+        تصل من قاعدة البيانات بقيمة null ما دام المدرّس لم يفتح إظهار
+        الإجابات، فلا يظهر هذا القسم أصلاً — لا فارغاً ولا مخفياً بـ CSS.
+        وتغيب كذلك عن الأسئلة التي لم تُكتب لها إجابة نموذجية.
+      */}
+      {question.model_answer ? (
+        <div className="divider pt-3">
+          <p className="mb-1 text-xs font-medium text-accent">الإجابة النموذجية</p>
+          <p className="whitespace-pre-wrap rounded-[6px] border-[0.5px] border-accent-line bg-accent-bg px-3 py-2.5 text-sm leading-relaxed text-ink">
+            {question.model_answer}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

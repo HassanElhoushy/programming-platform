@@ -3,18 +3,21 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 
 import { ExamSettingsForm } from "./exam-settings";
+import { ModelAnswerEditor } from "./model-answer";
 import { QuestionImporter } from "./question-importer";
 import {
   archiveExamAction,
   purgeExamImagesAction,
   setExamOpenAction,
   setRevealAnswersAction,
+  voidExamAttemptAction,
 } from "@/app/actions/admin-exams";
 import { deleteQuestionAction } from "@/app/actions/admin-exams";
 import { ActionButton } from "@/components/action-button";
 import { Badge, DataRow, SectionTitle } from "@/components/ui/primitives";
 import {
   EXAM_LEVEL_LABELS,
+  formatDateTime,
   formatPoints,
   lessonPath,
   QUESTION_TYPE_LABELS,
@@ -29,8 +32,16 @@ interface KeyRow {
   key:
     | { option_ids: string[] }
     | { value: boolean }
-    | { blanks: string[][] };
+    | { blanks: string[][] }
+    | null;
+  model_answer: string | null;
 }
+
+const ATTEMPT_LABEL: Record<string, { tone: "ok" | "wait"; label: string }> = {
+  in_progress: { tone: "wait", label: "جارية دلوقتي" },
+  submitted: { tone: "wait", label: "بانتظار التصحيح" },
+  graded: { tone: "ok", label: "تم التصحيح" },
+};
 
 export default async function AdminExamPage({
   params,
@@ -67,17 +78,25 @@ export default async function AdminExamPage({
       .order("position"),
     supabase
       .from("question_keys")
-      .select("question_id, key, questions!inner(exam_id)")
+      .select("question_id, key, model_answer, questions!inner(exam_id)")
       .eq("questions.exam_id", examId),
+    // تسمية المفتاح إجبارية: exam_attempts مرتبط بـ profiles مرتين
     supabase
       .from("exam_attempts")
-      .select("id, status")
+      .select(
+        "id, status, started_at, submitted_at, voided_at, profiles!exam_attempts_student_id_fkey(full_name)",
+      )
       .eq("exam_id", examId)
-      .is("voided_at", null),
+      .order("started_at", { ascending: false }),
   ]);
 
   const questions = questionsRes.data ?? [];
-  const attempts = attemptsRes.data ?? [];
+
+  const allAttempts = attemptsRes.data ?? [];
+  // المحاولات الملغاة تبقى للسجل لكنها لا تمنع شيئاً ولا تُحسب
+  const attempts = allAttempts.filter((a) => a.voided_at === null);
+  const voided = allAttempts.filter((a) => a.voided_at !== null);
+
   const pendingGrading = attempts.filter((a) => a.status === "submitted").length;
   const inProgress = attempts.filter((a) => a.status === "in_progress").length;
 
@@ -89,8 +108,10 @@ export default async function AdminExamPage({
   }
 
   const keyByQuestion = new Map<string, KeyRow["key"]>();
+  const modelByQuestion = new Map<string, string | null>();
   for (const row of (keysRes.data ?? []) as unknown as KeyRow[]) {
     keyByQuestion.set(row.question_id, row.key);
+    modelByQuestion.set(row.question_id, row.model_answer);
   }
 
   const totalPoints = questions.reduce((s, q) => s + Number(q.points), 0);
@@ -266,10 +287,96 @@ export default async function AdminExamPage({
                   options={optionsByQuestion.get(question.id) ?? []}
                   answerKey={keyByQuestion.get(question.id)}
                 />
+
+                {question.type === "essay" ? (
+                  <ModelAnswerEditor
+                    questionId={question.id}
+                    examId={examId}
+                    value={modelByQuestion.get(question.id) ?? null}
+                  />
+                ) : null}
               </li>
             ))}
           </ol>
         )}
+      </section>
+
+      {/* ------------------------------------------------------------- */}
+      <section className="mb-8">
+        <SectionTitle>المحاولات</SectionTitle>
+
+        {attempts.length === 0 && voided.length === 0 ? (
+          <p className="card px-4 py-6 text-center text-sm text-ink-3">
+            محدش دخل الامتحان ده لسه
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {[...attempts, ...voided].map((attempt) => {
+              const student = attempt.profiles as unknown as {
+                full_name: string;
+              } | null;
+              const state = ATTEMPT_LABEL[attempt.status];
+              const isVoided = attempt.voided_at !== null;
+
+              return (
+                <div key={attempt.id} className="card px-4 py-3.5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {student?.full_name ?? "طالب محذوف"}
+                      </p>
+
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {isVoided ? (
+                          <Badge tone="muted">ملغاة</Badge>
+                        ) : (
+                          <Badge tone={state.tone}>{state.label}</Badge>
+                        )}
+                        <span className="tnum text-xs text-ink-3">
+                          بدأ {formatDateTime(attempt.started_at)}
+                          {attempt.submitted_at
+                            ? ` · سلّم ${formatDateTime(attempt.submitted_at)}`
+                            : ""}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      {!isVoided && attempt.status !== "in_progress" ? (
+                        <Link
+                          href={`/admin/grading/${attempt.id}`}
+                          className="btn btn-secondary text-xs"
+                        >
+                          افتح التسليم
+                        </Link>
+                      ) : null}
+
+                      {!isVoided ? (
+                        <ActionButton
+                          action={voidExamAttemptAction.bind(null, attempt.id, examId)}
+                          className="btn btn-danger text-xs"
+                          confirm={
+                            attempt.status === "in_progress"
+                              ? "المحاولة هتتلغي والطالب هيقدر يبدأ من جديد. إجاباته الحالية هتفضل محفوظة في السجل."
+                              : "التسليم ده هيتلغي والدرجة مش هتتحسب. الطالب هيقدر يحل من جديد."
+                          }
+                        >
+                          إلغاء المحاولة
+                        </ActionButton>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="mt-2 text-xs leading-relaxed text-ink-3">
+          الإلغاء ما بيمسحش حاجة: بيخرج المحاولة من الحساب فيقدر الطالب يبدأ من
+          جديد، والسجل القديم بيفضل هنا. وأي محاولة غير ملغاة بتمنع استبدال
+          أسئلة الامتحان.
+        </p>
       </section>
 
       {/* ------------------------------------------------------------- */}

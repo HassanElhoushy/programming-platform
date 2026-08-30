@@ -184,16 +184,29 @@ export async function importQuestionsAction(
     return { error: "الملف فيه أخطاء:", details: logicErrors };
   }
 
-  const { count: attemptCount } = await supabase
+  /*
+   * أي محاولة غير ملغاة تمنع الاستبدال، لا الجارية وحدها: حذف الأسئلة
+   * القديمة يحذف معها إجابات المحاولات المصحَّحة (حذف متسلسل)، فيبقى للطالب
+   * درجة بلا إجابات تشرحها. الرسالة تفصّل النوعين لأن علاجهما مختلف.
+   */
+  const { data: blocking } = await supabase
     .from("exam_attempts")
-    .select("id", { count: "exact", head: true })
+    .select("status")
     .eq("exam_id", examId)
     .is("voided_at", null);
 
-  if ((attemptCount ?? 0) > 0) {
+  const attempts = blocking ?? [];
+  if (attempts.length > 0) {
+    const running = attempts.filter((a) => a.status === "in_progress").length;
+    const done = attempts.length - running;
+
+    const parts = [
+      running > 0 ? `${running} محاولة لسه جارية` : null,
+      done > 0 ? `${done} تسليم متسجّل` : null,
+    ].filter(Boolean);
+
     return {
-      error:
-        "فيه طلبة بدأوا الامتحان ده بالفعل، فمش ممكن نستبدل أسئلته. اعمل امتحاناً جديداً، أو ألغِ محاولاتهم من صفحة كل طالب.",
+      error: `مش ممكن نستبدل الأسئلة: فيه ${parts.join(" و")} على الامتحان ده. استبدال الأسئلة هيمسح إجاباتهم. ألغِ المحاولات من قسم "المحاولات" تحت، أو اعمل امتحاناً جديداً بدل ما تعدّل ده.`,
     };
   }
 
@@ -251,12 +264,22 @@ export async function importQuestionsAction(
     }
   }
 
-  /* المفاتيح */
-  const keyRows: { question_id: string; key: unknown }[] = [];
+  /* المفاتيح والإجابات النموذجية — كلاهما في الجدول المحمي نفسه */
+  const keyRows: {
+    question_id: string;
+    key: unknown;
+    model_answer: string | null;
+  }[] = [];
+
   questions.forEach((q, i) => {
     const questionId = idByPosition.get(i + 1)!;
     const key = buildKey(q, questionId, optionIdMap);
-    if (key !== null) keyRows.push({ question_id: questionId, key });
+    const modelAnswer =
+      q.type === "essay" ? (q.model_answer?.trim() || null) : null;
+
+    if (key !== null || modelAnswer !== null) {
+      keyRows.push({ question_id: questionId, key, model_answer: modelAnswer });
+    }
   });
 
   if (keyRows.length > 0) {
@@ -397,11 +420,97 @@ export async function addQuestionAction(
   }
 
   const key = buildKey(question, questionId, optionIdMap);
-  if (key !== null) {
+  const modelAnswer =
+    question.type === "essay" ? (question.model_answer?.trim() || null) : null;
+
+  if (key !== null || modelAnswer !== null) {
     const { error: kError } = await supabase
       .from("question_keys")
-      .insert({ question_id: questionId, key });
+      .insert({ question_id: questionId, key, model_answer: modelAnswer });
     if (kError) return { error: GENERIC };
+  }
+
+  revalidatePath(`/admin/exams/${examId}`);
+  return { ok: true };
+}
+
+/* ==========================================================================
+   المحاولات
+   ========================================================================== */
+
+/**
+ * إلغاء محاولة من صفحة الامتحان.
+ *
+ * الإلغاء لا يحذف شيئاً: يضع voided_at فيخرج الصف من الفهرس الفريد الجزئي
+ * الذي يسمح بمحاولة فعّالة واحدة لكل طالب، فيستطيع الطالب البدء من جديد
+ * بينما يبقى سجل المحاولة القديمة وإجاباتها للاطّلاع.
+ */
+export async function voidExamAttemptAction(
+  attemptId: string,
+  examId: string,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("void_attempt", { p_attempt_id: attemptId });
+  if (error) return { error: "تعذّر إلغاء المحاولة. حاول تاني." };
+
+  revalidatePath(`/admin/exams/${examId}`);
+  revalidatePath("/admin/grading");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/* ==========================================================================
+   الإجابة النموذجية للسؤال المقالي
+   ========================================================================== */
+
+/**
+ * تُحفظ في question_keys لا في questions، فترث سياسة RLS الوحيدة لذلك
+ * الجدول: المدرّس فقط. ولا تصل الطالب إلا عبر get_attempt_review وبنفس
+ * شرط إظهار الإجابات الصحيحة.
+ *
+ * النص الفارغ يمسح الصف كله إن لم يكن يحمل مفتاحاً — فالمكان لا يظهر
+ * للطالب أصلاً ما لم تُكتب إجابة.
+ */
+export async function setModelAnswerAction(
+  questionId: string,
+  examId: string,
+  text: string,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const value = text.trim();
+
+  const { data: question } = await supabase
+    .from("questions")
+    .select("id, type")
+    .eq("id", questionId)
+    .eq("exam_id", examId)
+    .maybeSingle();
+
+  if (!question || question.type !== "essay") {
+    return { error: "السؤال ده مش سؤال مقالي في الامتحان ده." };
+  }
+
+  if (value === "") {
+    const { error } = await supabase
+      .from("question_keys")
+      .delete()
+      .eq("question_id", questionId)
+      .is("key", null);
+
+    if (error) return { error: GENERIC };
+  } else {
+    const { error } = await supabase
+      .from("question_keys")
+      .upsert(
+        { question_id: questionId, key: null, model_answer: value },
+        { onConflict: "question_id" },
+      );
+
+    if (error) return { error: GENERIC };
   }
 
   revalidatePath(`/admin/exams/${examId}`);

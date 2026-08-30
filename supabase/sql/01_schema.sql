@@ -167,8 +167,14 @@ create index if not exists question_options_question_id_idx
 --   essay      : لا يوجد صف
 -- ---------------------------------------------------------------------------
 create table if not exists public.question_keys (
-  question_id uuid primary key references public.questions (id) on delete cascade,
-  key         jsonb not null
+  question_id  uuid primary key references public.questions (id) on delete cascade,
+  key          jsonb,
+  -- الإجابة النموذجية للسؤال المقالي. هنا لا في جدول questions، لتَرِث سياسة
+  -- RLS الوحيدة لهذا الجدول: المدرّس فقط. وهي أخطر من مفتاح الاختياري لأنها
+  -- نص جاهز للنسخ حرفياً.
+  model_answer text,
+  constraint question_keys_has_content
+    check (key is not null or nullif(trim(model_answer), '') is not null)
 );
 
 
