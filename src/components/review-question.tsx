@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import Image from "next/image";
-import { Check, X } from "lucide-react";
+import { Check, ChevronLeft, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
 import { formatPoints, QUESTION_TYPE_LABELS } from "@/lib/format";
@@ -92,7 +92,42 @@ export function ReviewQuestionCard({
           </p>
         </div>
       ) : null}
+
+      {/*
+        بعد الملاحظة عمداً: الملاحظة مكتوبة لإجابة هذا الطالب بعينه، والإجابة
+        النموذجية عامة. ولو سبقتها لذهب البصر إليها أولاً.
+      */}
+      {question.model_answer ? <ModelAnswer text={question.model_answer} /> : null}
     </li>
+  );
+}
+
+/**
+ * الإجابة النموذجية، مطويّة افتراضياً.
+ *
+ * الطي بصري بحت وليس حماية: ما يصل إلى هنا أصلاً لا يصل إلا بعد أن يفتح
+ * المدرّس "إظهار الإجابات"، وقبل ذلك يعود الحقل null من قاعدة البيانات فلا
+ * يُصيَّر هذا العنصر إطلاقاً. الغرض من الطي أن يقرأ الطالب ملاحظة مدرّسه
+ * ويراجع إجابته قبل أن يرى النموذج.
+ *
+ * details/summary لا يحتاج جافاسكربت، فيبقى المكوّن على الخادم، ويعمل
+ * بلوحة المفاتيح ومع قارئات الشاشة بلا كود إضافي.
+ */
+function ModelAnswer({ text }: { text: string }) {
+  return (
+    <details className="group divider mt-4 pt-3">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-accent [&::-webkit-details-marker]:hidden">
+        <ChevronLeft
+          className="size-3.5 transition-transform group-open:-rotate-90"
+          strokeWidth={2}
+        />
+        الإجابة النموذجية
+      </summary>
+
+      <p className="mt-2 whitespace-pre-wrap rounded-[6px] border-[0.5px] border-accent-line bg-accent-bg px-3 py-2.5 text-sm leading-relaxed text-ink">
+        {text}
+      </p>
+    </details>
   );
 }
 
@@ -257,20 +292,6 @@ function EssayReview({
 
       {!text && !question.image_path ? (
         <p className="text-sm text-ink-3">ما جاوبتش على السؤال ده.</p>
-      ) : null}
-
-      {/*
-        تصل من قاعدة البيانات بقيمة null ما دام المدرّس لم يفتح إظهار
-        الإجابات، فلا يظهر هذا القسم أصلاً — لا فارغاً ولا مخفياً بـ CSS.
-        وتغيب كذلك عن الأسئلة التي لم تُكتب لها إجابة نموذجية.
-      */}
-      {question.model_answer ? (
-        <div className="divider pt-3">
-          <p className="mb-1 text-xs font-medium text-accent">الإجابة النموذجية</p>
-          <p className="whitespace-pre-wrap rounded-[6px] border-[0.5px] border-accent-line bg-accent-bg px-3 py-2.5 text-sm leading-relaxed text-ink">
-            {question.model_answer}
-          </p>
-        </div>
       ) : null}
     </div>
   );
