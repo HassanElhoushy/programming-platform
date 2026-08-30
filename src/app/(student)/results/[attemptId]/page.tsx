@@ -43,7 +43,24 @@ export default async function ResultPage({
 
   const graded = attempt.status === "graded";
   const earned = Number(attempt.auto_score ?? 0) + Number(attempt.manual_score ?? 0);
-  const essayCount = questions.filter((q) => q.type === "essay").length;
+
+  /*
+   * درجة الموضوعي تُعرض فور التسليم لأنها صُحّحت آلياً في نفس اللحظة، ولا
+   * علاقة لها بمفتاح "إظهار الإجابات": المجموع لا يقول أي سؤال أصاب فيه
+   * الطالب وأيّه أخطأ. صواب كل سؤال على حدة يبقى محجوباً في قاعدة البيانات
+   * نفسها حتى يفتح المدرّس المفتاح.
+   *
+   * المقاما‌ن يُحسبان من درجات الأسئلة الواصلة في نفس الحمولة، فلا حاجة
+   * لاستعلام إضافي.
+   */
+  const essayQuestions = questions.filter((q) => q.type === "essay");
+  const objectiveQuestions = questions.filter((q) => q.type !== "essay");
+
+  const objectiveTotal = objectiveQuestions.reduce((s, q) => s + Number(q.points), 0);
+  const essayTotal = essayQuestions.reduce((s, q) => s + Number(q.points), 0);
+
+  const essayCount = essayQuestions.length;
+  const essayPending = attempt.manual_score === null;
 
   return (
     <>
@@ -86,6 +103,22 @@ export default async function ResultPage({
 
       <div className="card mb-8 px-4 py-2 sm:px-5">
         <div className="divide-y-[0.5px] divide-line">
+          {objectiveQuestions.length > 0 ? (
+            <DataRow label="الأسئلة الموضوعية">
+              {formatScore(attempt.auto_score ?? 0, objectiveTotal)}
+            </DataRow>
+          ) : null}
+
+          {essayCount > 0 ? (
+            <DataRow label="الأسئلة المقالية">
+              {essayPending ? (
+                <Badge tone="wait">بانتظار التصحيح</Badge>
+              ) : (
+                formatScore(attempt.manual_score, essayTotal)
+              )}
+            </DataRow>
+          ) : null}
+
           <DataRow label="الدرجة النهائية">
             {graded ? (
               <>
@@ -95,24 +128,11 @@ export default async function ResultPage({
                 </span>
               </>
             ) : (
-              "بانتظار تصحيح الأسئلة المقالية"
+              <span className="font-normal text-ink-2">
+                هتكتمل بعد تصحيح المقالي
+              </span>
             )}
           </DataRow>
-
-          {essayCount > 0 ? (
-            <>
-              <DataRow label="الأسئلة الموضوعية">
-                {formatScore(attempt.auto_score, null) === "—"
-                  ? "—"
-                  : `${Number(attempt.auto_score ?? 0)}`}
-              </DataRow>
-              <DataRow label="الأسئلة المقالية">
-                {attempt.manual_score === null
-                  ? "بانتظار التصحيح"
-                  : `${Number(attempt.manual_score)}`}
-              </DataRow>
-            </>
-          ) : null}
 
           <DataRow label="وقت التسليم">{formatDateTime(attempt.submitted_at)}</DataRow>
           <DataRow label="الوقت المستغرق">
