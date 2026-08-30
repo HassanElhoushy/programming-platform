@@ -5,7 +5,13 @@ import type { RunnerQuestion } from "./question-input";
 import { StartExamButton } from "./start-exam";
 import { Badge, DataRow, EmptyState } from "@/components/ui/primitives";
 import { Lock } from "lucide-react";
-import { EXAM_LEVEL_LABELS, formatPoints, lessonPath } from "@/lib/format";
+import {
+  EXAM_KIND_LABELS,
+  EXAM_LEVEL_LABELS,
+  formatPoints,
+  kindDefinite,
+  lessonPath,
+} from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { AnswerResponse } from "@/lib/types";
 
@@ -19,7 +25,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
   const { data: exam } = await supabase
     .from("exams")
     .select(
-      "id, title, level, duration_minutes, is_open, lessons(position, title, chapters(position))",
+      "id, title, level, kind, duration_minutes, is_open, lessons(position, title, chapters(position))",
     )
     .eq("id", examId)
     .is("archived_at", null)
@@ -34,6 +40,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
   } | null;
 
   const crumb = lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0);
+  const noun = kindDefinite(exam.kind);
 
   const { data: attempt } = await supabase
     .from("exam_attempts")
@@ -69,12 +76,13 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
         {!exam.is_open ? (
           <EmptyState
             icon={Lock}
-            title="الامتحان ده مقفول دلوقتي"
-            hint="المدرّس هو اللي بيفتح الامتحان. تابع معاه."
+            title={`${noun} ده مقفول دلوقتي`}
+            hint="المدرّس هو اللي بيفتح. تابع معاه."
           />
         ) : (
           <div className="card px-4 py-2 sm:px-5">
             <div className="divide-y-[0.5px] divide-line">
+              <DataRow label="النوع">{EXAM_KIND_LABELS[exam.kind]}</DataRow>
               <DataRow label="المستوى">{EXAM_LEVEL_LABELS[exam.level]}</DataRow>
               <DataRow label="عدد الأسئلة">{questions.length}</DataRow>
               <DataRow label="مجموع الدرجات">{formatPoints(totalPoints)}</DataRow>
@@ -90,11 +98,15 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
                 إجاباتك بتتحفظ أول بأول، فلو النت قطع أو الصفحة قفلت هترجع
                 تكمّل من نفس المكان.
                 {exam.duration_minutes
-                  ? " ولو الوقت خلص الامتحان مش هيتقفل، هتكمّل عادي والمدرّس هيشوف الوقت اللي أخدته."
+                  ? " ولو الوقت خلص مش هيتقفل، هتكمّل عادي والمدرّس هيشوف الوقت اللي أخدته."
                   : ""}{" "}
                 لما تسلّم مش هتقدر تحل تاني.
               </p>
-              <StartExamButton examId={exam.id} />
+              <StartExamButton
+                examId={exam.id}
+                kind={exam.kind}
+                durationMinutes={exam.duration_minutes}
+              />
             </div>
           </div>
         )}
@@ -160,6 +172,9 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
         <p className="text-xs text-ink-3">{crumb}</p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-lg font-semibold text-ink sm:text-xl">{exam.title}</h1>
+          <Badge tone={exam.kind === "exam" ? "wait" : "accent"}>
+            {EXAM_KIND_LABELS[exam.kind]}
+          </Badge>
           <Badge tone="muted">{EXAM_LEVEL_LABELS[exam.level]}</Badge>
         </div>
       </div>

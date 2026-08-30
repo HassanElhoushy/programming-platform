@@ -16,9 +16,11 @@ import { deleteQuestionAction } from "@/app/actions/admin-exams";
 import { ActionButton } from "@/components/action-button";
 import { Badge, DataRow, SectionTitle } from "@/components/ui/primitives";
 import {
+  EXAM_KIND_LABELS,
   EXAM_LEVEL_LABELS,
   formatDateTime,
   formatPoints,
+  kindDefinite,
   lessonPath,
   QUESTION_TYPE_LABELS,
 } from "@/lib/format";
@@ -52,7 +54,7 @@ export default async function AdminExamPage({
   const { data: exam } = await supabase
     .from("exams")
     .select(
-      "id, title, level, duration_minutes, is_open, reveal_answers, lesson_id, lessons(position, title, chapters(position))",
+      "id, title, level, kind, duration_minutes, is_open, reveal_answers, lesson_id, lessons(position, title, chapters(position))",
     )
     .eq("id", examId)
     .maybeSingle();
@@ -141,6 +143,7 @@ export default async function AdminExamPage({
 
         <div className="card px-4 py-2 sm:px-5">
           <div className="divide-y-[0.5px] divide-line">
+            <DataRow label="النوع">{EXAM_KIND_LABELS[exam.kind]}</DataRow>
             <DataRow label="المستوى">{EXAM_LEVEL_LABELS[exam.level]}</DataRow>
             <DataRow label="المدة">
               {exam.duration_minutes
@@ -162,6 +165,7 @@ export default async function AdminExamPage({
               examId={exam.id}
               title={exam.title}
               level={exam.level}
+              kind={exam.kind}
               durationMinutes={exam.duration_minutes}
             />
           </div>
@@ -239,7 +243,7 @@ export default async function AdminExamPage({
             ) : undefined
           }
         >
-          الأسئلة
+          أسئلة {kindDefinite(exam.kind)}
         </SectionTitle>
 
         <div className="mb-3">

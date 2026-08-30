@@ -19,9 +19,13 @@ do $$ begin
   create type public.file_kind as enum ('explanation', 'slides');
 exception when duplicate_object then null; end $$;
 
-do $$ begin
+do $ begin
   create type public.exam_level as enum ('basic', 'advanced');
-exception when duplicate_object then null; end $$;
+exception when duplicate_object then null; end $;
+
+do $ begin
+  create type public.exam_kind as enum ('practice', 'exam');
+exception when duplicate_object then null; end $;
 
 do $$ begin
   create type public.question_type as enum
@@ -112,6 +116,9 @@ create table if not exists public.exams (
   lesson_id        uuid not null references public.lessons (id) on delete cascade,
   title            text not null,
   level            public.exam_level not null default 'basic',
+  -- تدريب أم امتحان. الطالب يرى الفرق قبل أن يبدأ، فلا يحرق محاولته الوحيدة
+  -- في امتحان وهو يظن نفسه يتصفح تدريباً.
+  kind             public.exam_kind  not null default 'practice',
   duration_minutes integer,
   is_open          boolean not null default false,
   reveal_answers   boolean not null default false,

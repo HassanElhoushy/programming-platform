@@ -69,18 +69,18 @@ export default async function ResultPage({
         className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
       >
         <ChevronRight className="size-4" strokeWidth={1.5} />
-        نتائج الامتحانات
+        النتائج
       </Link>
 
       {submitted === "1" ? (
         <div className="card mb-5 flex items-start gap-3 px-4 py-4">
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-ink-3" strokeWidth={1.5} />
           <div>
-            <p className="text-sm font-medium text-ink">تم تسليم الامتحان</p>
+            <p className="text-sm font-medium text-ink">تم التسليم</p>
             <p className="mt-0.5 text-sm leading-relaxed text-ink-2">
               {essayCount > 0
                 ? "الأسئلة الموضوعية اتصححت على طول، والأسئلة المقالية عند المدرّس دلوقتي وهتوصلك درجتها والملاحظات عليها هنا."
-                : "امتحانك اتصحح بالكامل. درجتك تحت."}
+                : "اتصحح بالكامل. درجتك تحت."}
             </p>
           </div>
         </div>

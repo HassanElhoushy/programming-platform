@@ -199,7 +199,7 @@ export function ExamRunner({
 
       {overtime ? (
         <p className="card mb-5 px-4 py-3 text-sm leading-relaxed text-ink-2">
-          الوقت المحدد خلص، بس الامتحان لسه مفتوح وتقدر تكمّل عادي. المدرّس
+          الوقت المحدد خلص، بس لسه مفتوح وتقدر تكمّل عادي. المدرّس
           هيشوف إنك أخدت وقتاً أطول.
         </p>
       ) : null}
@@ -263,7 +263,7 @@ export function ExamRunner({
               onClick={() => setConfirming(true)}
             >
               <Send className="size-4" strokeWidth={1.5} />
-              إرسال الامتحان
+              إرسال الإجابات
             </button>
           </>
         ) : (
@@ -294,7 +294,7 @@ export function ExamRunner({
                 ) : (
                   <Send className="size-4" strokeWidth={1.5} />
                 )}
-                {submitting ? "جارٍ التسليم…" : "أيوه، سلّم الامتحان"}
+                {submitting ? "جارٍ التسليم…" : "أيوه، سلّم"}
               </button>
               <button
                 type="button"

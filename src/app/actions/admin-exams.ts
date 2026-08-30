@@ -29,11 +29,13 @@ export async function createExamAction(
   const lessonId = String(formData.get("lesson_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const level = String(formData.get("level") ?? "basic");
+  const kind = String(formData.get("kind") ?? "practice");
   const rawDuration = String(formData.get("duration_minutes") ?? "").trim();
 
   if (!lessonId) return { error: "اختر الدرس." };
   if (title.length < 2) return { error: "اكتب عنوان الامتحان." };
   if (level !== "basic" && level !== "advanced") return { error: "اختر المستوى." };
+  if (kind !== "practice" && kind !== "exam") return { error: "اختر النوع: تدريب أو امتحان." };
 
   let duration: number | null = null;
   if (rawDuration !== "") {
@@ -45,7 +47,7 @@ export async function createExamAction(
 
   const { data, error } = await supabase
     .from("exams")
-    .insert({ lesson_id: lessonId, title, level, duration_minutes: duration })
+    .insert({ lesson_id: lessonId, title, level, kind, duration_minutes: duration })
     .select("id")
     .single();
 
@@ -59,6 +61,7 @@ export async function updateExamAction(input: {
   examId: string;
   title: string;
   level: "basic" | "advanced";
+  kind: "practice" | "exam";
   durationMinutes: number | null;
 }): Promise<ActionResult> {
   await requireAdmin();
@@ -72,6 +75,7 @@ export async function updateExamAction(input: {
     .update({
       title,
       level: input.level,
+      kind: input.kind,
       duration_minutes: input.durationMinutes,
     })
     .eq("id", input.examId);

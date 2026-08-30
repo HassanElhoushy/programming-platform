@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     supabase
       .from("exams")
       .select(
-        "id, title, level, duration_minutes, created_at, lessons(position, title, chapters(position))",
+        "id, title, level, kind, duration_minutes, created_at, lessons(position, title, chapters(position))",
       )
       .eq("is_open", true)
       .is("archived_at", null)
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
               <Badge tone="wait">لسه ما اتسلّمش</Badge>
             </div>
             <p className="mt-0.5 text-xs text-ink-3">
-              بدأت الامتحان ده وما سلّمتوش. إجاباتك محفوظة زي ما سبتها.
+              بدأت ده وما سلّمتوش. إجاباتك محفوظة زي ما سبتها.
             </p>
           </div>
           <span className="shrink-0 text-sm font-medium text-accent">أكمل</span>
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
       {finished.length > 0 ? (
         <div className="card mb-8 grid grid-cols-2 divide-x-[0.5px] divide-x-reverse divide-line">
           <div className="px-4 py-3.5">
-            <p className="text-xs text-ink-2">امتحانات حليتها</p>
+            <p className="text-xs text-ink-2">حليتها</p>
             <p className="tnum mt-0.5 text-lg font-semibold text-ink">
               {finished.length}
             </p>
@@ -162,19 +162,19 @@ export default async function DashboardPage() {
           action={
             available.length > 0 ? (
               <Link href="/exams" className="text-xs text-ink-2 hover:text-ink">
-                كل الامتحانات
+                الكل
               </Link>
             ) : undefined
           }
         >
-          امتحانات متاحة
+          متاح لك دلوقتي
         </SectionTitle>
 
         {available.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
-            title="مفيش امتحانات جديدة دلوقتي"
-            hint="أول ما المدرّس يفتح امتحان جديد هتلاقيه هنا."
+            title="مفيش حاجة جديدة دلوقتي"
+            hint="أول ما المدرّس يفتح حاجة جديدة هتلاقيها هنا."
           />
         ) : (
           <div className="flex flex-col gap-2">
@@ -186,6 +186,7 @@ export default async function DashboardPage() {
                   href={`/exams/${exam.id}`}
                   title={exam.title}
                   level={exam.level}
+                  kind={exam.kind}
                   durationMinutes={exam.duration_minutes}
                   chapterPosition={lesson?.chapters?.position ?? 0}
                   lessonPosition={lesson?.position ?? 0}

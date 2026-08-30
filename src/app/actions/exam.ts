@@ -8,12 +8,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const RPC_MESSAGES: Record<string, string> = {
-  EXAM_CLOSED: "الامتحان ده مقفول دلوقتي.",
-  FORBIDDEN: "الامتحان ده مش متاح لحسابك.",
+  EXAM_CLOSED: "ده مقفول دلوقتي.",
+  FORBIDDEN: "ده مش متاح لحسابك.",
   ATTEMPT_NOT_FOUND: "مش لاقيين المحاولة دي.",
   ATTEMPT_VOIDED: "المحاولة دي اتلغت. ابدأ من جديد.",
-  ALREADY_SUBMITTED: "الامتحان ده اتسلّم قبل كده.",
-  NOT_SUBMITTED: "الامتحان ده لسه ما اتسلّمش.",
+  ALREADY_SUBMITTED: "ده اتسلّم قبل كده.",
+  NOT_SUBMITTED: "ده لسه ما اتسلّمش.",
 };
 
 function messageFor(error: { message: string }): string {

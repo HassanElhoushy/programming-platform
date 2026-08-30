@@ -58,7 +58,17 @@ export function CreateExamForm({ lessonId }: { lessonId: string }) {
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label className="label" htmlFor="exam-kind">
+            النوع
+          </label>
+          <select id="exam-kind" name="kind" className="input" defaultValue="practice">
+            <option value="practice">تدريب</option>
+            <option value="exam">امتحان</option>
+          </select>
+        </div>
+
         <div>
           <label className="label" htmlFor="exam-level">
             المستوى
@@ -79,10 +89,15 @@ export function CreateExamForm({ lessonId }: { lessonId: string }) {
             type="number"
             min={1}
             className="input tnum"
-            placeholder="اتركها فاضية = بدون وقت"
+            placeholder="فاضية = بدون وقت"
           />
         </div>
       </div>
+
+      <p className="-mt-1 text-xs leading-relaxed text-ink-3">
+        النوع بيحدد الكلام اللي الطالب يشوفه قبل ما يبدأ. الاتنين محاولة واحدة
+        بس، بس الامتحان بيجيله تحذير أوضح.
+      </p>
 
       <FormError>{state.error}</FormError>
 

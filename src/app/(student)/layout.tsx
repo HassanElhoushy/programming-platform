@@ -4,8 +4,8 @@ import { requireStudent } from "@/lib/auth";
 const NAV = [
   { href: "/dashboard", label: "الرئيسية" },
   { href: "/content", label: "المحتوى" },
-  { href: "/exams", label: "الامتحانات" },
-  { href: "/results", label: "نتائج الامتحانات" },
+  { href: "/exams", label: "الأسئلة" },
+  { href: "/results", label: "النتائج" },
 ];
 
 export default async function StudentLayout({ children }: LayoutProps<"/">) {

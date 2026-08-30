@@ -79,7 +79,7 @@ export default async function ContentPage() {
 
                   const parts = [
                     nFiles > 0 ? `${nFiles} ملف` : null,
-                    nExams > 0 ? `${nExams} امتحان` : null,
+                    nExams > 0 ? `${nExams} تدريب أو امتحان` : null,
                   ].filter(Boolean);
 
                   return (

@@ -4,7 +4,7 @@ import { ExamCard } from "@/components/shared";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "الامتحانات · منصة البرمجة" };
+export const metadata = { title: "الأسئلة · منصة البرمجة" };
 export const dynamic = "force-dynamic";
 
 interface LessonRef {
@@ -19,7 +19,7 @@ export default async function ExamsPage() {
     supabase
       .from("exams")
       .select(
-        "id, title, level, duration_minutes, is_open, created_at, lessons(position, chapters(position))",
+        "id, title, level, kind, duration_minutes, is_open, created_at, lessons(position, chapters(position))",
       )
       .is("archived_at", null)
       .order("created_at", { ascending: false }),
@@ -49,13 +49,13 @@ export default async function ExamsPage() {
 
   return (
     <>
-      <PageHeader title="الامتحانات" subtitle="الامتحانات المتاحة لك" />
+      <PageHeader title="الأسئلة" subtitle="التدريبات والامتحانات المتاحة لك" />
 
       {ordered.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="مفيش امتحانات متاحة لك"
-          hint="أول ما المدرّس يفتح لك امتحان هتلاقيه هنا."
+          title="مفيش حاجة متاحة لك دلوقتي"
+          hint="أول ما المدرّس يفتح لك تدريب أو امتحان هتلاقيه هنا."
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -84,6 +84,7 @@ export default async function ExamsPage() {
                 href={href}
                 title={exam.title}
                 level={exam.level}
+                kind={exam.kind}
                 durationMinutes={exam.duration_minutes}
                 chapterPosition={lesson?.chapters?.position ?? 0}
                 lessonPosition={lesson?.position ?? 0}

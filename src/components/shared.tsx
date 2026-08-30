@@ -3,12 +3,13 @@ import { FileText, Presentation, ChevronLeft, Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
 import {
+  EXAM_KIND_LABELS,
   EXAM_LEVEL_LABELS,
   FILE_KIND_LABELS,
   formatDate,
   lessonPath,
 } from "@/lib/format";
-import type { ExamLevel, FileKind } from "@/lib/types";
+import type { ExamKind, ExamLevel, FileKind } from "@/lib/types";
 
 /** "الفصل الأول · الدرس الثاني" بالتنسيق الخافت الموحّد */
 export function LessonCrumb({
@@ -32,6 +33,18 @@ export function LessonCrumb({
 
 export function LevelBadge({ level }: { level: ExamLevel }) {
   return <Badge tone="muted">{EXAM_LEVEL_LABELS[level]}</Badge>;
+}
+
+/**
+ * تدريب أم امتحان — أول شارة على الكارت.
+ * الطالب لازم يعرف ده قبل ما يفتح، لأن المحاولة واحدة لا تتكرر.
+ */
+export function KindBadge({ kind }: { kind: ExamKind }) {
+  return (
+    <Badge tone={kind === "exam" ? "wait" : "accent"}>
+      {EXAM_KIND_LABELS[kind]}
+    </Badge>
+  );
 }
 
 /** صف ملف بعنوانه ونوعه، يفتح عبر مسار موقّع على السيرفر */
@@ -89,6 +102,7 @@ export function ExamCard({
   href,
   title,
   level,
+  kind,
   durationMinutes,
   chapterPosition,
   lessonPosition,
@@ -98,6 +112,7 @@ export function ExamCard({
   href: string;
   title: string;
   level: ExamLevel;
+  kind: ExamKind;
   durationMinutes: number | null;
   chapterPosition: number;
   lessonPosition: number;
@@ -114,6 +129,7 @@ export function ExamCard({
           />
           <p className="mt-1 text-sm font-medium text-ink">{title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <KindBadge kind={kind} />
             <LevelBadge level={level} />
             <Badge tone="muted">
               {durationMinutes ? `${durationMinutes} دقيقة` : "بدون وقت محدد"}

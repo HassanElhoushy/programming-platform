@@ -5,17 +5,19 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { updateExamAction } from "@/app/actions/admin-exams";
-import type { ExamLevel } from "@/lib/types";
+import type { ExamKind, ExamLevel } from "@/lib/types";
 
 export function ExamSettingsForm({
   examId,
   title: initialTitle,
   level: initialLevel,
+  kind: initialKind,
   durationMinutes: initialDuration,
 }: {
   examId: string;
   title: string;
   level: ExamLevel;
+  kind: ExamKind;
   durationMinutes: number | null;
 }) {
   const router = useRouter();
@@ -24,6 +26,7 @@ export function ExamSettingsForm({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
   const [level, setLevel] = useState<ExamLevel>(initialLevel);
+  const [kind, setKind] = useState<ExamKind>(initialKind);
   const [duration, setDuration] = useState(
     initialDuration === null ? "" : String(initialDuration),
   );
@@ -36,6 +39,7 @@ export function ExamSettingsForm({
         examId,
         title,
         level,
+        kind,
         durationMinutes: duration.trim() === "" ? null : Number(duration),
       });
 
@@ -75,7 +79,22 @@ export function ExamSettingsForm({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label className="label" htmlFor="edit-kind">
+            النوع
+          </label>
+          <select
+            id="edit-kind"
+            value={kind}
+            onChange={(e) => setKind(e.target.value as ExamKind)}
+            className="input"
+          >
+            <option value="practice">تدريب</option>
+            <option value="exam">امتحان</option>
+          </select>
+        </div>
+
         <div>
           <label className="label" htmlFor="edit-level">
             المستوى

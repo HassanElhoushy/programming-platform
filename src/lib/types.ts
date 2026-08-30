@@ -2,6 +2,7 @@ export type UserRole = "admin" | "student";
 export type UserStatus = "pending" | "active" | "blocked";
 export type FileKind = "explanation" | "slides";
 export type ExamLevel = "basic" | "advanced";
+export type ExamKind = "practice" | "exam";
 export type AttemptStatus = "in_progress" | "submitted" | "graded";
 export type PermissionResource = "lesson" | "file" | "exam";
 
@@ -55,6 +56,7 @@ export interface Exam {
   lesson_id: string;
   title: string;
   level: ExamLevel;
+  kind: ExamKind;
   duration_minutes: number | null;
   is_open: boolean;
   reveal_answers: boolean;
@@ -143,6 +145,7 @@ export interface AttemptReview {
     id: string;
     title: string;
     level: ExamLevel;
+    kind: ExamKind;
     duration_minutes: number | null;
     reveal_answers: boolean;
   };

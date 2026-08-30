@@ -70,7 +70,7 @@ export default async function AdminContentPage() {
         <EmptyState
           icon={BookOpen}
           title="لسه ما أضفتش أي فصل"
-          hint="ابدأ بإضافة فصل، وبعدين ضيف دروسه وملفاته وامتحاناته."
+          hint="ابدأ بإضافة فصل، وبعدين ضيف دروسه وملفاته وتدريباته."
         />
       ) : (
         <div className="flex flex-col gap-8">
@@ -125,7 +125,7 @@ export default async function AdminContentPage() {
                       const exams = examCounts.get(lesson.id);
                       const parts = [
                         `${fileCounts.get(lesson.id) ?? 0} ملف`,
-                        `${exams?.total ?? 0} امتحان`,
+                        `${exams?.total ?? 0} تدريب أو امتحان`,
                         exams?.open ? `${exams.open} مفتوح` : null,
                       ].filter(Boolean);
 

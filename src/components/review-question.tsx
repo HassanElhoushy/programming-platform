@@ -80,7 +80,7 @@ export function ReviewQuestionCard({
 
       {question.type !== "essay" && !revealed ? (
         <p className="mt-3 text-xs text-ink-3">
-          المدرّس لسه ما فتحش عرض الإجابات النموذجية للامتحان ده.
+          المدرّس لسه ما فتحش عرض الإجابات النموذجية هنا.
         </p>
       ) : null}
 

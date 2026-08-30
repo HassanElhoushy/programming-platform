@@ -145,6 +145,25 @@ export const QUESTION_TYPE_LABELS: Record<string, string> = {
   essay: "سؤال مقالي",
 };
 
+export const EXAM_KIND_LABELS: Record<string, string> = {
+  practice: "تدريب",
+  exam: "امتحان",
+};
+
+/** نكرة: "تدريب" أو "امتحان" */
+export function kindNoun(kind: string): string {
+  return EXAM_KIND_LABELS[kind] ?? "تدريب";
+}
+
+/**
+ * معرفة: "التدريب" أو "الامتحان".
+ * تُستخدم في الجمل الموجّهة للطالب — "ابدأ الامتحان"، "أسئلة التدريب" —
+ * فتتبع الكلمة نوع العنصر بدل كلمة واحدة تخيف في موضع وتُضلّل في آخر.
+ */
+export function kindDefinite(kind: string): string {
+  return `ال${kindNoun(kind)}`;
+}
+
 export const EXAM_LEVEL_LABELS: Record<string, string> = {
   basic: "أساسي",
   advanced: "متقدم",

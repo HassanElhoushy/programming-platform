@@ -36,7 +36,7 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
       .order("position"),
     supabase
       .from("exams")
-      .select("id, title, level, duration_minutes, is_open")
+      .select("id, title, level, kind, duration_minutes, is_open")
       .eq("lesson_id", lessonId)
       .is("archived_at", null)
       .order("created_at"),
@@ -93,7 +93,7 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
 
       {exams.length > 0 ? (
         <section>
-          <SectionTitle>الامتحانات</SectionTitle>
+          <SectionTitle>الأسئلة</SectionTitle>
           <div className="flex flex-col gap-2">
             {exams.map((exam) => {
               const attempt = attemptByExam.get(exam.id);
@@ -119,6 +119,7 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
                   href={href}
                   title={exam.title}
                   level={exam.level}
+                  kind={exam.kind}
                   durationMinutes={exam.duration_minutes}
                   chapterPosition={chapter?.position ?? 0}
                   lessonPosition={lesson.position}

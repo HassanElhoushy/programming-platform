@@ -8,6 +8,7 @@ import { archiveFileAction } from "@/app/actions/admin-content";
 import { ActionButton } from "@/components/action-button";
 import { Badge, SectionTitle } from "@/components/ui/primitives";
 import {
+  EXAM_KIND_LABELS,
   EXAM_LEVEL_LABELS,
   FILE_KIND_LABELS,
   formatDate,
@@ -46,7 +47,7 @@ export default async function AdminLessonPage({
       .order("position"),
     supabase
       .from("exams")
-      .select("id, title, level, duration_minutes, is_open, reveal_answers")
+      .select("id, title, level, kind, duration_minutes, is_open, reveal_answers")
       .eq("lesson_id", lessonId)
       .is("archived_at", null)
       .order("created_at"),
@@ -139,7 +140,7 @@ export default async function AdminLessonPage({
       </section>
 
       <section>
-        <SectionTitle>الامتحانات</SectionTitle>
+        <SectionTitle>التدريبات والامتحانات</SectionTitle>
 
         <div className="mb-3">
           <CreateExamForm lessonId={lessonId} />
@@ -147,7 +148,7 @@ export default async function AdminLessonPage({
 
         {exams.length === 0 ? (
           <p className="card px-4 py-6 text-center text-sm text-ink-3">
-            مفيش امتحانات على الدرس ده
+            مفيش تدريبات ولا امتحانات على الدرس ده
           </p>
         ) : (
           <div className="flex flex-col gap-2">
@@ -164,6 +165,9 @@ export default async function AdminLessonPage({
                       {exam.title}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <Badge tone={exam.kind === "exam" ? "wait" : "accent"}>
+                        {EXAM_KIND_LABELS[exam.kind]}
+                      </Badge>
                       <Badge tone="muted">{EXAM_LEVEL_LABELS[exam.level]}</Badge>
                       <Badge tone={exam.is_open ? "ok" : "muted"}>
                         {exam.is_open ? "مفتوح" : "مغلق"}

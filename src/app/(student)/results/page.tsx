@@ -5,7 +5,7 @@ import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { formatDate, formatScore, lessonPath, percentage } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "نتائج الامتحانات · منصة البرمجة" };
+export const metadata = { title: "النتائج · منصة البرمجة" };
 export const dynamic = "force-dynamic";
 
 interface ExamRef {
@@ -29,13 +29,13 @@ export default async function ResultsPage() {
 
   return (
     <>
-      <PageHeader title="نتائج الامتحانات" subtitle="امتحاناتك السابقة ودرجاتها" />
+      <PageHeader title="النتائج" subtitle="اللي حليته قبل كده ودرجاتك فيه" />
 
       {attempts.length === 0 ? (
         <EmptyState
           icon={ClipboardCheck}
-          title="ما حليتش أي امتحان لسه"
-          hint="أول ما تسلّم امتحان هتلاقي نتيجته هنا."
+          title="ما حليتش حاجة لسه"
+          hint="أول ما تسلّم تدريب أو امتحان هتلاقي نتيجته هنا."
         />
       ) : (
         <div className="flex flex-col gap-2">
