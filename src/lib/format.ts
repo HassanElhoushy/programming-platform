@@ -36,14 +36,30 @@ export function chapterName(position: number): string {
   return `الفصل ${ordinal(position)}`;
 }
 
-export function lessonName(position: number): string {
-  return `الدرس ${ordinal(position)}`;
+/**
+ * "الدرس الثاني" أو "مراجعة الفصل".
+ *
+ * المراجعة تسكن الهيكل كدرس لأن كل ملف وامتحان يحتاج درساً يحويه، لكنها
+ * ليست درساً خامساً بل ختام الفصل — فالترقيم يبقى داخلياً للترتيب، والكلمة
+ * وحدها تتبع النوع.
+ */
+export function lessonName(position: number, kind: string = "lesson"): string {
+  return kind === "review" ? "مراجعة الفصل" : `الدرس ${ordinal(position)}`;
 }
 
-/** "الفصل الأول · الدرس الثاني" */
-export function lessonPath(chapterPosition: number, lessonPosition: number): string {
-  return `${chapterName(chapterPosition)} · ${lessonName(lessonPosition)}`;
+/** "الفصل الأول · الدرس الثاني" أو "الفصل الأول · مراجعة الفصل" */
+export function lessonPath(
+  chapterPosition: number,
+  lessonPosition: number,
+  lessonKind: string = "lesson",
+): string {
+  return `${chapterName(chapterPosition)} · ${lessonName(lessonPosition, lessonKind)}`;
 }
+
+export const LESSON_KIND_LABELS: Record<string, string> = {
+  lesson: "درس",
+  review: "مراجعة",
+};
 
 /*
  * المنطقة الزمنية مثبّتة على القاهرة عمداً: بدونها يُنسّق الخادم التاريخ

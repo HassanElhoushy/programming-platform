@@ -25,7 +25,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
   const { data: exam } = await supabase
     .from("exams")
     .select(
-      "id, title, level, kind, duration_minutes, is_open, lessons(position, title, chapters(position))",
+      "id, title, level, kind, duration_minutes, is_open, lessons(position, title, kind, chapters(position))",
     )
     .eq("id", examId)
     .is("archived_at", null)
@@ -36,10 +36,11 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
   const lesson = exam.lessons as unknown as {
     position: number;
     title: string;
+    kind: string;
     chapters: { position: number } | null;
   } | null;
 
-  const crumb = lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0);
+  const crumb = lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0, lesson?.kind);
   const noun = kindDefinite(exam.kind);
 
   const { data: attempt } = await supabase

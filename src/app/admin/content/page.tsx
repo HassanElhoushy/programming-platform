@@ -20,6 +20,7 @@ interface LessonRow {
   id: string;
   title: string;
   position: number;
+  kind: string;
   archived_at: string | null;
 }
 
@@ -29,7 +30,7 @@ export default async function AdminContentPage() {
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
     supabase
       .from("chapters")
-      .select("id, title, position, archived_at, lessons(id, title, position, archived_at)")
+      .select("id, title, position, archived_at, lessons(id, title, position, kind, archived_at)")
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
     supabase.from("exams").select("id, lesson_id, is_open").is("archived_at", null),
@@ -140,7 +141,7 @@ export default async function AdminContentPage() {
                           >
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-ink-3">
-                                {lessonName(lesson.position)}
+                                {lessonName(lesson.position, lesson.kind)}
                               </p>
                               {lesson.archived_at ? (
                                 <Badge tone="muted">مؤرشف</Badge>

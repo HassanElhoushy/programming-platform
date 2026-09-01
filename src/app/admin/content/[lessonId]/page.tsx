@@ -27,7 +27,7 @@ export default async function AdminLessonPage({
 
   const { data: lesson } = await supabase
     .from("lessons")
-    .select("id, title, position, chapters(position, title)")
+    .select("id, title, position, kind, chapters(position, title)")
     .eq("id", lessonId)
     .maybeSingle();
 
@@ -80,7 +80,7 @@ export default async function AdminLessonPage({
 
       <div className="mb-7">
         <p className="text-xs text-ink-3">
-          {lessonPath(chapter?.position ?? 0, lesson.position)}
+          {lessonPath(chapter?.position ?? 0, lesson.position, lesson.kind)}
         </p>
         <h1 className="mt-1 text-xl font-semibold text-ink sm:text-2xl">
           {lesson.title}

@@ -132,10 +132,10 @@ export function CreateLessonForm({
     <form ref={formRef} action={action} className="card flex flex-col gap-3 px-4 py-4">
       <input type="hidden" name="chapter_id" value={chapterId} />
 
-      <div className="grid gap-3 sm:grid-cols-[6rem_1fr]">
+      <div className="grid gap-3 sm:grid-cols-[6rem_8rem_1fr]">
         <div>
           <label className="label" htmlFor={`lesson-position-${chapterId}`}>
-            رقم الدرس
+            الرقم
           </label>
           <input
             id={`lesson-position-${chapterId}`}
@@ -147,6 +147,22 @@ export function CreateLessonForm({
             className="input tnum"
           />
         </div>
+
+        <div>
+          <label className="label" htmlFor={`lesson-kind-${chapterId}`}>
+            النوع
+          </label>
+          <select
+            id={`lesson-kind-${chapterId}`}
+            name="kind"
+            className="input"
+            defaultValue="lesson"
+          >
+            <option value="lesson">درس</option>
+            <option value="review">مراجعة</option>
+          </select>
+        </div>
+
         <div>
           <label className="label" htmlFor={`lesson-title-${chapterId}`}>
             عنوان الدرس
@@ -161,6 +177,11 @@ export function CreateLessonForm({
           />
         </div>
       </div>
+
+      <p className="-mt-1 text-xs leading-relaxed text-ink-3">
+        اختار «مراجعة» لختام الفصل — الترقيم بيفضل زي ما هو، بس السطر فوق
+        المحتوى بيبقى «مراجعة الفصل» بدل «الدرس الخامس».
+      </p>
 
       <FormError>{state.error}</FormError>
 

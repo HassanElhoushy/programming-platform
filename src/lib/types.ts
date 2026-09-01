@@ -3,6 +3,7 @@ export type UserStatus = "pending" | "active" | "blocked";
 export type FileKind = "explanation" | "slides";
 export type ExamLevel = "basic" | "advanced";
 export type ExamKind = "practice" | "exam";
+export type LessonKind = "lesson" | "review";
 export type AttemptStatus = "in_progress" | "submitted" | "graded";
 export type PermissionResource = "lesson" | "file" | "exam";
 
@@ -35,6 +36,7 @@ export interface Lesson {
   chapter_id: string;
   title: string;
   position: number;
+  kind: LessonKind;
   archived_at: string | null;
 }
 
@@ -151,6 +153,7 @@ export interface AttemptReview {
   };
   lesson_position: number;
   lesson_title: string;
+  lesson_kind: LessonKind;
   chapter_position: number;
   chapter_title: string;
   reveal: boolean;

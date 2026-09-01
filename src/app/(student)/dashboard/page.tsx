@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 interface LessonRef {
   position: number;
   title: string;
+  kind: string;
   chapters: { position: number } | null;
 }
 
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
     supabase
       .from("exams")
       .select(
-        "id, title, level, kind, duration_minutes, created_at, lessons(position, title, chapters(position))",
+        "id, title, level, kind, duration_minutes, created_at, lessons(position, title, kind, chapters(position))",
       )
       .eq("is_open", true)
       .is("archived_at", null)
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
 
     supabase
       .from("lesson_files")
-      .select("id, title, kind, created_at, lessons(position, title, chapters(position))")
+      .select("id, title, kind, created_at, lessons(position, title, kind, chapters(position))")
       .is("archived_at", null)
       .order("created_at", { ascending: false })
       .limit(4),
@@ -190,6 +191,7 @@ export default async function DashboardPage() {
                   durationMinutes={exam.duration_minutes}
                   chapterPosition={lesson?.chapters?.position ?? 0}
                   lessonPosition={lesson?.position ?? 0}
+                  lessonKind={lesson?.kind}
                   cta="ابدأ"
                 />
               );
@@ -231,6 +233,7 @@ export default async function DashboardPage() {
                   crumb={{
                     chapterPosition: lesson?.chapters?.position ?? 0,
                     lessonPosition: lesson?.position ?? 0,
+                    lessonKind: lesson?.kind,
                   }}
                 />
               );

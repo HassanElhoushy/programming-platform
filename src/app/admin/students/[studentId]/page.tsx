@@ -37,6 +37,7 @@ interface LessonRow {
   id: string;
   title: string;
   position: number;
+  kind: string;
 }
 
 export default async function StudentDetailPage({
@@ -57,7 +58,7 @@ export default async function StudentDetailPage({
     await Promise.all([
       supabase
         .from("chapters")
-        .select("id, title, position, lessons(id, title, position)")
+        .select("id, title, position, lessons(id, title, position, kind)")
         .is("archived_at", null)
         .order("position"),
       supabase
@@ -82,7 +83,7 @@ export default async function StudentDetailPage({
       supabase
         .from("exam_attempts")
         .select(
-          "id, status, started_at, submitted_at, time_spent_seconds, exceeded_duration, auto_score, manual_score, total_points, voided_at, exams(title, lessons(position, chapters(position)))",
+          "id, status, started_at, submitted_at, time_spent_seconds, exceeded_duration, auto_score, manual_score, total_points, voided_at, exams(title, lessons(position, kind, chapters(position)))",
         )
         .eq("student_id", studentId)
         .order("started_at", { ascending: false }),
@@ -112,6 +113,7 @@ export default async function StudentDetailPage({
         id: lesson.id,
         title: lesson.title,
         position: lesson.position,
+        kind: lesson.kind,
         files: filesByLesson.get(lesson.id) ?? [],
         exams: examsByLesson.get(lesson.id) ?? [],
       })),
@@ -247,7 +249,7 @@ export default async function StudentDetailPage({
             {attempts.map((attempt) => {
               const exam = attempt.exams as unknown as {
                 title: string;
-                lessons: { position: number; chapters: { position: number } | null } | null;
+                lessons: { position: number; kind: string; chapters: { position: number } | null } | null;
               } | null;
 
               const earned =
@@ -262,6 +264,7 @@ export default async function StudentDetailPage({
                         {lessonPath(
                           exam?.lessons?.chapters?.position ?? 0,
                           exam?.lessons?.position ?? 0,
+                          exam?.lessons?.kind,
                         )}
                       </p>
                       <p className="mt-0.5 truncate text-sm font-medium text-ink">

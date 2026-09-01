@@ -19,13 +19,13 @@ do $$ begin
   create type public.file_kind as enum ('explanation', 'slides');
 exception when duplicate_object then null; end $$;
 
-do $ begin
+do $$ begin
   create type public.exam_level as enum ('basic', 'advanced');
-exception when duplicate_object then null; end $;
+exception when duplicate_object then null; end $$;
 
-do $ begin
+do $$ begin
   create type public.exam_kind as enum ('practice', 'exam');
-exception when duplicate_object then null; end $;
+exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type public.question_type as enum
@@ -82,6 +82,8 @@ create table if not exists public.lessons (
   chapter_id  uuid not null references public.chapters (id) on delete cascade,
   title       text not null,
   position    integer not null,
+  -- درس أم مراجعة ختام الفصل. الترقيم يبقى للترتيب، والكلمة تتبع النوع.
+  kind        public.lesson_kind not null default 'lesson',
   archived_at timestamptz,
   created_at  timestamptz not null default now()
 );

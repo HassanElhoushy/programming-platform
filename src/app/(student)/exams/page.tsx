@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 interface LessonRef {
   position: number;
+  kind: string;
   chapters: { position: number } | null;
 }
 
@@ -19,7 +20,7 @@ export default async function ExamsPage() {
     supabase
       .from("exams")
       .select(
-        "id, title, level, kind, duration_minutes, is_open, created_at, lessons(position, chapters(position))",
+        "id, title, level, kind, duration_minutes, is_open, created_at, lessons(position, kind, chapters(position))",
       )
       .is("archived_at", null)
       .order("created_at", { ascending: false }),
@@ -88,6 +89,7 @@ export default async function ExamsPage() {
                 durationMinutes={exam.duration_minutes}
                 chapterPosition={lesson?.chapters?.position ?? 0}
                 lessonPosition={lesson?.position ?? 0}
+                lessonKind={lesson?.kind}
                 right={status ? <Badge tone={status.tone}>{status.label}</Badge> : null}
                 cta={
                   attempt?.status === "in_progress"

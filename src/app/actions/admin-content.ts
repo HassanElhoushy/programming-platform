@@ -106,6 +106,7 @@ export async function createLessonAction(
   const chapterId = String(formData.get("chapter_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const position = Number(formData.get("position"));
+  const kind = String(formData.get("kind") ?? "lesson");
 
   if (!chapterId) return { error: "اختر الفصل." };
   if (title.length < 2) return { error: "اكتب عنوان الدرس." };
@@ -113,9 +114,11 @@ export async function createLessonAction(
     return { error: "رقم الدرس لازم يكون عدداً صحيحاً أكبر من صفر." };
   }
 
+  if (kind !== "lesson" && kind !== "review") return { error: "اختر النوع." };
+
   const { error } = await supabase
     .from("lessons")
-    .insert({ chapter_id: chapterId, title, position });
+    .insert({ chapter_id: chapterId, title, position, kind });
 
   if (error) return { error: GENERIC };
 
@@ -127,13 +130,14 @@ export async function updateLessonAction(
   lessonId: string,
   title: string,
   position: number,
+  kind: "lesson" | "review",
 ): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("lessons")
-    .update({ title: title.trim(), position })
+    .update({ title: title.trim(), position, kind })
     .eq("id", lessonId);
 
   if (error) return { error: GENERIC };

@@ -15,17 +15,19 @@ import type { ExamKind, ExamLevel, FileKind } from "@/lib/types";
 export function LessonCrumb({
   chapterPosition,
   lessonPosition,
+  lessonKind = "lesson",
   lessonTitle,
   className,
 }: {
   chapterPosition: number;
   lessonPosition: number;
+  lessonKind?: string;
   lessonTitle?: string;
   className?: string;
 }) {
   return (
     <p className={className ?? "text-xs text-ink-3"}>
-      {lessonPath(chapterPosition, lessonPosition)}
+      {lessonPath(chapterPosition, lessonPosition, lessonKind)}
       {lessonTitle ? ` · ${lessonTitle}` : null}
     </p>
   );
@@ -59,7 +61,7 @@ export function FileRow({
   title: string;
   kind: FileKind;
   createdAt?: string;
-  crumb?: { chapterPosition: number; lessonPosition: number };
+  crumb?: { chapterPosition: number; lessonPosition: number; lessonKind?: string };
 }) {
   const Icon = kind === "slides" ? Presentation : FileText;
 
@@ -77,7 +79,7 @@ export function FileRow({
           <p className="truncate text-sm font-medium text-ink">{title}</p>
           <p className="mt-0.5 truncate text-xs text-ink-3">
             {crumb
-              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition)} · `
+              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition, crumb.lessonKind)} · `
               : ""}
             {FILE_KIND_LABELS[kind]}
             {createdAt ? ` · ${formatDate(createdAt)}` : ""}
@@ -106,6 +108,7 @@ export function ExamCard({
   durationMinutes,
   chapterPosition,
   lessonPosition,
+  lessonKind = "lesson",
   right,
   cta,
 }: {
@@ -116,6 +119,7 @@ export function ExamCard({
   durationMinutes: number | null;
   chapterPosition: number;
   lessonPosition: number;
+  lessonKind?: string;
   right?: React.ReactNode;
   cta?: string;
 }) {
@@ -126,6 +130,7 @@ export function ExamCard({
           <LessonCrumb
             chapterPosition={chapterPosition}
             lessonPosition={lessonPosition}
+            lessonKind={lessonKind}
           />
           <p className="mt-1 text-sm font-medium text-ink">{title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">

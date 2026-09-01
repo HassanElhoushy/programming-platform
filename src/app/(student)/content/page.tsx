@@ -12,6 +12,7 @@ interface LessonRow {
   id: string;
   title: string;
   position: number;
+  kind: string;
 }
 
 export default async function ContentPage() {
@@ -20,7 +21,7 @@ export default async function ContentPage() {
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
     supabase
       .from("chapters")
-      .select("id, title, position, lessons(id, title, position)")
+      .select("id, title, position, lessons(id, title, position, kind)")
       .is("archived_at", null)
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
@@ -90,7 +91,7 @@ export default async function ContentPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-ink-3">
-                          {lessonName(lesson.position)}
+                          {lessonName(lesson.position, lesson.kind)}
                         </p>
                         <p className="mt-0.5 truncate text-sm font-medium text-ink">
                           {lesson.title}

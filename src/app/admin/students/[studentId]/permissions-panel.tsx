@@ -15,6 +15,7 @@ export interface PermissionLesson {
   id: string;
   title: string;
   position: number;
+  kind: string;
   files: { id: string; title: string; kind: string }[];
   exams: { id: string; title: string }[];
 }
@@ -129,7 +130,7 @@ export function PermissionsPanel({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs text-ink-3">
-                        {lessonName(lesson.position)}
+                        {lessonName(lesson.position, lesson.kind)}
                       </p>
                       <p className="mt-0.5 truncate text-sm font-medium text-ink">
                         {lesson.title}
