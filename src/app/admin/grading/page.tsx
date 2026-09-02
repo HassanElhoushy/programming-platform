@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 interface ExamRef {
   title: string;
-  lessons: { position: number; kind: string; chapters: { position: number } | null } | null;
+  lessons: { position: number; kind: string; chapters: { position: number; kind: string } | null } | null;
 }
 
 export default async function GradingPage() {
@@ -24,7 +24,7 @@ export default async function GradingPage() {
   const { data, error } = await supabase
     .from("exam_attempts")
     .select(
-      "id, status, submitted_at, time_spent_seconds, exceeded_duration, profiles!exam_attempts_student_id_fkey(full_name), exams(title, lessons(position, kind, chapters(position)))",
+      "id, status, submitted_at, time_spent_seconds, exceeded_duration, profiles!exam_attempts_student_id_fkey(full_name), exams(title, lessons(position, kind, chapters(position, kind)))",
     )
     .eq("status", "submitted")
     .is("voided_at", null)
@@ -84,6 +84,7 @@ export default async function GradingPage() {
                       exam?.lessons?.chapters?.position ?? 0,
                       exam?.lessons?.position ?? 0,
                       exam?.lessons?.kind,
+                      exam?.lessons?.chapters?.kind,
                     )}{" "}
                     · {exam?.title}
                   </p>

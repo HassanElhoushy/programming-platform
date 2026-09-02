@@ -88,7 +88,7 @@ export default async function ResultPage({
 
       <div className="mb-6">
         <p className="text-xs text-ink-3">
-          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind)}
+          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind, review.chapter_kind)}
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-semibold text-ink sm:text-2xl">{exam.title}</h1>

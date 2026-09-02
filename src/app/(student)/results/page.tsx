@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 interface ExamRef {
   title: string;
-  lessons: { position: number; kind: string; chapters: { position: number } | null } | null;
+  lessons: { position: number; kind: string; chapters: { position: number; kind: string } | null } | null;
 }
 
 export default async function ResultsPage() {
@@ -19,7 +19,7 @@ export default async function ResultsPage() {
   const { data } = await supabase
     .from("exam_attempts")
     .select(
-      "id, status, submitted_at, auto_score, manual_score, total_points, exceeded_duration, exams(title, lessons(position, kind, chapters(position)))",
+      "id, status, submitted_at, auto_score, manual_score, total_points, exceeded_duration, exams(title, lessons(position, kind, chapters(position, kind)))",
     )
     .is("voided_at", null)
     .neq("status", "in_progress")
@@ -57,6 +57,7 @@ export default async function ResultsPage() {
                       exam?.lessons?.chapters?.position ?? 0,
                       exam?.lessons?.position ?? 0,
                       exam?.lessons?.kind,
+                      exam?.lessons?.chapters?.kind,
                     )}
                   </p>
                   <p className="mt-0.5 truncate text-sm font-medium text-ink">

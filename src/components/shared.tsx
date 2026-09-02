@@ -16,18 +16,20 @@ export function LessonCrumb({
   chapterPosition,
   lessonPosition,
   lessonKind = "lesson",
+  chapterKind = "chapter",
   lessonTitle,
   className,
 }: {
   chapterPosition: number;
   lessonPosition: number;
   lessonKind?: string;
+  chapterKind?: string;
   lessonTitle?: string;
   className?: string;
 }) {
   return (
     <p className={className ?? "text-xs text-ink-3"}>
-      {lessonPath(chapterPosition, lessonPosition, lessonKind)}
+      {lessonPath(chapterPosition, lessonPosition, lessonKind, chapterKind)}
       {lessonTitle ? ` · ${lessonTitle}` : null}
     </p>
   );
@@ -61,7 +63,12 @@ export function FileRow({
   title: string;
   kind: FileKind;
   createdAt?: string;
-  crumb?: { chapterPosition: number; lessonPosition: number; lessonKind?: string };
+  crumb?: {
+    chapterPosition: number;
+    lessonPosition: number;
+    lessonKind?: string;
+    chapterKind?: string;
+  };
 }) {
   const Icon = kind === "slides" ? Presentation : FileText;
 
@@ -79,7 +86,7 @@ export function FileRow({
           <p className="truncate text-sm font-medium text-ink">{title}</p>
           <p className="mt-0.5 truncate text-xs text-ink-3">
             {crumb
-              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition, crumb.lessonKind)} · `
+              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition, crumb.lessonKind, crumb.chapterKind)} · `
               : ""}
             {FILE_KIND_LABELS[kind]}
             {createdAt ? ` · ${formatDate(createdAt)}` : ""}
@@ -109,6 +116,7 @@ export function ExamCard({
   chapterPosition,
   lessonPosition,
   lessonKind = "lesson",
+  chapterKind = "chapter",
   right,
   cta,
 }: {
@@ -120,6 +128,7 @@ export function ExamCard({
   chapterPosition: number;
   lessonPosition: number;
   lessonKind?: string;
+  chapterKind?: string;
   right?: React.ReactNode;
   cta?: string;
 }) {
@@ -131,6 +140,7 @@ export function ExamCard({
             chapterPosition={chapterPosition}
             lessonPosition={lessonPosition}
             lessonKind={lessonKind}
+            chapterKind={chapterKind}
           />
           <p className="mt-1 text-sm font-medium text-ink">{title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">

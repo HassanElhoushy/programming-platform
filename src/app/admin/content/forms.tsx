@@ -44,10 +44,10 @@ export function CreateChapterForm({ nextPosition }: { nextPosition: number }) {
 
   return (
     <form ref={formRef} action={action} className="card flex flex-col gap-3 px-4 py-4">
-      <div className="grid gap-3 sm:grid-cols-[6rem_1fr]">
+      <div className="grid gap-3 sm:grid-cols-[6rem_9rem_1fr]">
         <div>
           <label className="label" htmlFor="chapter-position">
-            رقم الفصل
+            الترتيب
           </label>
           <input
             id="chapter-position"
@@ -59,6 +59,17 @@ export function CreateChapterForm({ nextPosition }: { nextPosition: number }) {
             className="input tnum"
           />
         </div>
+
+        <div>
+          <label className="label" htmlFor="chapter-kind">
+            النوع
+          </label>
+          <select id="chapter-kind" name="kind" className="input" defaultValue="chapter">
+            <option value="chapter">فصل</option>
+            <option value="review">مراجعة شاملة</option>
+          </select>
+        </div>
+
         <div>
           <label className="label" htmlFor="chapter-title">
             عنوان الفصل
@@ -73,6 +84,12 @@ export function CreateChapterForm({ nextPosition }: { nextPosition: number }) {
           />
         </div>
       </div>
+
+      <p className="-mt-1 text-xs leading-relaxed text-ink-3">
+        «مراجعة شاملة» حاوية للمراجعات اللي بتغطي أكتر من فصل — مش بتاخد رقم
+        فصل في العرض. حط فيها ختام الفصل الأول والثاني، والمراجعة النهائية،
+        وهكذا.
+      </p>
 
       <FormError>{state.error}</FormError>
 

@@ -21,7 +21,7 @@ export default async function ContentPage() {
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
     supabase
       .from("chapters")
-      .select("id, title, position, lessons(id, title, position, kind)")
+      .select("id, title, position, kind, lessons(id, title, position, kind)")
       .is("archived_at", null)
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
@@ -68,7 +68,7 @@ export default async function ContentPage() {
             <section key={chapter.id}>
               <div className="mb-3">
                 <h2 className="text-sm font-semibold text-ink">
-                  {chapterName(chapter.position)}
+                  {chapterName(chapter.position, chapter.kind)}
                 </h2>
                 <p className="text-xs text-ink-3">{chapter.title}</p>
               </div>
@@ -91,7 +91,9 @@ export default async function ContentPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-ink-3">
-                          {lessonName(lesson.position, lesson.kind)}
+                          {chapter.kind === "review"
+                            ? "مراجعة"
+                            : lessonName(lesson.position, lesson.kind)}
                         </p>
                         <p className="mt-0.5 truncate text-sm font-medium text-ink">
                           {lesson.title}

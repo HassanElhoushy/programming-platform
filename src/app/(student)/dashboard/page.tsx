@@ -14,7 +14,7 @@ interface LessonRef {
   position: number;
   title: string;
   kind: string;
-  chapters: { position: number } | null;
+  chapters: { position: number; kind: string } | null;
 }
 
 export default async function DashboardPage() {
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
     supabase
       .from("exams")
       .select(
-        "id, title, level, kind, duration_minutes, created_at, lessons(position, title, kind, chapters(position))",
+        "id, title, level, kind, duration_minutes, created_at, lessons(position, title, kind, chapters(position, kind))",
       )
       .eq("is_open", true)
       .is("archived_at", null)
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
 
     supabase
       .from("lesson_files")
-      .select("id, title, kind, created_at, lessons(position, title, kind, chapters(position))")
+      .select("id, title, kind, created_at, lessons(position, title, kind, chapters(position, kind))")
       .is("archived_at", null)
       .order("created_at", { ascending: false })
       .limit(4),
@@ -192,6 +192,7 @@ export default async function DashboardPage() {
                   chapterPosition={lesson?.chapters?.position ?? 0}
                   lessonPosition={lesson?.position ?? 0}
                   lessonKind={lesson?.kind}
+                  chapterKind={lesson?.chapters?.kind}
                   cta="ابدأ"
                 />
               );
@@ -234,6 +235,7 @@ export default async function DashboardPage() {
                     chapterPosition: lesson?.chapters?.position ?? 0,
                     lessonPosition: lesson?.position ?? 0,
                     lessonKind: lesson?.kind,
+                    chapterKind: lesson?.chapters?.kind,
                   }}
                 />
               );

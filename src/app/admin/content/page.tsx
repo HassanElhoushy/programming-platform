@@ -30,7 +30,7 @@ export default async function AdminContentPage() {
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
     supabase
       .from("chapters")
-      .select("id, title, position, archived_at, lessons(id, title, position, kind, archived_at)")
+      .select("id, title, position, kind, archived_at, lessons(id, title, position, kind, archived_at)")
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
     supabase.from("exams").select("id, lesson_id, is_open").is("archived_at", null),
@@ -85,7 +85,7 @@ export default async function AdminContentPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-sm font-semibold text-ink">
-                        {chapterName(chapter.position)}
+                        {chapterName(chapter.position, chapter.kind)}
                       </h2>
                       {chapter.archived_at ? <Badge tone="muted">مؤرشف</Badge> : null}
                     </div>
@@ -141,7 +141,9 @@ export default async function AdminContentPage() {
                           >
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-ink-3">
-                                {lessonName(lesson.position, lesson.kind)}
+                                {chapter.kind === "review"
+                                  ? "مراجعة"
+                                  : lessonName(lesson.position, lesson.kind)}
                               </p>
                               {lesson.archived_at ? (
                                 <Badge tone="muted">مؤرشف</Badge>

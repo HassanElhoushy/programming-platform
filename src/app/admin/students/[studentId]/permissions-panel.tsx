@@ -24,6 +24,7 @@ export interface PermissionChapter {
   id: string;
   title: string;
   position: number;
+  kind: string;
   lessons: PermissionLesson[];
 }
 
@@ -110,7 +111,7 @@ export function PermissionsPanel({
         <div key={chapter.id}>
           <div className="mb-2">
             <h3 className="text-sm font-semibold text-ink">
-              {chapterName(chapter.position)}
+              {chapterName(chapter.position, chapter.kind)}
             </h3>
             <p className="text-xs text-ink-3">{chapter.title}</p>
           </div>
@@ -130,7 +131,9 @@ export function PermissionsPanel({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs text-ink-3">
-                        {lessonName(lesson.position, lesson.kind)}
+                        {chapter.kind === "review"
+                          ? "مراجعة"
+                          : lessonName(lesson.position, lesson.kind)}
                       </p>
                       <p className="mt-0.5 truncate text-sm font-medium text-ink">
                         {lesson.title}

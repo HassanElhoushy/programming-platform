@@ -54,7 +54,7 @@ export default async function AdminExamPage({
   const { data: exam } = await supabase
     .from("exams")
     .select(
-      "id, title, level, kind, duration_minutes, is_open, reveal_answers, lesson_id, lessons(position, title, kind, chapters(position))",
+      "id, title, level, kind, duration_minutes, is_open, reveal_answers, lesson_id, lessons(position, title, kind, chapters(position, kind))",
     )
     .eq("id", examId)
     .maybeSingle();
@@ -65,7 +65,7 @@ export default async function AdminExamPage({
     position: number;
     title: string;
     kind: string;
-    chapters: { position: number } | null;
+    chapters: { position: number; kind: string } | null;
   } | null;
 
   const [questionsRes, optionsRes, keysRes, attemptsRes] = await Promise.all([
@@ -131,7 +131,7 @@ export default async function AdminExamPage({
 
       <div className="mb-7">
         <p className="text-xs text-ink-3">
-          {lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0, lesson?.kind)}
+          {lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0, lesson?.kind, lesson?.chapters?.kind)}
         </p>
         <h1 className="mt-1 text-xl font-semibold text-ink sm:text-2xl">
           {exam.title}

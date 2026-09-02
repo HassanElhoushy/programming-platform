@@ -26,13 +26,16 @@ export async function createChapterAction(
 
   const title = String(formData.get("title") ?? "").trim();
   const position = Number(formData.get("position"));
+  const kind = String(formData.get("kind") ?? "chapter");
 
   if (title.length < 2) return { error: "اكتب عنوان الفصل." };
   if (!Number.isInteger(position) || position < 1) {
     return { error: "رقم الفصل لازم يكون عدداً صحيحاً أكبر من صفر." };
   }
 
-  const { error } = await supabase.from("chapters").insert({ title, position });
+  if (kind !== "chapter" && kind !== "review") return { error: "اختر النوع." };
+
+  const { error } = await supabase.from("chapters").insert({ title, position, kind });
   if (error) return { error: GENERIC };
 
   revalidatePath("/admin/content");
@@ -43,13 +46,14 @@ export async function updateChapterAction(
   chapterId: string,
   title: string,
   position: number,
+  kind: "chapter" | "review",
 ): Promise<ActionResult> {
   await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("chapters")
-    .update({ title: title.trim(), position })
+    .update({ title: title.trim(), position, kind })
     .eq("id", chapterId);
 
   if (error) return { error: GENERIC };

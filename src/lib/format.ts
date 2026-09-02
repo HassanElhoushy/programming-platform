@@ -32,8 +32,14 @@ export function ordinal(n: number): string {
   return ORDINALS[n] ?? `رقم ${n}`;
 }
 
-export function chapterName(position: number): string {
-  return `الفصل ${ordinal(position)}`;
+/**
+ * "الفصل الأول" أو "مراجعة شاملة".
+ *
+ * حاوية المراجعات العابرة للفصول لا تأخذ رقماً: ترتيبها بين الفصول لا
+ * معنى له، وهي أختٌ لها لا واحدةٌ منها.
+ */
+export function chapterName(position: number, kind: string = "chapter"): string {
+  return kind === "review" ? "مراجعة شاملة" : `الفصل ${ordinal(position)}`;
 }
 
 /**
@@ -52,9 +58,18 @@ export function lessonPath(
   chapterPosition: number,
   lessonPosition: number,
   lessonKind: string = "lesson",
+  chapterKind: string = "chapter",
 ): string {
+  // داخل حاوية المراجعات لا رقم فصل ولا رقم درس — العنوان وحده يكفي،
+  // و"مراجعة شاملة · مراجعة الفصل" تكرار بلا فائدة.
+  if (chapterKind === "review") return chapterName(0, "review");
   return `${chapterName(chapterPosition)} · ${lessonName(lessonPosition, lessonKind)}`;
 }
+
+export const CHAPTER_KIND_LABELS: Record<string, string> = {
+  chapter: "فصل",
+  review: "مراجعة شاملة",
+};
 
 export const LESSON_KIND_LABELS: Record<string, string> = {
   lesson: "درس",

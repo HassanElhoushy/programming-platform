@@ -28,6 +28,14 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type public.lesson_kind as enum ('lesson', 'review');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type public.chapter_kind as enum ('chapter', 'review');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
   create type public.question_type as enum
     ('mcq_single', 'mcq_multi', 'true_false', 'fill_blank', 'essay');
 exception when duplicate_object then null; end $$;
@@ -71,6 +79,9 @@ create table if not exists public.chapters (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
   position    integer not null,
+  -- فصل عادي أم حاوية للمراجعات العابرة للفصول. حاوية المراجعات لا تأخذ
+  -- رقماً في العرض لأن ترتيبها بين الفصول لا معنى له.
+  kind        public.chapter_kind not null default 'chapter',
   archived_at timestamptz,
   created_at  timestamptz not null default now()
 );

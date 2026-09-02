@@ -60,7 +60,7 @@ export default async function GradeAttemptPage({
 
       <div className="mb-6">
         <p className="text-xs text-ink-3">
-          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind)} · {exam.title}
+          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind, review.chapter_kind)} · {exam.title}
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-semibold text-ink sm:text-2xl">
