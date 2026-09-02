@@ -4,7 +4,11 @@ import { ChevronLeft, ChevronRight, FileText, Presentation } from "lucide-react"
 
 import { CreateExamForm } from "./create-exam-form";
 import { FileUploader } from "./file-uploader";
-import { archiveFileAction } from "@/app/actions/admin-content";
+import {
+  archiveFileAction,
+  deleteFileAction,
+  restoreFileAction,
+} from "@/app/actions/admin-content";
 import { ActionButton } from "@/components/action-button";
 import { Badge, SectionTitle } from "@/components/ui/primitives";
 import {
@@ -42,9 +46,8 @@ export default async function AdminLessonPage({
   const [filesRes, examsRes, attemptsRes] = await Promise.all([
     supabase
       .from("lesson_files")
-      .select("id, title, kind, size_bytes, created_at")
+      .select("id, title, kind, size_bytes, created_at, archived_at")
       .eq("lesson_id", lessonId)
-      .is("archived_at", null)
       .order("position"),
     supabase
       .from("exams")
@@ -58,7 +61,9 @@ export default async function AdminLessonPage({
       .is("voided_at", null),
   ]);
 
-  const files = filesRes.data ?? [];
+  const allFiles = filesRes.data ?? [];
+  const files = allFiles.filter((f) => f.archived_at === null);
+  const archivedFiles = allFiles.filter((f) => f.archived_at !== null);
   const exams = examsRes.data ?? [];
 
   const attemptStats = new Map<string, { total: number; pending: number }>();
@@ -129,15 +134,64 @@ export default async function AdminLessonPage({
                   <ActionButton
                     action={archiveFileAction.bind(null, file.id, lessonId)}
                     className="btn btn-ghost text-xs"
-                    confirm="هيختفي من حسابات الطلبة."
+                    confirm="هيختفي من حسابات الطلبة. تقدر ترجّعه أو تمسحه نهائياً بعد كده."
                   >
-                    حذف
+                    أرشفة
                   </ActionButton>
                 </div>
               );
             })}
           </div>
         )}
+
+        {/*
+          الملفات المؤرشفة تبقى معروضة هنا عمداً: المؤرشف مخفي عن الطلاب
+          لكنه ما زال يشغل مساحة من التخزين المجاني، ولو اختفى من هذه الصفحة
+          أيضاً لصار لا سبيل إلى حذفه.
+        */}
+        {archivedFiles.length > 0 ? (
+          <div className="divider mt-4 pt-4">
+            <p className="mb-1 text-xs font-medium text-ink-2">
+              ملفات مؤرشفة ({archivedFiles.length})
+            </p>
+            <p className="mb-3 text-xs leading-relaxed text-ink-3">
+              مخفية عن الطلبة، لكنها لسه واخدة مساحة من التخزين. امسح نهائياً
+              اللي متأكد إنك مش محتاجه.
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {archivedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="card flex flex-wrap items-center gap-2 px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-ink-2">{file.title}</p>
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      {FILE_KIND_LABELS[file.kind]} ·{" "}
+                      {formatFileSize(file.size_bytes)}
+                    </p>
+                  </div>
+
+                  <ActionButton
+                    action={restoreFileAction.bind(null, file.id, lessonId)}
+                    className="btn btn-ghost text-xs"
+                  >
+                    استرجاع
+                  </ActionButton>
+
+                  <ActionButton
+                    action={deleteFileAction.bind(null, file.id, lessonId)}
+                    className="btn btn-danger text-xs"
+                    confirm="هيتمسح من التخزين ومن المنصة نهائياً. مفيش رجعة."
+                  >
+                    حذف نهائي
+                  </ActionButton>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section>

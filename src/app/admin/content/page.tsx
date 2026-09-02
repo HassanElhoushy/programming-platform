@@ -5,6 +5,8 @@ import { CreateChapterForm, CreateLessonForm } from "./forms";
 import {
   archiveChapterAction,
   archiveLessonAction,
+  deleteChapterAction,
+  deleteLessonAction,
   restoreChapterAction,
   restoreLessonAction,
 } from "@/app/actions/admin-content";
@@ -98,12 +100,21 @@ export default async function AdminContentPage() {
                       nextPosition={nextLessonPosition}
                     />
                     {chapter.archived_at ? (
-                      <ActionButton
-                        action={restoreChapterAction.bind(null, chapter.id)}
-                        className="btn btn-ghost text-xs"
-                      >
-                        استرجاع
-                      </ActionButton>
+                      <>
+                        <ActionButton
+                          action={restoreChapterAction.bind(null, chapter.id)}
+                          className="btn btn-ghost text-xs"
+                        >
+                          استرجاع
+                        </ActionButton>
+                        <ActionButton
+                          action={deleteChapterAction.bind(null, chapter.id)}
+                          className="btn btn-danger text-xs"
+                          confirm="هيتمسح نهائياً ومفيش رجعة. الحذف بيتم بس لو الفصل فاضي من الدروس."
+                        >
+                          حذف نهائي
+                        </ActionButton>
+                      </>
                     ) : (
                       <ActionButton
                         action={archiveChapterAction.bind(null, chapter.id)}
@@ -158,12 +169,21 @@ export default async function AdminContentPage() {
                           </Link>
 
                           {lesson.archived_at ? (
-                            <ActionButton
-                              action={restoreLessonAction.bind(null, lesson.id)}
-                              className="btn btn-ghost text-xs"
-                            >
-                              استرجاع
-                            </ActionButton>
+                            <>
+                              <ActionButton
+                                action={restoreLessonAction.bind(null, lesson.id)}
+                                className="btn btn-ghost text-xs"
+                              >
+                                استرجاع
+                              </ActionButton>
+                              <ActionButton
+                                action={deleteLessonAction.bind(null, lesson.id)}
+                                className="btn btn-danger text-xs"
+                                confirm="هيتمسح نهائياً. الحذف بيتم بس لو الدرس فاضي من الملفات والامتحانات."
+                              >
+                                حذف نهائي
+                              </ActionButton>
+                            </>
                           ) : (
                             <ActionButton
                               action={archiveLessonAction.bind(null, lesson.id)}

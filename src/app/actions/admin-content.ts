@@ -182,6 +182,141 @@ export async function restoreLessonAction(lessonId: string): Promise<ActionResul
 }
 
 /* ==========================================================================
+   الحذف النهائي
+   ==========================================================================
+
+   الأرشفة هي التصرف الافتراضي، والحذف استثناء لما أُنشئ بالخطأ.
+
+   القيود هنا ليست تجميلاً: سلسلة الحذف المتتالي في قاعدة البيانات تمتد من
+   الفصل إلى الدروس إلى الامتحانات إلى المحاولات إلى إجابات الطلاب. فحذف
+   فصل واحد فيه محتوى يمحو درجات كل من حلّ تحته، بصمت وبلا رجعة.
+
+   لذلك شرطان معاً، ويُفحصان على الخادم لا في الواجهة:
+     • أن يكون العنصر مؤرشفاً — فالأرشفة خطوة أولى تمنح مهلة للتراجع
+     • أن يكون فارغاً — فلا يُحذف شيء لم يقصد المدرّس حذفه
+   وما لا يستوفيهما يُرفض برسالة تقول ما الذي يمنعه.
+*/
+
+export async function deleteChapterAction(chapterId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: chapter } = await supabase
+    .from("chapters")
+    .select("id, archived_at")
+    .eq("id", chapterId)
+    .maybeSingle();
+
+  if (!chapter) return { error: "الفصل ده مش موجود." };
+  if (!chapter.archived_at) {
+    return { error: "أرشِف الفصل الأول، وبعدين تقدر تحذفه نهائياً." };
+  }
+
+  const { count } = await supabase
+    .from("lessons")
+    .select("id", { count: "exact", head: true })
+    .eq("chapter_id", chapterId);
+
+  if ((count ?? 0) > 0) {
+    return {
+      error: `الفصل ده جواه ${count} درس. احذفهم الأول واحد واحد — كده تكون شايف بعينك كل حاجة بتتمسح.`,
+    };
+  }
+
+  const { error } = await supabase.from("chapters").delete().eq("id", chapterId);
+  if (error) return { error: GENERIC };
+
+  revalidatePath("/admin/content");
+  return { ok: true };
+}
+
+export async function deleteLessonAction(lessonId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: lesson } = await supabase
+    .from("lessons")
+    .select("id, archived_at")
+    .eq("id", lessonId)
+    .maybeSingle();
+
+  if (!lesson) return { error: "الدرس ده مش موجود." };
+  if (!lesson.archived_at) {
+    return { error: "أرشِف الدرس الأول، وبعدين تقدر تحذفه نهائياً." };
+  }
+
+  const [files, exams] = await Promise.all([
+    supabase
+      .from("lesson_files")
+      .select("id", { count: "exact", head: true })
+      .eq("lesson_id", lessonId),
+    supabase
+      .from("exams")
+      .select("id", { count: "exact", head: true })
+      .eq("lesson_id", lessonId),
+  ]);
+
+  const nFiles = files.count ?? 0;
+  const nExams = exams.count ?? 0;
+
+  if (nFiles > 0 || nExams > 0) {
+    const parts = [
+      nFiles > 0 ? `${nFiles} ملف` : null,
+      nExams > 0 ? `${nExams} تدريب أو امتحان` : null,
+    ].filter(Boolean);
+
+    return {
+      error: `الدرس ده جواه ${parts.join(" و")}. الامتحانات بتتأرشف بس مش بتتمسح — لو الدرس غلط خالص سيبه مؤرشف.`,
+    };
+  }
+
+  const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
+  if (error) return { error: GENERIC };
+
+  revalidatePath("/admin/content");
+  return { ok: true };
+}
+
+/**
+ * حذف ملف نهائياً: من التخزين ومن قاعدة البيانات معاً.
+ *
+ * الملفات وحدها التي يُتاح حذفها كاملةً لأن ما يضيع بضياعها نسخةٌ عندك
+ * أصلاً، ولأن التخزين المجاني جيجابايت واحد فالملف المرفوع بالخطأ يأكل منه.
+ * ويُحذف من التخزين أولاً حتى لا يبقى ملف يتيم يشغل مساحة بلا صف يدل عليه.
+ */
+export async function deleteFileAction(
+  fileId: string,
+  lessonId: string,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: file } = await supabase
+    .from("lesson_files")
+    .select("id, storage_path, archived_at")
+    .eq("id", fileId)
+    .maybeSingle();
+
+  if (!file) return { error: "الملف ده مش موجود." };
+  if (!file.archived_at) {
+    return { error: "أرشِف الملف الأول، وبعدين تقدر تحذفه نهائياً." };
+  }
+
+  const admin = createAdminClient();
+  const { error: storageError } = await admin.storage
+    .from("files")
+    .remove([file.storage_path]);
+
+  if (storageError) return { error: "تعذّر حذف الملف من التخزين. حاول تاني." };
+
+  const { error } = await supabase.from("lesson_files").delete().eq("id", fileId);
+  if (error) return { error: GENERIC };
+
+  revalidatePath(`/admin/content/${lessonId}`);
+  return { ok: true };
+}
+
+/* ==========================================================================
    الملفات
    ========================================================================== */
 
@@ -247,6 +382,24 @@ export async function archiveFileAction(
   const { error } = await supabase
     .from("lesson_files")
     .update({ archived_at: new Date().toISOString() })
+    .eq("id", fileId);
+
+  if (error) return { error: GENERIC };
+
+  revalidatePath(`/admin/content/${lessonId}`);
+  return { ok: true };
+}
+
+export async function restoreFileAction(
+  fileId: string,
+  lessonId: string,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("lesson_files")
+    .update({ archived_at: null })
     .eq("id", fileId);
 
   if (error) return { error: GENERIC };
