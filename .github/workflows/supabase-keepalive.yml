@@ -12,9 +12,10 @@
 # المفتاح ده عام أصلاً وبيظهر في المتصفح، فمفيش خطورة فيه — بنحطه سرّاً
 # للترتيب بس. وجدول heartbeat مفتوح للقراءة فقط بسياسة RLS مخصصة له.
 #
-# ملاحظة مهمة: GitHub بيوقف الـ workflows المجدولة تلقائياً لو الريبو
-# قعد 60 يوم من غير أي نشاط، وبيبعتلك إيميل قبلها. لو وصلك الإيميل ده
-# ادخل على تبويب Actions واضغط "Enable workflow".
+# الخطوة الأخيرة بتحمي الـ workflow من نفسه: GitHub بيوقف الجدولة تلقائياً
+# لو الريبو قعد 60 يوم من غير commit، وده بالظبط اللي بيحصل في الأجازة
+# الصيفي — الوقت اللي محتاجين فيه الحماية دي أكتر حاجة. فبنعمل commit
+# صغير كل ~50 يوم عشان العدّاد يرجع من أوله من غير تدخّل منك.
 
 name: Supabase keep-alive
 
@@ -24,12 +25,17 @@ on:
     - cron: "0 6 */2 * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   ping:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: قراءة صف من جدول heartbeat
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -60,3 +66,26 @@ jobs:
           fi
 
           echo "المشروع شغال."
+
+      # يمنع GitHub من إيقاف الجدولة بعد 60 يوم سكون. لا يعمل شيئاً في
+      # الأيام العادية — فقط حين يقترب الريبو من الحد.
+      - name: منع إيقاف الجدولة بعد 60 يوم سكون
+        run: |
+          set -euo pipefail
+
+          last=$(git log -1 --format=%ct)
+          age=$(( ( $(date +%s) - last ) / 86400 ))
+          echo "آخر commit من ${age} يوم."
+
+          if [ "${age}" -lt 50 ]; then
+            echo "الريبو نشط، مفيش داعي لأي commit."
+            exit 0
+          fi
+
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/last-activity
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/last-activity
+          git commit -m "نبضة: إبقاء جدولة GitHub Actions فعّالة"
+          git push
+          echo "اتعمل commit عشان عدّاد الـ 60 يوم يرجع من أوله."
