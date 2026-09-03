@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkStorageRoom, TEACHER_BLOCK_PCT } from "@/lib/storage-quota";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ActionResult {
@@ -325,6 +326,17 @@ export async function createFileUploadAction(
   lessonId: string,
 ): Promise<{ path?: string; token?: string; error?: string }> {
   await requireAdmin();
+
+  // المدرّس يتحجب قبل الطالب: عنده بديل (يمسح المؤرشف) ويقدر يستنى،
+  // والطالب وسط امتحان لأ. الهامش الفاضل محجوز لصور الإجابات.
+  const room = await checkStorageRoom(TEACHER_BLOCK_PCT);
+  if (!room.allowed) {
+    return {
+      error:
+        `المساحة وصلت ${room.usage.pct}% ووقفنا رفع الملفات عشان نسيب ` +
+        "مكان لصور إجابات الطلبة. امسح ملفات مؤرشفة مش محتاجها وجرّب تاني.",
+    };
+  }
 
   const path = `lessons/${lessonId}/${crypto.randomUUID()}.pdf`;
   const admin = createAdminClient();

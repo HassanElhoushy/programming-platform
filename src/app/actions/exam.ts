@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requireStudent } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkStorageRoom, STUDENT_BLOCK_PCT } from "@/lib/storage-quota";
 import { createClient } from "@/lib/supabase/server";
 
 const RPC_MESSAGES: Record<string, string> = {
@@ -68,6 +69,17 @@ export async function createAnswerImageUploadAction(
 
   if (ok !== true) {
     return { error: "مش مسموح بالرفع للسؤال ده دلوقتي." };
+  }
+
+  // آخر خط قبل امتلاء مساحة الباقة المجانية. الرسالة بتدي بديل فوري
+  // عشان الطالب يسلّم دلوقتي، مش عشان يستنى حد يفضّي مساحة.
+  const room = await checkStorageRoom(STUDENT_BLOCK_PCT);
+  if (!room.allowed) {
+    return {
+      error:
+        "مساحة المنصة خلصت تقريباً فمش قادرين نستقبل صور دلوقتي. " +
+        "اكتب إجابتك بالكيبورد عادي — هتتحسب كاملة — وبلّغ المدرّس.",
+    };
   }
 
   const path = `${session.id}/${attemptId}/${questionId}.jpg`;

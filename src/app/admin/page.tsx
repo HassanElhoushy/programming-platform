@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, HardDrive } from "lucide-react";
 
 import { PageHeader } from "@/components/ui/primitives";
+import { formatFileSize } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import {
+  readStorageUsage,
+  TEACHER_BLOCK_PCT,
+  WARN_PCT,
+} from "@/lib/storage-quota";
 
 export const metadata = { title: "لوحة المدرّس · منصة البرمجة" };
 export const dynamic = "force-dynamic";
@@ -10,7 +16,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage() {
   const supabase = await createClient();
 
-  const [pendingRes, ungradedRes, openExamsRes, activeRes] = await Promise.all([
+  const [usage, [pendingRes, ungradedRes, openExamsRes, activeRes]] = await Promise.all([
+    readStorageUsage(),
+    Promise.all([
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
@@ -31,6 +39,7 @@ export default async function AdminHomePage() {
       .select("id", { count: "exact", head: true })
       .eq("role", "student")
       .eq("status", "active"),
+    ]),
   ]);
 
   const cards = [
@@ -63,6 +72,30 @@ export default async function AdminHomePage() {
   return (
     <>
       <PageHeader title="نظرة عامة" subtitle="اللي محتاج منك دلوقتي" />
+
+      {/*
+        تحذير المساحة بيظهر بدري عمداً، وقت ما لسه فيه متسع للتصرّف.
+        الحجب الفعلي بيحصل في السيرفر وقت الرفع، وده تنبيه بس.
+      */}
+      {usage && usage.pct >= WARN_PCT ? (
+        <div className="card mb-3 flex items-start gap-3 px-4 py-3.5">
+          <HardDrive className="mt-0.5 size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink">
+              مساحة التخزين وصلت{" "}
+              <span className="tnum">{usage.pct}%</span>
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-3">
+              {formatFileSize(usage.usedBytes)} من{" "}
+              {formatFileSize(usage.limitBytes)}.{" "}
+              {usage.pct >= TEACHER_BLOCK_PCT
+                ? "رفع الملفات متوقف دلوقتي عشان نسيب مكان لصور إجابات الطلبة."
+                : `عند ${TEACHER_BLOCK_PCT}% هيتوقف رفع الملفات عشان نسيب مكان لصور إجابات الطلبة.`}{" "}
+              امسح ملفات مؤرشفة مش محتاجها من صفحات الدروس.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid gap-2 sm:grid-cols-2">
         {cards.map((card) => (
