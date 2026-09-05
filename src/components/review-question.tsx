@@ -70,6 +70,12 @@ export function ReviewQuestionCard({
 
       {question.type === "fill_blank" ? <FillBlankReview question={question} /> : null}
 
+      {question.type === "matching" ||
+      question.type === "ordering" ||
+      question.type === "classification" ? (
+        <AssignReview question={question} />
+      ) : null}
+
       {question.type === "essay" ? (
         <EssayReview
           question={question}
@@ -293,6 +299,64 @@ function EssayReview({
       {!text && !question.image_path ? (
         <p className="text-sm text-ink-3">ما جاوبتش على السؤال ده.</p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * مراجعة التوصيل والتصنيف والترتيب.
+ *
+ * صف لكل عنصر: ما اختاره الطالب، وبجانبه الصحيح إن فتح المدرّس الإظهار.
+ * الصف الصحيح لا يُعلَّم بلون خلفية — الشارة الصغيرة تكفي، وهذا هو نظام
+ * الألوان في المنصة كلها.
+ *
+ * ولأن الدرجة جزئية، يرى الطالب أي بند بالضبط ضيّع فيه، لا مجرد أنه أخطأ.
+ */
+function AssignReview({ question }: { question: ReviewQuestion }) {
+  const rows = question.options.filter((o) => o.role === "item");
+  const picks = question.options.filter((o) => o.role === "choice");
+
+  const given = question.response && "assign" in question.response
+    ? question.response.assign
+    : [];
+  const correct =
+    question.correct && "assign" in question.correct ? question.correct.assign : null;
+
+  const isOrdering = question.type === "ordering";
+
+  /** نص ما اختاره الطالب: اسم الاختيار في التوصيل والتصنيف، ورقم في الترتيب */
+  function label(v: string | number | null | undefined): string {
+    if (v === null || v === undefined || v === "") return "—";
+    if (isOrdering) return String(v);
+    return picks.find((p) => p.id === v)?.body ?? "—";
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((row, i) => {
+        const mine = given[i] ?? null;
+        const right = correct ? correct[i] : null;
+        const matched = correct !== null && String(mine ?? "") === String(right ?? "");
+
+        return (
+          <div
+            key={row.id}
+            className="flex flex-wrap items-center gap-2 rounded-[6px] border-[0.5px] border-line px-3 py-2.5"
+          >
+            <span className="min-w-0 flex-1 text-sm leading-relaxed text-ink">
+              {row.body}
+            </span>
+            <span className="text-sm text-ink-2">{label(mine)}</span>
+            {correct !== null ? (
+              matched ? (
+                <Badge tone="ok">صح</Badge>
+              ) : (
+                <Badge tone="bad">الصحيح: {label(right)}</Badge>
+              )
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

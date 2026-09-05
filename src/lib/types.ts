@@ -13,7 +13,17 @@ export type QuestionType =
   | "mcq_multi"
   | "true_false"
   | "fill_blank"
-  | "essay";
+  | "essay"
+  | "matching"
+  | "ordering"
+  | "classification";
+
+/** الأنواع التي يجيب فيها الطالب عن كل عنصر على حدة */
+export const ASSIGN_TYPES = ["matching", "ordering", "classification"] as const;
+
+export function isAssignType(type: string): boolean {
+  return (ASSIGN_TYPES as readonly string[]).includes(type);
+}
 
 export interface Profile {
   id: string;
@@ -80,6 +90,7 @@ export interface Question {
 
 export interface QuestionOption {
   id: string;
+  role: "item" | "choice";
   question_id: string;
   position: number;
   body: string;
@@ -106,6 +117,11 @@ export type AnswerResponse =
   | { value: boolean }
   | { blanks: string[] }
   | { text: string }
+  /*
+   * توصيل وتصنيف وترتيب. assign[i] هو ما اختاره الطالب للعنصر رقم i:
+   * معرّف اختيار في التوصيل والتصنيف، ورقم مكان في الترتيب.
+   */
+  | { assign: (string | number | null)[] }
   | null;
 
 export interface Answer {
@@ -130,6 +146,7 @@ export type CorrectKey =
   | { option_ids: string[] }
   | { value: boolean }
   | { blanks: string[][] }
+  | { assign: (string | number)[] }
   | null;
 
 /** الشكل الذي تعيده public.get_attempt_review */
@@ -170,7 +187,7 @@ export interface ReviewQuestion {
   body: string;
   points: number;
   blank_count: number;
-  options: { id: string; body: string }[];
+  options: { id: string; body: string; role: "item" | "choice" }[];
   response: AnswerResponse;
   image_path: string | null;
   feedback: string | null;

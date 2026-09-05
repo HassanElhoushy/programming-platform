@@ -37,7 +37,8 @@ exception when duplicate_object then null; end $$;
 
 do $$ begin
   create type public.question_type as enum
-    ('mcq_single', 'mcq_multi', 'true_false', 'fill_blank', 'essay');
+    ('mcq_single', 'mcq_multi', 'true_false', 'fill_blank', 'essay',
+     'matching', 'ordering', 'classification');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
@@ -166,11 +167,16 @@ create index if not exists questions_exam_id_idx on public.questions (exam_id, p
 -- جدول question_keys المنفصل. هذا يجعل تسريب الإجابة من هذا الجدول مستحيلاً
 -- بنيوياً، وليس معتمداً على تذكّر إخفاء عمود.
 -- ---------------------------------------------------------------------------
+-- role يفصل عناصر السؤال عن اختياراته: في التوصيل الأوصاف عناصر
+-- والمصطلحات اختيارات، وفي الترتيب الخطوات عناصر بلا اختيارات. خيارات
+-- الاختيار من متعدد كلها اختيارات، وهي القيمة الافتراضية.
 create table if not exists public.question_options (
   id          uuid primary key default gen_random_uuid(),
   question_id uuid not null references public.questions (id) on delete cascade,
   position    integer not null,
-  body        text not null
+  body        text not null,
+  role        text not null default 'choice'
+              constraint question_options_role_check check (role in ('item', 'choice'))
 );
 
 create index if not exists question_options_question_id_idx

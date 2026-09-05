@@ -174,6 +174,9 @@ export const QUESTION_TYPE_LABELS: Record<string, string> = {
   true_false: "صح أو خطأ",
   fill_blank: "إكمال فراغات",
   essay: "سؤال مقالي",
+  matching: "توصيل",
+  ordering: "ترتيب",
+  classification: "تصنيف",
 };
 
 export const EXAM_KIND_LABELS: Record<string, string> = {

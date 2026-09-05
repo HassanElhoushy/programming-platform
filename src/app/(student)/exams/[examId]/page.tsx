@@ -124,7 +124,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
     questionIds.length > 0
       ? supabase
           .from("question_options")
-          .select("id, question_id, position, body")
+          .select("id, question_id, position, body, role")
           .in("question_id", questionIds)
           .order("position")
       : Promise.resolve({ data: [] }),
@@ -134,10 +134,17 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
       .eq("attempt_id", attempt.id),
   ]);
 
-  const optionsByQuestion = new Map<string, { id: string; body: string }[]>();
+  const optionsByQuestion = new Map<
+    string,
+    { id: string; body: string; role: "item" | "choice" }[]
+  >();
   for (const option of optionsRes.data ?? []) {
     const list = optionsByQuestion.get(option.question_id) ?? [];
-    list.push({ id: option.id, body: option.body });
+    list.push({
+      id: option.id,
+      body: option.body,
+      role: option.role === "item" ? "item" : "choice",
+    });
     optionsByQuestion.set(option.question_id, list);
   }
 

@@ -5,11 +5,11 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { planQuestion } from "@/lib/question-plan";
 import {
   countBlankMarkers,
   importFileSchema,
   validateImport,
-  type ImportQuestion,
 } from "@/lib/validation";
 import type { ActionResult } from "@/app/actions/admin-content";
 
@@ -224,6 +224,12 @@ export async function importQuestionsAction(
 
   if (clearError) return { error: GENERIC };
 
+  /*
+   * خطة لكل سؤال تحدّد صفوف خياراته وكيف يُبنى مفتاحه. هنا تحدث بعثرة ما
+   * يجب بعثرته، فيُخزَّن السؤال بترتيب لا يدل على إجابته.
+   */
+  const plans = questions.map((q) => planQuestion(q));
+
   const { data: insertedQuestions, error: qError } = await supabase
     .from("questions")
     .insert(
@@ -233,7 +239,7 @@ export async function importQuestionsAction(
         type: q.type,
         body: q.body.trim(),
         points: q.points,
-        blank_count: q.type === "fill_blank" ? q.blanks.length : 0,
+        blank_count: plans[i].blankCount,
       })),
     )
     .select("id, position");
@@ -245,12 +251,16 @@ export async function importQuestionsAction(
   );
 
   /* الخيارات: دفعة واحدة، ثم نستعيد معرّفاتها لبناء المفاتيح */
-  const optionRows: { question_id: string; position: number; body: string }[] = [];
-  questions.forEach((q, i) => {
-    if (q.type !== "mcq_single" && q.type !== "mcq_multi") return;
+  const optionRows: {
+    question_id: string;
+    position: number;
+    body: string;
+    role: string;
+  }[] = [];
+  plans.forEach((plan, i) => {
     const questionId = idByPosition.get(i + 1)!;
-    q.options.forEach((body, oi) => {
-      optionRows.push({ question_id: questionId, position: oi + 1, body: body.trim() });
+    plan.options.forEach((o) => {
+      optionRows.push({ question_id: questionId, ...o });
     });
   });
 
@@ -277,7 +287,7 @@ export async function importQuestionsAction(
 
   questions.forEach((q, i) => {
     const questionId = idByPosition.get(i + 1)!;
-    const key = buildKey(q, questionId, optionIdMap);
+    const key = plans[i].buildKey((pos) => optionIdMap.get(`${questionId}:${pos}`));
     const modelAnswer =
       q.type === "essay" ? (q.model_answer?.trim() || null) : null;
 
@@ -295,26 +305,6 @@ export async function importQuestionsAction(
   return { ok: true, count: questions.length };
 }
 
-function buildKey(
-  question: ImportQuestion,
-  questionId: string,
-  optionIds: Map<string, string>,
-): unknown {
-  switch (question.type) {
-    case "mcq_single":
-      return { option_ids: [optionIds.get(`${questionId}:${question.correct}`)] };
-    case "mcq_multi":
-      return {
-        option_ids: question.correct.map((c) => optionIds.get(`${questionId}:${c}`)),
-      };
-    case "true_false":
-      return { value: question.correct };
-    case "fill_blank":
-      return { blanks: question.blanks };
-    default:
-      return null;
-  }
-}
 
 /* ==========================================================================
    تعديل سؤال مفرد يدوياً
@@ -385,6 +375,7 @@ export async function addQuestionAction(
     .maybeSingle();
 
   const position = (last?.position ?? 0) + 1;
+  const plan = planQuestion(question);
 
   const { data: inserted, error: qError } = await supabase
     .from("questions")
@@ -394,7 +385,7 @@ export async function addQuestionAction(
       type: question.type,
       body: question.body.trim(),
       points: question.points,
-      blank_count: question.type === "fill_blank" ? question.blanks.length : 0,
+      blank_count: plan.blankCount,
     })
     .select("id")
     .single();
@@ -404,16 +395,10 @@ export async function addQuestionAction(
   const questionId = inserted.id as string;
   const optionIdMap = new Map<string, string>();
 
-  if (question.type === "mcq_single" || question.type === "mcq_multi") {
+  if (plan.options.length > 0) {
     const { data: options, error: oError } = await supabase
       .from("question_options")
-      .insert(
-        question.options.map((body, i) => ({
-          question_id: questionId,
-          position: i + 1,
-          body: body.trim(),
-        })),
-      )
+      .insert(plan.options.map((o) => ({ question_id: questionId, ...o })))
       .select("id, position");
 
     if (oError || !options) return { error: GENERIC };
@@ -423,7 +408,7 @@ export async function addQuestionAction(
     }
   }
 
-  const key = buildKey(question, questionId, optionIdMap);
+  const key = plan.buildKey((pos) => optionIdMap.get(`${questionId}:${pos}`));
   const modelAnswer =
     question.type === "essay" ? (question.model_answer?.trim() || null) : null;
 
