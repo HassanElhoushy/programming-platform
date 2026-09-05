@@ -203,7 +203,11 @@ create table if not exists public.question_keys (
   -- ضمناً في الغالب، فيَرِث سياسة المفاتيح بلا أن يتذكّرها أحد.
   explanation  text,
   constraint question_keys_has_content
-    check (key is not null or nullif(trim(model_answer), '') is not null)
+    check (
+      key is not null
+      or nullif(trim(model_answer), '') is not null
+      or nullif(trim(explanation), '')  is not null
+    )
 );
 
 

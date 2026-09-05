@@ -387,3 +387,21 @@ select
                                                                         as "الطالب ينادي grade_one",
   has_function_privilege('authenticated', 'public.check_bank_answer(uuid, jsonb)', 'execute')
                                                                         as "الطالب ينادي البنك";
+
+
+-- ---------------------------------------------------------------------------
+-- 7) الشرح وحده يكفي لوجود الصف
+--
+--    القيد الأصلي كان يشترط مفتاحاً أو إجابة نموذجية. وسؤال مقالي بشرح بلا
+--    إجابة نموذجية صفٌّ مشروع، فكان يُرفض. الشرح ثالثُهما.
+-- ---------------------------------------------------------------------------
+alter table public.question_keys
+  drop constraint if exists question_keys_has_content;
+
+alter table public.question_keys
+  add constraint question_keys_has_content
+  check (
+    key is not null
+    or nullif(trim(model_answer), '') is not null
+    or nullif(trim(explanation), '')  is not null
+  );

@@ -10,6 +10,8 @@ export const SAMPLE_QUESTIONS = {
       points: 2,
       options: ["لغة الآلة", "لغة التجميع Assembly", "بايثون Python", "الشفرة الثنائية"],
       correct: 3,
+      explanation:
+        "بايثون لغة عالية المستوى: أوامرها قريبة من لغة البشر وبعيدة عن تفاصيل العتاد. أما لغة الآلة والشفرة الثنائية فهما أدنى المستويات، والتجميع بينهما.",
     },
     {
       type: "mcq_multi",
@@ -51,6 +53,8 @@ export const SAMPLE_QUESTIONS = {
       ],
       right: ["GET", "POST", "HTTPS", "FTP"],
       correct: [3, 1, 2],
+      explanation:
+        "GET يطلب ولا يعدّل، وPOST يرسل بيانات جديدة، وHTTPS ليس طريقة طلب بل بروتوكول النقل المشفّر نفسه.",
     },
     {
       type: "ordering",

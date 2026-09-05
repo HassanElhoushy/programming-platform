@@ -192,5 +192,35 @@ const dupClassification = importFileSchema.safeParse({
 check("مقبول: تصنيف بسلّة واحدة لعدة عناصر",
   dupClassification.success && validateImport(dupClassification.data).length === 0);
 
+/* ---------------------------------------------------------------- 5 */
+/*
+ * الشرح حقل مشترك: يقبله كل نوع. لو قُصر على بعضها لاكتشف كاتب الملف ذلك
+ * بعد أن يكتب مئة سؤال، لا قبلها.
+ */
+const withExplanation = [
+  { type: "mcq_single", body: "س", points: 1, options: ["أ", "ب"], correct: 1 },
+  { type: "mcq_multi", body: "س", points: 1, options: ["أ", "ب"], correct: [1] },
+  { type: "true_false", body: "س", points: 1, correct: true },
+  { type: "fill_blank", body: "نص فيه [1]", points: 1, blanks: [["إجابة"]] },
+  { type: "essay", body: "س", points: 1 },
+  { type: "matching", body: "س", points: 1, left: ["أ", "ب"], right: ["س", "ص"], correct: [1, 2] },
+  { type: "ordering", body: "س", points: 1, steps: ["أ", "ب"], correct: [1, 2] },
+  { type: "classification", body: "س", points: 1, buckets: ["س", "ص"], items: ["أ", "ب"], correct: [1, 2] },
+].map((q) => ({ ...q, explanation: "لأن كذا وكذا." }));
+
+const explained = importFileSchema.safeParse({ questions: withExplanation });
+check(
+  "explanation مقبول على الأنواع الثمانية كلها",
+  explained.success && validateImport(explained.data).length === 0,
+  explained.success ? "" : JSON.stringify(explained.error.issues[0]),
+);
+
+if (explained.success) {
+  check(
+    "explanation محفوظ بعد التحليل لا مُسقَط",
+    explained.data.questions.every((q) => q.explanation === "لأن كذا وكذا."),
+  );
+}
+
 console.log(`\n${pass}/${pass + fail}`);
 process.exit(fail === 0 ? 0 : 1);

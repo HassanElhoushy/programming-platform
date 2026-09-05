@@ -34,6 +34,12 @@ const pointsSchema = z
 const baseQuestion = {
   body: z.string().trim().min(1, "نص السؤال مطلوب"),
   points: pointsSchema.default(1),
+  /*
+   * لماذا الإجابة هي هذه. يظهر في بنك الأسئلة بعد أن يجيب الطالب — صحّ أم
+   * أخطأ. ويُخزَّن في جدول المفاتيح المحمي لا مع نص السؤال، لأنه يقول
+   * الإجابة ضمناً في الغالب.
+   */
+  explanation: z.string().trim().min(1).optional(),
 };
 
 const mcqSingle = z.object({

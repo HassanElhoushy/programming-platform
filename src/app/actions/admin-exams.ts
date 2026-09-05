@@ -290,6 +290,7 @@ export async function importQuestionsAction(
     question_id: string;
     key: unknown;
     model_answer: string | null;
+    explanation: string | null;
   }[] = [];
 
   questions.forEach((q, i) => {
@@ -297,9 +298,15 @@ export async function importQuestionsAction(
     const key = plans[i].buildKey((pos) => optionIdMap.get(`${questionId}:${pos}`));
     const modelAnswer =
       q.type === "essay" ? (q.model_answer?.trim() || null) : null;
+    const explanation = q.explanation?.trim() || null;
 
-    if (key !== null || modelAnswer !== null) {
-      keyRows.push({ question_id: questionId, key, model_answer: modelAnswer });
+    if (key !== null || modelAnswer !== null || explanation !== null) {
+      keyRows.push({
+        question_id: questionId,
+        key,
+        model_answer: modelAnswer,
+        explanation,
+      });
     }
   });
 
@@ -418,11 +425,17 @@ export async function addQuestionAction(
   const key = plan.buildKey((pos) => optionIdMap.get(`${questionId}:${pos}`));
   const modelAnswer =
     question.type === "essay" ? (question.model_answer?.trim() || null) : null;
+  const explanation = question.explanation?.trim() || null;
 
-  if (key !== null || modelAnswer !== null) {
+  if (key !== null || modelAnswer !== null || explanation !== null) {
     const { error: kError } = await supabase
       .from("question_keys")
-      .insert({ question_id: questionId, key, model_answer: modelAnswer });
+      .insert({
+        question_id: questionId,
+        key,
+        model_answer: modelAnswer,
+        explanation,
+      });
     if (kError) return { error: GENERIC };
   }
 
