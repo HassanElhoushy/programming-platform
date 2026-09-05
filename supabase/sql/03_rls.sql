@@ -297,3 +297,17 @@ create policy heartbeat_read on public.heartbeat
 -- من الصلاحية، ثم يُصدر رابطاً موقّعاً قصير العمر. المتصفح لا يملك أي
 -- طريق مباشر إلى التخزين.
 -- =============================================================================
+
+
+-- ---------------------------------------------------------------------------
+-- تقدّم البنك: قراءة فقط، ولا سياسة كتابة إطلاقاً.
+--
+-- الكتابة تمر حصراً عبر public.check_bank_answer وهي security definer، فلا
+-- يستطيع طالب أن يعلّم سؤالاً "صح" بطلب مباشر على الجدول.
+-- ---------------------------------------------------------------------------
+alter table public.bank_progress enable row level security;
+
+drop policy if exists bank_progress_select on public.bank_progress;
+create policy bank_progress_select on public.bank_progress
+  for select to authenticated
+  using ( public.is_admin() or student_id = (select auth.uid()) );

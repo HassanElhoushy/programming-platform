@@ -182,6 +182,7 @@ export const QUESTION_TYPE_LABELS: Record<string, string> = {
 export const EXAM_KIND_LABELS: Record<string, string> = {
   practice: "تدريب",
   exam: "امتحان",
+  bank: "بنك أسئلة",
 };
 
 /** نكرة: "تدريب" أو "امتحان" */

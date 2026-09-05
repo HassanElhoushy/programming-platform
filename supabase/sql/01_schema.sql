@@ -24,7 +24,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type public.exam_kind as enum ('practice', 'exam');
+  create type public.exam_kind as enum ('practice', 'exam', 'bank');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
@@ -199,9 +199,38 @@ create table if not exists public.question_keys (
   -- RLS الوحيدة لهذا الجدول: المدرّس فقط. وهي أخطر من مفتاح الاختياري لأنها
   -- نص جاهز للنسخ حرفياً.
   model_answer text,
+  -- لماذا الإجابة هي هذه. هنا أيضاً لا في جدول الأسئلة: الشرح يقول الإجابة
+  -- ضمناً في الغالب، فيَرِث سياسة المفاتيح بلا أن يتذكّرها أحد.
+  explanation  text,
   constraint question_keys_has_content
     check (key is not null or nullif(trim(model_answer), '') is not null)
 );
+
+
+-- ---------------------------------------------------------------------------
+-- تقدّم الطالب في بنك الأسئلة. صف لكل (طالب، سؤال)، وغياب الصف يعني أنه لم
+-- يره بعد. نحفظ آخر إجابة خاطئة لا مجرد أنها خطأ: أن يختار نصف الفصل نفس
+-- البديل الخاطئ يقول شيئاً عن الشرح، وأن يتفرّقوا يقول شيئاً عن الانتباه.
+--
+-- الكتابة تمر حصراً عبر public.check_bank_answer، فلا سياسة كتابة لهذا
+-- الجدول إطلاقاً (السياسات في 03_rls.sql).
+-- ---------------------------------------------------------------------------
+create table if not exists public.bank_progress (
+  student_id    uuid not null references public.profiles (id)  on delete cascade,
+  question_id   uuid not null references public.questions (id) on delete cascade,
+  state         text not null check (state in ('correct', 'wrong')),
+  last_response jsonb,
+  tries         integer not null default 1,
+  first_seen_at timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  primary key (student_id, question_id)
+);
+
+create index if not exists bank_progress_question_idx
+  on public.bank_progress (question_id);
+
+create index if not exists bank_progress_student_state_idx
+  on public.bank_progress (student_id, state);
 
 
 -- ---------------------------------------------------------------------------

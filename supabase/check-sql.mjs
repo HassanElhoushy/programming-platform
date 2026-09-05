@@ -109,7 +109,18 @@ const enums = new Map();
   let m;
   while ((m = re.exec(allSql))) {
     const values = [...m[2].matchAll(/'([^']+)'/g)].map((x) => x[1]);
-    enums.set(m[1], new Set(values));
+    // ملف الهجرة قد يعيد إعلان النوع بقيمه القديمة، فنجمع لا نستبدل
+    const set = enums.get(m[1]) ?? new Set();
+    for (const v of values) set.add(v);
+    enums.set(m[1], set);
+  }
+
+  // القيم المضافة لاحقاً بالهجرة قيمٌ صحيحة مثل المعلنة في الإنشاء
+  const alterRe = /alter type public\.(\w+) add value (?:if not exists )?'([^']+)'/gi;
+  while ((m = alterRe.exec(allSql))) {
+    const set = enums.get(m[1]) ?? new Set();
+    set.add(m[2]);
+    enums.set(m[1], set);
   }
 }
 

@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { planQuestion } from "@/lib/question-plan";
+import type { ExamKind } from "@/lib/types";
 import {
   countBlankMarkers,
   importFileSchema,
@@ -61,7 +62,7 @@ export async function updateExamAction(input: {
   examId: string;
   title: string;
   level: "basic" | "advanced";
-  kind: "practice" | "exam";
+  kind: ExamKind;
   durationMinutes: number | null;
 }): Promise<ActionResult> {
   await requireAdmin();
