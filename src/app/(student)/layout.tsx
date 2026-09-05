@@ -4,7 +4,7 @@ import { requireStudent } from "@/lib/auth";
 const NAV = [
   { href: "/dashboard", label: "الرئيسية" },
   { href: "/content", label: "المحتوى" },
-  { href: "/exams", label: "الأسئلة" },
+  { href: "/bank", label: "بنك الأسئلة" },
   { href: "/results", label: "النتائج" },
 ];
 

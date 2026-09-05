@@ -5,6 +5,7 @@ const NAV = [
   { href: "/admin", label: "نظرة عامة" },
   // صفحة الامتحان تُفتح من داخل الدرس، فتبقى "المحتوى" هي التبويب النشط فيها
   { href: "/admin/content", label: "المحتوى", alsoUnder: ["/admin/exams"] },
+  { href: "/admin/bank", label: "بنك الأسئلة" },
   { href: "/admin/grading", label: "التصحيح" },
   { href: "/admin/students", label: "الطلاب" },
 ];

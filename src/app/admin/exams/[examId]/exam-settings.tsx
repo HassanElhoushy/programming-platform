@@ -92,6 +92,7 @@ export function ExamSettingsForm({
           >
             <option value="practice">تدريب</option>
             <option value="exam">امتحان</option>
+            <option value="bank">بنك أسئلة</option>
           </select>
         </div>
 

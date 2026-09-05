@@ -36,7 +36,9 @@ export async function createExamAction(
   if (!lessonId) return { error: "اختر الدرس." };
   if (title.length < 2) return { error: "اكتب عنوان الامتحان." };
   if (level !== "basic" && level !== "advanced") return { error: "اختر المستوى." };
-  if (kind !== "practice" && kind !== "exam") return { error: "اختر النوع: تدريب أو امتحان." };
+  if (kind !== "practice" && kind !== "exam" && kind !== "bank") {
+    return { error: "اختر النوع: تدريب أو امتحان أو بنك أسئلة." };
+  }
 
   let duration: number | null = null;
   if (rawDuration !== "") {
@@ -70,6 +72,10 @@ export async function updateExamAction(input: {
 
   const title = input.title.trim();
   if (title.length < 2) return { error: "اكتب عنوان الامتحان." };
+
+  if (!["practice", "exam", "bank"].includes(input.kind)) {
+    return { error: "النوع غير معروف." };
+  }
 
   const { error } = await supabase
     .from("exams")
