@@ -230,6 +230,30 @@ create table if not exists public.bank_progress (
   primary key (student_id, question_id)
 );
 
+-- ---------------------------------------------------------------------------
+-- وقت آخر تعديل من الخادم دائماً.
+--
+-- المتصفح لا يُؤتمن على الوقت: ساعة جهاز الطالب قد تكون متأخرة ساعات،
+-- فتقول البيانات إن إجابته حُفظت قبل أن يبدأ الامتحان.
+-- ---------------------------------------------------------------------------
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $fn$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$fn$;
+
+drop trigger if exists answers_touch_updated_at on public.answers;
+create trigger answers_touch_updated_at
+  before update on public.answers
+  for each row
+  execute function public.touch_updated_at();
+
+
 create index if not exists bank_progress_question_idx
   on public.bank_progress (question_id);
 
