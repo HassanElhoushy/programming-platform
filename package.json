@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "check:sql": "node supabase/check-sql.mjs",
     "check": "npm run typecheck && npm run lint && npm run check:sql",
-    "check:queries": "node scripts/check-queries.mjs"
+    "check:queries": "node scripts/check-queries.mjs",
+    "check:types": "tsx scripts/check-question-types.ts",
+    "check:save": "node scripts/check-answer-save.mjs",
+    "check:all": "npm run check && npm run check:queries && npm run check:types && npm run check:save"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",
@@ -33,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

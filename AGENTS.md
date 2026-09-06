@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# منصة البرمجة
+
+اقرأ **[HANDOFF.md](HANDOFF.md)** كاملاً قبل أن تكتب سطراً في هذا المشروع.
+فيه نموذج الأمان والقرارات المحسومة والأخطاء التي وقعت فعلاً — وهي أشياء
+لا يقولها الكود عن نفسه.
