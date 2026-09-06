@@ -129,7 +129,18 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
                   right={
                     status ? <Badge tone={status.tone}>{status.label}</Badge> : null
                   }
-                  cta={!attempt && exam.is_open ? "ابدأ" : undefined}
+                  /*
+                    "أكمل" للمحاولة الجارية كما في الصفحة الرئيسية. الشارة
+                    وحدها كانت تقول "لسه ما اتسلّمش" ولا تقول إن بالإمكان
+                    الرجوع، فيظن الطالب أن بابه أُغلق.
+                  */
+                  cta={
+                    attempt?.status === "in_progress"
+                      ? "أكمل"
+                      : !attempt && exam.is_open
+                        ? "ابدأ"
+                        : undefined
+                  }
                 />
               );
             })}

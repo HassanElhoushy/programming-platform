@@ -23,6 +23,8 @@ interface Props {
   initialAnswers: Record<string, { response: AnswerResponse; image_path: string | null }>;
   durationMinutes: number | null;
   initialElapsedSeconds: number;
+  /** الطالب عاد إلى محاولة بدأها، لا يبدأ الآن */
+  resuming?: boolean;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -35,6 +37,7 @@ export function ExamRunner({
   initialAnswers,
   durationMinutes,
   initialElapsedSeconds,
+  resuming = false,
 }: Props) {
   const [answers, setAnswers] = useState<Record<string, AnswerResponse>>(() =>
     Object.fromEntries(
@@ -284,6 +287,20 @@ export function ExamRunner({
         نصٌّ على الجهاز لم يبلغ الخادم. يظهر قبل الأسئلة لا بعدها: من فتح
         الصفحة بعد انقطاع يجب أن يرى هذا قبل أن يبدأ الكتابة من جديد.
       */}
+      {/*
+        من رجع بعد انقطاع يجب أن يعرف شيئين قبل أن يكتب حرفاً: أن ما حلّه
+        باقٍ، وأن الوقت لم يقف في غيابه. الثاني أهم — من ظنّ أن المؤقّت
+        توقّف حين خرج يوزّع وقته على غير الحقيقة.
+      */}
+      {resuming && restorable.length === 0 ? (
+        <p className="card mb-5 px-4 py-3 text-sm leading-relaxed text-ink-2">
+          إنت بتكمّل محاولة بدأتها قبل كده — <strong>إجاباتك محفوظة زي ما
+          سبتها</strong>
+          {durationMinutes ? "، والوقت كان ماشي وإنت بره" : ""}. كمّل عادي
+          ولما تخلص اضغط إرسال.
+        </p>
+      ) : null}
+
       {restorable.length > 0 ? (
         <div className="card mb-5 px-4 py-4">
           <p className="text-sm font-medium text-ink">

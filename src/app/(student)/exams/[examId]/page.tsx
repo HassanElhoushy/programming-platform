@@ -193,6 +193,12 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
         initialAnswers={initialAnswers}
         durationMinutes={exam.duration_minutes}
         initialElapsedSeconds={elapsed}
+        /*
+          دقيقة كاملة مضت منذ البدء تعني أن هذه ليست اللحظة التي ضغط فيها
+          "ابدأ"، فهو راجع أو محدِّث للصفحة. وفي الحالتين يطمئنه أن يقرأ أن
+          إجاباته مكانها.
+        */
+        resuming={elapsed > 60}
       />
     </>
   );
