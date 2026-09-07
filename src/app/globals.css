@@ -19,6 +19,13 @@
   --color-accent: #2b4257;
   --color-accent-line: #c9d2db;
   --color-accent-bg: #edf1f4;
+  /*
+     لون التحديد. لا يجوز أن يكون accent-bg: صندوق الإجابة النموذجية
+     خلفيته accent-bg نفسه، فكان المدرّس يحدّد النص فلا يرى شيئاً ويظن
+     أن التحديد ممنوع. هذا اللون أغمق منهما معاً فيبين على الأبيض وعلى
+     الأزرق الفاتح.
+  */
+  --color-select: #c3d7e7;
 
   --color-ok: #3b6d11;
   --color-ok-bg: #eff4e7;
@@ -54,7 +61,8 @@
   }
 
   ::selection {
-    background-color: var(--color-accent-bg);
+    background-color: var(--color-select);
+    color: var(--color-ink);
   }
 
   /* الأرقام في الجداول والدرجات تبقى مصطفّة */
