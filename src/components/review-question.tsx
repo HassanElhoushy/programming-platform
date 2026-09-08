@@ -47,7 +47,7 @@ export function ReviewQuestionCard({
     question.response,
     question.image_path,
   );
-  const pickLabel = viewer === "teacher" ? "اختيارها" : "إجابتك";
+  const pickLabel = viewer === "teacher" ? "اختيار الطالب" : "إجابتك";
 
   return (
     <li className="card px-4 py-4 sm:px-5">

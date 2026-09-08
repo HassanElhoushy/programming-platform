@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 
 import { overrideAutoGradeAction } from "@/app/actions/admin-students";
 import { formatPoints } from "@/lib/format";
@@ -48,48 +48,56 @@ export function OverrideScore({
   }
 
   return (
-    <div className="divider mt-4 pt-3">
-      <p className="mb-2 text-xs font-medium text-ink-2">تعديل درجة السؤال</p>
-      <div className="flex flex-wrap items-end gap-2">
-        <div>
-          <label className="label" htmlFor={`override-${questionId}`}>
-            الدرجة
-          </label>
-          <input
-            id={`override-${questionId}`}
-            type="number"
-            step="0.5"
-            min={0}
-            max={points}
-            value={value}
-            onChange={(e) => {
-              setSaved(false);
-              setValue(e.target.value);
-            }}
-            className="input tnum w-28"
-          />
+    <details className="group divider mt-4 pt-3">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-accent [&::-webkit-details-marker]:hidden">
+        <ChevronLeft
+          className="size-3.5 transition-transform group-open:-rotate-90"
+          strokeWidth={2}
+        />
+        تعديل درجة السؤال
+      </summary>
+      <div className="mt-3">
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <label className="label" htmlFor={`override-${questionId}`}>
+              الدرجة
+            </label>
+            <input
+              id={`override-${questionId}`}
+              type="number"
+              step="0.5"
+              min={0}
+              max={points}
+              value={value}
+              onChange={(e) => {
+                setSaved(false);
+                setValue(e.target.value);
+              }}
+              className="input tnum w-28"
+            />
+          </div>
+          <span className="mb-2 text-xs text-ink-3">من {formatPoints(points)}</span>
+          <button
+            type="button"
+            className="btn btn-secondary mb-0.5"
+            onClick={save}
+            disabled={pending}
+          >
+            {pending ? (
+              <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />
+            ) : null}
+            {pending ? "جارٍ الحفظ…" : "حفظ الدرجة"}
+          </button>
         </div>
-        <span className="mb-2 text-xs text-ink-3">من {formatPoints(points)}</span>
-        <button
-          type="button"
-          className="btn btn-secondary mb-0.5"
-          onClick={save}
-          disabled={pending}
-        >
-          {pending ? (
-            <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />
-          ) : null}
-          {pending ? "جارٍ الحفظ…" : "حفظ الدرجة"}
-        </button>
+        {error ? (
+          <p className="badge badge-bad mt-2 w-full justify-start px-3 py-2">{error}</p>
+        ) : null}
+        {saved ? (
+          <p className="badge badge-ok mt-2 w-full justify-start px-3 py-2">
+            اتحفظت الدرجة واتحدّث مجموع الامتحان.
+          </p>
+        ) : null}
       </div>
-      {error ? (
-        <p className="badge badge-bad mt-2 w-full justify-start px-3 py-2">{error}</p>
-      ) : null}
-      {saved ? (
-        <p className="badge badge-ok mt-2 w-full justify-start px-3 py-2">
-          اتحفظت الدرجة واتحدّث مجموع الامتحان.
-        </p>
-      ) : null}
-    </div>
+    </details>
   );
 }
