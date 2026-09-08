@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { GradingForm } from "./grading-form";
+import { OverrideScore } from "./override-score";
 import { ReviewQuestionCard } from "@/components/review-question";
 import { Badge, DataRow, SectionTitle } from "@/components/ui/primitives";
 import {
@@ -120,7 +121,11 @@ export default async function GradeAttemptPage({
 
       {objective.length > 0 ? (
         <section>
-          <SectionTitle>الأسئلة الموضوعية (اتصححت آلياً)</SectionTitle>
+          <SectionTitle>الأسئلة الموضوعية</SectionTitle>
+          <p className="mb-3 text-xs leading-relaxed text-ink-3">
+            اتصححت آلياً. اختيار الطالبة ظاهر جنب الصحيح، وتقدر تعدّل درجة أي
+            سؤال من تحت — مثلاً لو اعتبرت إكمال الفراغات صح.
+          </p>
           <ol className="flex flex-col gap-4">
             {objective.map((question, index) => (
               <ReviewQuestionCard
@@ -128,7 +133,19 @@ export default async function GradeAttemptPage({
                 question={question}
                 index={index}
                 attemptId={attemptId}
-              />
+                viewer="teacher"
+              >
+                <OverrideScore
+                  attemptId={attemptId}
+                  questionId={question.id}
+                  points={Number(question.points)}
+                  awarded={
+                    question.awarded_points === null
+                      ? null
+                      : Number(question.awarded_points)
+                  }
+                />
+              </ReviewQuestionCard>
             ))}
           </ol>
         </section>

@@ -212,3 +212,29 @@ export async function gradeAttemptAction(
   revalidatePath(`/admin/grading/${attemptId}`);
   return { ok: true };
 }
+
+/**
+ * رفع أو خفض درجة سؤال موضوعي بعد التسليم. التصحيح الآلي يبقى كما هو
+ * إلى أن يغيّره المدرّس من هنا — مثلاً فراغ ناقص كلمة وهو يعتبره صحيحاً.
+ */
+export async function overrideAutoGradeAction(
+  attemptId: string,
+  questionId: string,
+  awardedPoints: number,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("override_auto_grade", {
+    p_attempt_id: attemptId,
+    p_question_id: questionId,
+    p_awarded_points: awardedPoints,
+  });
+
+  if (error) return { error: "تعذّر حفظ الدرجة. حاول تاني." };
+
+  revalidatePath("/admin/grading");
+  revalidatePath(`/admin/grading/${attemptId}`);
+  revalidatePath(`/results/${attemptId}`);
+  return { ok: true };
+}

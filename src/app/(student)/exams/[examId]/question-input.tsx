@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
+import { choiceShortLabel } from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
 export interface RunnerQuestion {
@@ -224,13 +225,13 @@ function Assign({
             aria-label={`الاختيار للعنصر رقم ${i + 1}`}
             value={typeof assign[i] === "string" ? (assign[i] as string) : ""}
             onChange={(e) => setAt(i, e.target.value)}
-            className="input w-36 shrink-0 px-2 py-1.5 text-sm sm:w-44"
+            className="input w-40 shrink-0 px-2 py-1.5 text-sm sm:w-52"
           >
             <option value="">— اختر —</option>
             {picks.map((choice, ci) => (
               <option key={choice.id} value={choice.id}>
                 {OPTION_LETTERS[ci] ? `${OPTION_LETTERS[ci]}. ` : ""}
-                {choice.body}
+                {choiceShortLabel(choice.body)}
               </option>
             ))}
           </select>

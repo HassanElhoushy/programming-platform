@@ -1,9 +1,16 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import Image from "next/image";
-import { Check, ChevronLeft, X } from "lucide-react";
+import { Check, ChevronLeft, Minus, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
-import { formatPoints, QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
+import { isQuestionAnswered } from "@/lib/answered";
+import {
+  choiceShortLabel,
+  formatPoints,
+  normalizeAr,
+  QUESTION_TYPE_LABELS,
+  withChoiceList,
+} from "@/lib/format";
 import type { ReviewQuestion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -14,19 +21,33 @@ import { cn } from "@/lib/utils";
  * عندما يكون إظهار الإجابات مقفولاً. لا نخفيها هنا — هي غير موجودة أصلاً في
  * البيانات التي وصلت للصفحة، فلا شيء يمكن استخراجه من مصدر الصفحة أو من
  * تبويب الشبكة.
+ *
+ * اختيار الطالب يظهر دائماً إن وُجد في الإجابة المحفوظة. إن لم توجد إجابة
+ * محفوظة نكتب ذلك صراحةً — «إجابة خاطئة» وحدها مع تظليل الصحيح كانت تخفي
+ * أن الطالبة ما جاوبتش أو أن الاختيار ما وصلش المنصة.
  */
 export function ReviewQuestionCard({
   question,
   index,
   attemptId,
   showEssayImage = true,
+  viewer = "student",
+  children,
 }: {
   question: ReviewQuestion;
   index: number;
   attemptId: string;
   showEssayImage?: boolean;
+  viewer?: "student" | "teacher";
+  children?: ReactNode;
 }) {
   const revealed = question.correct !== null;
+  const answered = isQuestionAnswered(
+    question.type,
+    question.response,
+    question.image_path,
+  );
+  const pickLabel = viewer === "teacher" ? "اختيارها" : "إجابتك";
 
   return (
     <li className="card px-4 py-4 sm:px-5">
@@ -40,6 +61,11 @@ export function ReviewQuestionCard({
             <Badge tone="ok">
               <Check className="size-3" strokeWidth={2} />
               إجابة صحيحة
+            </Badge>
+          ) : question.is_correct === false && !answered ? (
+            <Badge tone="wait">
+              <Minus className="size-3" strokeWidth={2} />
+              بدون إجابة
             </Badge>
           ) : question.is_correct === false ? (
             <Badge tone="bad">
@@ -62,18 +88,28 @@ export function ReviewQuestionCard({
         </p>
       ) : null}
 
-      {question.type === "mcq_single" || question.type === "mcq_multi" ? (
-        <ChoiceReview question={question} />
+      {!answered && question.type !== "essay" ? (
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">
+          {viewer === "teacher"
+            ? "مافيش اختيار محفوظ للسؤال ده. يا إما ما جاوبتش، يا إما الإجابة ما وصلتش المنصة وقت التسليم."
+            : "ما جاوبتش على السؤال ده."}
+        </p>
       ) : null}
 
-      {question.type === "true_false" ? <TrueFalseReview question={question} /> : null}
+      {question.type === "mcq_single" || question.type === "mcq_multi" ? (
+        <ChoiceReview question={question} pickLabel={pickLabel} />
+      ) : null}
+
+      {question.type === "true_false" ? (
+        <TrueFalseReview question={question} pickLabel={pickLabel} />
+      ) : null}
 
       {question.type === "fill_blank" ? <FillBlankReview question={question} /> : null}
 
       {question.type === "matching" ||
       question.type === "ordering" ||
       question.type === "classification" ? (
-        <AssignReview question={question} />
+        <AssignReview question={question} pickLabel={pickLabel} />
       ) : null}
 
       {question.type === "essay" ? (
@@ -81,6 +117,7 @@ export function ReviewQuestionCard({
           question={question}
           attemptId={attemptId}
           showImage={showEssayImage}
+          viewer={viewer}
         />
       ) : null}
 
@@ -104,6 +141,8 @@ export function ReviewQuestionCard({
         النموذجية عامة. ولو سبقتها لذهب البصر إليها أولاً.
       */}
       {question.model_answer ? <ModelAnswer text={question.model_answer} /> : null}
+
+      {children}
     </li>
   );
 }
@@ -139,7 +178,13 @@ function ModelAnswer({ text }: { text: string }) {
 
 const OPTION_LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح"];
 
-function ChoiceReview({ question }: { question: ReviewQuestion }) {
+function ChoiceReview({
+  question,
+  pickLabel,
+}: {
+  question: ReviewQuestion;
+  pickLabel: string;
+}) {
   const chosen =
     question.response && "option_ids" in question.response
       ? question.response.option_ids
@@ -154,6 +199,7 @@ function ChoiceReview({ question }: { question: ReviewQuestion }) {
       {question.options.map((option, i) => {
         const picked = chosen.includes(option.id);
         const isRight = correct?.includes(option.id) ?? false;
+        const wrongPick = picked && correct !== null && !isRight;
 
         return (
           <div
@@ -162,9 +208,11 @@ function ChoiceReview({ question }: { question: ReviewQuestion }) {
               "flex items-start gap-3 rounded-[6px] border-[0.5px] px-3 py-2.5",
               correct && isRight
                 ? "border-ok/30 bg-ok-bg"
-                : picked
-                  ? "border-accent-line bg-accent-bg"
-                  : "border-line",
+                : wrongPick
+                  ? "border-bad/30 bg-bad-bg"
+                  : picked
+                    ? "border-accent-line bg-accent-bg"
+                    : "border-line",
             )}
           >
             <span className="mt-px shrink-0 text-sm font-medium text-ink-3">
@@ -173,8 +221,10 @@ function ChoiceReview({ question }: { question: ReviewQuestion }) {
             <span className="flex-1 text-sm leading-relaxed text-ink">
               {option.body}
             </span>
-            <span className="flex shrink-0 items-center gap-1.5">
-              {picked ? <Badge tone="muted">إجابتك</Badge> : null}
+            <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+              {picked ? (
+                <Badge tone={wrongPick ? "bad" : "muted"}>{pickLabel}</Badge>
+              ) : null}
               {correct && isRight ? <Badge tone="ok">الصحيحة</Badge> : null}
             </span>
           </div>
@@ -184,17 +234,26 @@ function ChoiceReview({ question }: { question: ReviewQuestion }) {
   );
 }
 
-function TrueFalseReview({ question }: { question: ReviewQuestion }) {
+function TrueFalseReview({
+  question,
+  pickLabel,
+}: {
+  question: ReviewQuestion;
+  pickLabel: string;
+}) {
   const chosen =
     question.response && "value" in question.response ? question.response.value : null;
   const correct =
     question.correct && "value" in question.correct ? question.correct.value : null;
 
-  const label = (v: boolean | null) => (v === null ? "لم تُجب" : v ? "صح" : "خطأ");
+  const label = (v: boolean | null) => (v === null ? "ما جاوبتش" : v ? "صح" : "خطأ");
+  const wrong = chosen !== null && correct !== null && chosen !== correct;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Badge tone="muted">إجابتك: {label(chosen)}</Badge>
+      <Badge tone={wrong ? "bad" : "muted"}>
+        {pickLabel}: {label(chosen)}
+      </Badge>
       {correct !== null ? <Badge tone="ok">الصحيحة: {label(correct)}</Badge> : null}
     </div>
   );
@@ -216,17 +275,29 @@ function FillBlankReview({ question }: { question: ReviewQuestion }) {
           if (!marker) return <Fragment key={i}>{part}</Fragment>;
 
           const index = Number(marker[1]) - 1;
-          const text = given[index]?.trim();
+          const text = given[index]?.trim() ?? "";
+          const ok =
+            accepted && index < accepted.length
+              ? blankMatches(text, accepted[index])
+              : null;
 
           return (
             <span
               key={i}
               className={cn(
-                "mx-1 inline-block rounded-[6px] border-[0.5px] px-2 py-0.5 align-middle text-sm",
-                text ? "border-accent-line bg-accent-bg" : "border-line text-ink-3",
+                "mx-1 inline-flex items-center gap-1 rounded-[6px] border-[0.5px] px-2 py-0.5 align-middle text-sm",
+                ok === true
+                  ? "border-ok/30 bg-ok-bg"
+                  : ok === false
+                    ? "border-bad/30 bg-bad-bg"
+                    : text
+                      ? "border-accent-line bg-accent-bg"
+                      : "border-line text-ink-3",
               )}
             >
               {text || "فارغ"}
+              {ok === true ? <Badge tone="ok">صح</Badge> : null}
+              {ok === false ? <Badge tone="bad">غلط</Badge> : null}
             </span>
           );
         })}
@@ -249,25 +320,35 @@ function FillBlankReview({ question }: { question: ReviewQuestion }) {
   );
 }
 
+function blankMatches(given: string, accepted: string[]): boolean {
+  const normalized = normalizeAr(given);
+  if (!normalized) return false;
+  return accepted.some((option) => normalizeAr(option) === normalized);
+}
+
 function EssayReview({
   question,
   attemptId,
   showImage,
+  viewer,
 }: {
   question: ReviewQuestion;
   attemptId: string;
   showImage: boolean;
+  viewer: "student" | "teacher";
 }) {
   const text =
     question.response && "text" in question.response
       ? question.response.text.trim()
       : "";
+  const writtenLabel = viewer === "teacher" ? "إجابتها المكتوبة" : "إجابتك المكتوبة";
+  const imageLabel = viewer === "teacher" ? "صورة إجابتها" : "صورة إجابتك";
 
   return (
     <div className="flex flex-col gap-3">
       {text ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-ink-2">إجابتك المكتوبة</p>
+          <p className="mb-1 text-xs font-medium text-ink-2">{writtenLabel}</p>
           <p className="whitespace-pre-wrap rounded-[6px] border-[0.5px] border-line px-3 py-2.5 text-sm leading-relaxed text-ink">
             {text}
           </p>
@@ -276,7 +357,7 @@ function EssayReview({
 
       {showImage && question.image_path ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-ink-2">صورة إجابتك</p>
+          <p className="mb-1 text-xs font-medium text-ink-2">{imageLabel}</p>
           <a
             href={`/answer-image?attempt=${attemptId}&question=${question.id}`}
             target="_blank"
@@ -297,7 +378,9 @@ function EssayReview({
       ) : null}
 
       {!text && !question.image_path ? (
-        <p className="text-sm text-ink-3">ما جاوبتش على السؤال ده.</p>
+        <p className="text-sm text-ink-3">
+          {viewer === "teacher" ? "ما جاوبتش على السؤال ده." : "ما جاوبتش على السؤال ده."}
+        </p>
       ) : null}
     </div>
   );
@@ -312,13 +395,18 @@ function EssayReview({
  *
  * ولأن الدرجة جزئية، يرى الطالب أي بند بالضبط ضيّع فيه، لا مجرد أنه أخطأ.
  */
-function AssignReview({ question }: { question: ReviewQuestion }) {
+function AssignReview({
+  question,
+  pickLabel,
+}: {
+  question: ReviewQuestion;
+  pickLabel: string;
+}) {
   const rows = question.options.filter((o) => o.role === "item");
   const picks = question.options.filter((o) => o.role === "choice");
 
-  const given = question.response && "assign" in question.response
-    ? question.response.assign
-    : [];
+  const given =
+    question.response && "assign" in question.response ? question.response.assign : [];
   const correct =
     question.correct && "assign" in question.correct ? question.correct.assign : null;
 
@@ -328,7 +416,8 @@ function AssignReview({ question }: { question: ReviewQuestion }) {
   function label(v: string | number | null | undefined): string {
     if (v === null || v === undefined || v === "") return "—";
     if (isOrdering) return String(v);
-    return picks.find((p) => p.id === v)?.body ?? "—";
+    const body = picks.find((p) => p.id === v)?.body;
+    return body ? choiceShortLabel(body) : "—";
   }
 
   return (
@@ -346,7 +435,9 @@ function AssignReview({ question }: { question: ReviewQuestion }) {
             <span className="min-w-0 flex-1 text-sm leading-relaxed text-ink">
               {row.body}
             </span>
-            <span className="text-sm text-ink-2">{label(mine)}</span>
+            <span className="text-sm text-ink-2">
+              {pickLabel}: {label(mine)}
+            </span>
             {correct !== null ? (
               matched ? (
                 <Badge tone="ok">صح</Badge>

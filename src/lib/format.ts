@@ -133,6 +133,24 @@ export function formatClock(seconds: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
 }
 
+/**
+ * نفس تطبيع `normalize_ar` في Postgres: تشكيل وتطويل، وأ/إ/آ/ى/ة،
+ * وأرقام عربية. يُستخدم في المراجعة ليظهر أي فراغ اتعدّ صحيح وأيّه غلط
+ * بنفس قاعدة التصحيح، من غير ما نعيد التصحيح في المتصفح.
+ */
+export function normalizeAr(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[ؤئ]/g, "ء")
+    .replace(/[٠١٢٣٤٥٦٧٨٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** يحذف الأصفار العشرية غير المفيدة: 7.50 -> "7.5" و 7.00 -> "7" */
 export function formatPoints(value: number | string | null | undefined): string {
   if (value == null) return "—";
@@ -208,6 +226,19 @@ export const FILE_KIND_LABELS: Record<string, string> = {
   explanation: "شرح",
   slides: "سلايدز",
 };
+
+/**
+ * القائمة المنسدلة في التوصيل والتصنيف ضيقة. الإنجليزي يتكتب مرة في رأس
+ * السؤال، والاختيار نفسه يفضل عربي (أو الرمز الإنجليزي لو مفيش عربي، زي GET).
+ */
+export function choiceShortLabel(body: string): string {
+  const t = body.trim();
+  if (!/[\u0600-\u06FF]/.test(t)) return t;
+  return t
+    .replace(/\s*\([^)]*[A-Za-z][^)]*\)\s*$/u, "")
+    .replace(/\s+[A-Za-z][A-Za-z0-9+.\-\/ ]*$/u, "")
+    .trim();
+}
 
 /**
  * التوصيل والتصنيف يخفون الاختيارات داخل قائمة منسدلة. نلحقها بنص السؤال

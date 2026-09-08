@@ -7,7 +7,7 @@ import { Check, X } from "lucide-react";
 import { QuestionInput, type RunnerQuestion } from "../../exams/[examId]/question-input";
 import { checkBankAnswerAction, type BankResult } from "@/app/actions/bank";
 import { Badge } from "@/components/ui/primitives";
-import { QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
+import { QUESTION_TYPE_LABELS, choiceShortLabel, withChoiceList } from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
 export interface BankQuestion {
@@ -247,8 +247,13 @@ function CorrectAnswer({
   const key = result.correct;
   if (!key) return null;
 
-  const bodyOf = (id: string) =>
-    question.options.find((o) => o.id === id)?.body ?? "—";
+  const bodyOf = (id: string) => {
+    const body = question.options.find((o) => o.id === id)?.body ?? "—";
+    if (question.type === "matching" || question.type === "classification") {
+      return choiceShortLabel(body);
+    }
+    return body;
+  };
 
   if ("option_ids" in key) {
     return (
