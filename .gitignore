@@ -50,3 +50,5 @@ next-env.d.ts
 # المجلد يبقى ووصفه يبقى، ومحتواه لا يُرفع.
 /curriculum/*
 !/curriculum/README.md
+
+.vercel
