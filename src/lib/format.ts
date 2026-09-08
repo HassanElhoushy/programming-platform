@@ -208,3 +208,26 @@ export const FILE_KIND_LABELS: Record<string, string> = {
   explanation: "شرح",
   slides: "سلايدز",
 };
+
+/**
+ * التوصيل والتصنيف يخفون الاختيارات داخل قائمة منسدلة. نلحقها بنص السؤال
+ * بين قوسين حتى يراها الطالب وهو بيقرأ، من غير ما يفتح القائمة.
+ * لو النص فيه القائمة بالفعل (اتخزّنت في القاعدة) مش هتتكرر.
+ */
+export function withChoiceList(
+  type: string,
+  body: string,
+  options: { role?: string; body: string }[],
+): string {
+  if (type !== "matching" && type !== "classification") return body;
+  const picks = options
+    .filter((o) => o.role === "choice")
+    .map((o) => o.body.trim())
+    .filter(Boolean);
+  if (picks.length === 0) return body;
+  const wrapped = `(${picks.join("، ")})`;
+  const trimmed = body.trim();
+  if (trimmed.includes(wrapped)) return trimmed;
+  const stem = trimmed.replace(/[.\s]+$/, "");
+  return `${stem}. ${wrapped}`;
+}

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Check, ChevronLeft, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
-import { formatPoints, QUESTION_TYPE_LABELS } from "@/lib/format";
+import { formatPoints, QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
 import type { ReviewQuestion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +58,7 @@ export function ReviewQuestionCard({
 
       {question.type !== "fill_blank" ? (
         <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-          {question.body}
+          {withChoiceList(question.type, question.body, question.options)}
         </p>
       ) : null}
 

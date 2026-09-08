@@ -23,6 +23,7 @@ import {
   kindDefinite,
   lessonPath,
   QUESTION_TYPE_LABELS,
+  withChoiceList,
 } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { QuestionType } from "@/lib/types";
@@ -284,7 +285,11 @@ export default async function AdminExamPage({
                 </div>
 
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
-                  {question.body}
+                  {withChoiceList(
+                    question.type,
+                    question.body,
+                    optionsByQuestion.get(question.id) ?? [],
+                  )}
                 </p>
 
                 <AnswerKeyPreview

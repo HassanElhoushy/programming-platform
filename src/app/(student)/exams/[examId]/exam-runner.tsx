@@ -7,13 +7,14 @@ import { EssayInput } from "./essay-input";
 import { QuestionInput, type RunnerQuestion } from "./question-input";
 import { submitExamAction } from "@/app/actions/exam";
 import { Badge } from "@/components/ui/primitives";
-import { formatClock, formatPoints, QUESTION_TYPE_LABELS } from "@/lib/format";
+import { formatClock, formatPoints, QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
 import {
   clearDraft,
   draftGain,
   readDraft,
   saveDraft,
 } from "@/lib/exam-draft";
+import { isQuestionAnswered } from "@/lib/answered";
 import { createClient } from "@/lib/supabase/client";
 import type { AnswerResponse } from "@/lib/types";
 
@@ -214,16 +215,7 @@ export function ExamRunner({
   }
 
   function isAnswered(q: RunnerQuestion): boolean {
-    const a = answers[q.id];
-    if (q.type === "essay") {
-      const hasText = !!a && "text" in a && a.text.trim().length > 0;
-      return hasText || !!images[q.id];
-    }
-    if (!a) return false;
-    if ("option_ids" in a) return a.option_ids.length > 0;
-    if ("value" in a) return true;
-    if ("blanks" in a) return a.blanks.some((b) => b.trim().length > 0);
-    return false;
+    return isQuestionAnswered(q.type, answers[q.id] ?? null, images[q.id] ?? null);
   }
 
   const answeredCount = questions.filter(isAnswered).length;
@@ -383,7 +375,7 @@ export function ExamRunner({
 
             {question.type !== "fill_blank" ? (
               <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-                {question.body}
+                {withChoiceList(question.type, question.body, question.options)}
               </p>
             ) : null}
 

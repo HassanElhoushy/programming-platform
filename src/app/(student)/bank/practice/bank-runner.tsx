@@ -7,7 +7,7 @@ import { Check, X } from "lucide-react";
 import { QuestionInput, type RunnerQuestion } from "../../exams/[examId]/question-input";
 import { checkBankAnswerAction, type BankResult } from "@/app/actions/bank";
 import { Badge } from "@/components/ui/primitives";
-import { QUESTION_TYPE_LABELS } from "@/lib/format";
+import { QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
 export interface BankQuestion {
@@ -138,7 +138,7 @@ export function BankRunner({
 
         {question.type !== "fill_blank" ? (
           <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-            {question.body}
+            {withChoiceList(question.type, question.body, question.options)}
           </p>
         ) : null}
 
