@@ -53,6 +53,21 @@ function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
 }
 
 /**
+ * خانة الخلط فوق دروس الفصل. جواها البنوك الظاهرة للطالب فقط —
+ * RLS والصلاحية — فلا نقول «من أول درس لختام الفصل» وهو فاتح درسين.
+ */
+function mixScope(banks: BankRow[]): string {
+  const n = banks.filter((b) => b.lessons?.kind !== "review").length;
+  const hasReview = banks.some((b) => b.lessons?.kind === "review");
+  const lessonsWord = n === 1 ? "درس" : n === 2 ? "درسان" : `${n} دروس`;
+
+  if (hasReview && n === 0) return "ختام الفصل اللي قدامك";
+  if (hasReview) return `${lessonsWord} وختام الفصل اللي قدامك`;
+  if (n === 2) return "الدرسان اللي قدامك";
+  return `${lessonsWord} اللي قدامك`;
+}
+
+/**
  * بنك الأسئلة.
  *
  * ليس امتحاناً: بلا مؤقّت ولا تسليم ولا درجة تُسجَّل. الطالب يجيب فيعرف
@@ -264,40 +279,48 @@ export default async function BankPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                {totals.todo > 0 ? (
-                  <Link
-                    href={`/bank/practice?chapter=${chapterId}`}
-                    className="card card-hover flex items-center gap-3 px-4 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-ink">كل أسئلة الفصل مخلوطة</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-                        من أول درس لختام الفصل، مش درس لوحده —{" "}
-                        <span className="tnum">{totals.todo}</span> سؤال محتاج شغل
-                      </p>
-                    </div>
-                    <ChevronLeft
-                      className="size-4 shrink-0 text-ink-3"
-                      strokeWidth={1.5}
-                    />
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/bank/practice?chapter=${chapterId}&mode=review`}
-                    className="card card-hover flex items-center gap-3 px-4 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-ink">راجع الفصل كله مخلوط</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-                        خلّصت أسئلة الفصل — المراجعة تبدأ بأسئلة التفريق
-                      </p>
-                    </div>
-                    <ChevronLeft
-                      className="size-4 shrink-0 text-ink-3"
-                      strokeWidth={1.5}
-                    />
-                  </Link>
-                )}
+                {chapter.banks.length >= 2 ? (
+                  totals.todo > 0 ? (
+                    <Link
+                      href={`/bank/practice?chapter=${chapterId}`}
+                      className="card card-hover flex items-center gap-3 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-ink">
+                          الأسئلة المفتوحة في الفصل مخلوطة
+                        </p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+                          {mixScope(chapter.banks)} مع بعض — مش درس لوحده —{" "}
+                          <span className="tnum">{totals.todo}</span> سؤال
+                          محتاج شغل
+                        </p>
+                      </div>
+                      <ChevronLeft
+                        className="size-4 shrink-0 text-ink-3"
+                        strokeWidth={1.5}
+                      />
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/bank/practice?chapter=${chapterId}&mode=review`}
+                      className="card card-hover flex items-center gap-3 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-ink">
+                          راجع المفتوح في الفصل مخلوط
+                        </p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+                          خلّصت {mixScope(chapter.banks)} — المراجعة تبدأ
+                          بأسئلة التفريق
+                        </p>
+                      </div>
+                      <ChevronLeft
+                        className="size-4 shrink-0 text-ink-3"
+                        strokeWidth={1.5}
+                      />
+                    </Link>
+                  )
+                ) : null}
 
                 {chapter.banks.map((bank) => {
                   const stats = perBank.get(bank.id) ?? ZERO;
