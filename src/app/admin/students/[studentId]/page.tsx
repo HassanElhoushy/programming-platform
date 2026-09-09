@@ -13,7 +13,7 @@ import {
   voidAttemptAction,
 } from "@/app/actions/admin-students";
 import { ActionButton } from "@/components/action-button";
-import { Badge, DataRow, Fold } from "@/components/ui/primitives";
+import { Badge, DataRow, Fold, SectionTitle } from "@/components/ui/primitives";
 import {
   formatDate,
   formatDateTime,
