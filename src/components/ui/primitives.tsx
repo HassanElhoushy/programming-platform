@@ -74,15 +74,18 @@ export function Fold({
 }) {
   return (
     <details className="group mb-8">
-      <summary className="mb-3 flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+      <summary className="mb-3 flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-accent [&::-webkit-details-marker]:hidden">
         <ChevronLeft
-          className="size-3.5 shrink-0 text-ink-3 transition-transform group-open:-rotate-90"
+          className="size-3.5 shrink-0 transition-transform group-open:-rotate-90"
           strokeWidth={2}
         />
-        <span className="text-sm font-semibold text-ink-2">{title}</span>
+        <span>{title}</span>
         {hint ? (
-          <span className="tnum text-xs font-normal text-ink-3">{hint}</span>
+          <span className="tnum font-normal text-ink-3">{hint}</span>
         ) : null}
+        <span className="ms-auto text-xs font-normal text-ink-3 group-open:hidden">
+          اعرض
+        </span>
       </summary>
       {children}
     </details>
