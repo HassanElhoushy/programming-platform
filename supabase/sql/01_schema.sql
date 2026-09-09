@@ -36,6 +36,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type public.question_tier as enum ('definition', 'application', 'trap');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
   create type public.question_type as enum
     ('mcq_single', 'mcq_multi', 'true_false', 'fill_blank', 'essay',
      'matching', 'ordering', 'classification');
@@ -155,6 +159,10 @@ create table if not exists public.questions (
   body        text not null,
   points      numeric(6, 2) not null default 1,
   blank_count integer not null default 0,
+  -- ما يطلبه السؤال: تعريف أم تطبيق أم تفريق بين مفهومين متقاربين. مطلوب في
+  -- البنك لأن ترتيب الجلسة يقوم عليه، وبلا معنى في التدريبات والامتحانات
+  -- حيث الترتيب هو ترتيب الورقة. وليس درجة صعوبة — انظر 23_bank_levels.sql.
+  tier        public.question_tier,
   constraint questions_points_positive check (points > 0)
 );
 
@@ -223,6 +231,9 @@ create table if not exists public.bank_progress (
   student_id    uuid not null references public.profiles (id)  on delete cascade,
   question_id   uuid not null references public.questions (id) on delete cascade,
   state         text not null check (state in ('correct', 'wrong')),
+  -- مُتقَن وأخطأ فيه بعد ذلك. state لا ينزل من correct أبداً كي لا يتراجع
+  -- عدّاد الطالب لأنه راجع، وهذه العلامة هي التي ترجّع السؤال في المراجعة.
+  forgot        boolean not null default false,
   last_response jsonb,
   tries         integer not null default 1,
   first_seen_at timestamptz not null default now(),

@@ -18,6 +18,27 @@ export type QuestionType =
   | "ordering"
   | "classification";
 
+/**
+ * ما يطلبه سؤال البنك، لا مدى صعوبته.
+ *
+ * "سهل ومتوسط وصعب" حكمٌ على طالب لا يعرفه كاتب السؤال. وهذه الثلاثة تصف
+ * الطلب نفسه فتُفحَص ولا تُظَن، وترتيبها هو ترتيب الجلسة: الطالب يصعد من
+ * التعريف إلى الفخ، والمراجعة تهبط من الفخ إلى التعريف.
+ */
+export type QuestionTier = "definition" | "application" | "trap";
+
+export const QUESTION_TIERS = [
+  "definition",
+  "application",
+  "trap",
+] as const satisfies readonly QuestionTier[];
+
+/** موضع المستوى في الترتيب. الأسئلة بلا مستوى تُعامَل معاملة التطبيق. */
+export function tierRank(tier: string | null): number {
+  const index = (QUESTION_TIERS as readonly string[]).indexOf(tier ?? "");
+  return index === -1 ? 1 : index;
+}
+
 /** الأنواع التي يجيب فيها الطالب عن كل عنصر على حدة */
 export const ASSIGN_TYPES = ["matching", "ordering", "classification"] as const;
 
@@ -86,6 +107,8 @@ export interface Question {
   body: string;
   points: number;
   blank_count: number;
+  /** مطلوب في البنك، وبلا معنى في التدريبات والامتحانات */
+  tier: QuestionTier | null;
 }
 
 export interface QuestionOption {

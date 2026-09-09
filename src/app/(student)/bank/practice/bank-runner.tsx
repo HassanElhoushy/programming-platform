@@ -7,7 +7,12 @@ import { Check, X } from "lucide-react";
 import { QuestionInput, type RunnerQuestion } from "../../exams/[examId]/question-input";
 import { checkBankAnswerAction, type BankResult } from "@/app/actions/bank";
 import { Badge } from "@/components/ui/primitives";
-import { QUESTION_TYPE_LABELS, choiceShortLabel, withChoiceList } from "@/lib/format";
+import {
+  QUESTION_TIER_LABELS,
+  QUESTION_TYPE_LABELS,
+  choiceShortLabel,
+  withChoiceList,
+} from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
 export interface BankQuestion {
@@ -16,9 +21,12 @@ export interface BankQuestion {
   body: string;
   points: number;
   blank_count: number;
+  tier: string | null;
   bank_title: string;
   options: { id: string; body: string; role: "item" | "choice" }[];
   state: string | null;
+  /** مثبَّت وأخطأ فيه بعد ذلك */
+  forgot: boolean;
 }
 
 /**
@@ -34,9 +42,15 @@ export interface BankQuestion {
 export function BankRunner({
   questions,
   remaining,
+  review = false,
+  nextHref = "/bank/practice",
 }: {
   questions: BankQuestion[];
   remaining: number;
+  /** جلسة مراجعة لما سبق إتقانه — تبدأ بأسئلة التفريق وتنزل */
+  review?: boolean;
+  /** رابط الجلسة القادمة بنفس النطاق. بدونه يعود الطالب إلى نطاق آخر. */
+  nextHref?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<AnswerResponse>(null);
@@ -86,14 +100,25 @@ export function BankRunner({
         <p className="tnum mt-2 text-sm text-ink-2">
           {tally.right} صح · {tally.wrong} غلط
         </p>
+        {/*
+          الغلط لا يعود في الجلسة نفسها، فيُقال للطالب متى يعود. بدون هذا
+          السطر يظن أن غلطه اتفلت منه.
+        */}
         <p className="mt-3 text-xs leading-relaxed text-ink-3">
+          {tally.wrong > 0
+            ? "اللي غلطت فيه هتلاقيه أول الجلسة الجاية."
+            : review
+              ? "لسه فاكر كل حاجة."
+              : "كله صح."}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-ink-3">
           {remaining > 0
             ? `لسه فيه ${remaining} سؤال في النطاق ده.`
             : "خلّصت كل اللي في النطاق ده."}
         </p>
         <div className="mt-5 flex justify-center gap-2">
           {remaining > 0 ? (
-            <Link href="/bank/practice" className="btn btn-primary text-sm">
+            <Link href={nextHref} className="btn btn-primary text-sm">
               جلسة تانية
             </Link>
           ) : null}
@@ -128,10 +153,19 @@ export function BankRunner({
       </div>
 
       <article className="card px-5 py-5">
+        {/*
+          المستوى معلَن للطالب لا مخفيّ عنه: أن يعرف أن السؤال يطلب تفريقاً
+          بين مفهومين متقاربين يوجّه انتباهه، ولا يقول له الإجابة.
+        */}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           <Badge tone="muted">{QUESTION_TYPE_LABELS[question.type]}</Badge>
+          {question.tier ? (
+            <Badge tone="muted">{QUESTION_TIER_LABELS[question.tier]}</Badge>
+          ) : null}
           {question.state === "wrong" ? (
             <Badge tone="wait">غلطت فيه قبل كده</Badge>
+          ) : question.forgot ? (
+            <Badge tone="wait">كنت حالّه صح</Badge>
           ) : null}
           <span className="truncate text-xs text-ink-3">{question.bank_title}</span>
         </div>

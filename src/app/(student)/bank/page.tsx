@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ChevronLeft, Layers } from "lucide-react";
+import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
 
-import { EmptyState, PageHeader } from "@/components/ui/primitives";
+import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
 import { chapterName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,6 +19,24 @@ interface BankRow {
   } | null;
 }
 
+interface Counts {
+  total: number;
+  mastered: number;
+  todo: number;
+  forgot: number;
+}
+
+const ZERO: Counts = { total: 0, mastered: 0, todo: 0, forgot: 0 };
+
+function add(a: Counts, b: Counts): Counts {
+  return {
+    total: a.total + b.total,
+    mastered: a.mastered + b.mastered,
+    todo: a.todo + b.todo,
+    forgot: a.forgot + b.forgot,
+  };
+}
+
 /**
  * بنك الأسئلة.
  *
@@ -26,7 +44,8 @@ interface BankRow {
  * فوراً ويرى الصحيح وسببه، ثم يمضي.
  *
  * الصفحة تفتح على "اللي محتاج شغل" لا على قائمة الفصول، لأن أكثر ما يحتاجه
- * من فتحها أن يبدأ لا أن يختار.
+ * من فتحها أن يبدأ لا أن يختار. ومن لم يبق عليه شيء لا يُقال له "خلّصت"
+ * ويُترك: يُعرَض عليه أن يراجع، فالمراجعة هي ما جاء من أجله.
  */
 export default async function BankPage() {
   const supabase = await createClient();
@@ -40,8 +59,11 @@ export default async function BankPage() {
       .eq("kind", "bank")
       .eq("is_open", true)
       .is("archived_at", null),
-    supabase.from("bank_progress").select("question_id, state"),
+    supabase.from("bank_progress").select("question_id, state, forgot"),
   ]);
+
+  if (banksRes.error) return <QueryError message={banksRes.error.message} />;
+  if (progressRes.error) return <QueryError message={progressRes.error.message} />;
 
   const banks = (banksRes.data ?? []) as unknown as BankRow[];
 
@@ -60,30 +82,42 @@ export default async function BankPage() {
 
   /* عدد أسئلة كل بنك، وحالة الطالب في كل سؤال */
   const bankIds = banks.map((b) => b.id);
-  const { data: questionRows } = await supabase
+  const questionsRes = await supabase
     .from("questions")
     .select("id, exam_id")
     .in("exam_id", bankIds);
 
-  const stateOf = new Map(
-    (progressRes.data ?? []).map((p) => [p.question_id, p.state]),
+  if (questionsRes.error) return <QueryError message={questionsRes.error.message} />;
+
+  const progressOf = new Map(
+    (progressRes.data ?? []).map((p) => [
+      p.question_id,
+      { state: p.state as string, forgot: !!p.forgot },
+    ]),
   );
 
-  const perBank = new Map<string, { total: number; correct: number; todo: number }>();
-  let allCorrect = 0;
-  let allTodo = 0;
+  const perBank = new Map<string, Counts>();
+  let all = ZERO;
 
-  for (const q of questionRows ?? []) {
-    const entry = perBank.get(q.exam_id) ?? { total: 0, correct: 0, todo: 0 };
+  for (const q of questionsRes.data ?? []) {
+    const entry = perBank.get(q.exam_id) ?? { ...ZERO };
+    const progress = progressOf.get(q.id);
+
     entry.total += 1;
-    if (stateOf.get(q.id) === "correct") {
-      entry.correct += 1;
-      allCorrect += 1;
+    if (progress?.state === "correct") {
+      entry.mastered += 1;
+      if (progress.forgot) entry.forgot += 1;
     } else {
       entry.todo += 1;
-      allTodo += 1;
     }
+
     perBank.set(q.exam_id, entry);
+    all = add(all, {
+      total: 1,
+      mastered: progress?.state === "correct" ? 1 : 0,
+      todo: progress?.state === "correct" ? 0 : 1,
+      forgot: progress?.forgot ? 1 : 0,
+    });
   }
 
   /* تجميع حسب الفصل — هو وحدة التنقّل الطبيعية عند الطالب */
@@ -120,42 +154,81 @@ export default async function BankPage() {
         المدخل الأساسي: يبدأ من الغلط ثم مما لم يره. الطالب الذي يفتح البنك
         يريد أن يحلّ، فلا نجعل أول ما يواجهه اختياراً.
       */}
-      {allTodo > 0 ? (
+      {all.todo > 0 ? (
         <Link
           href="/bank/practice"
-          className="card card-hover mb-6 flex items-center gap-3 px-4 py-4"
+          className="card card-hover mb-3 flex items-center gap-3 px-4 py-4"
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-ink">ابدأ اللي محتاج شغل</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
-              <span className="tnum">{allTodo}</span> سؤال لسه محتاج منك —
+              <span className="tnum">{all.todo}</span> سؤال لسه محتاج منك —
               اللي غلطت فيه الأول، وبعده اللي ما شفتهوش.
             </p>
           </div>
           <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
         </Link>
       ) : (
-        <div className="card mb-6 px-4 py-4">
-          <p className="text-sm font-medium text-ink">خلّصت كل المتاح</p>
+        <div className="card mb-3 px-4 py-4">
+          <p className="text-sm font-medium text-ink">مفيش حاجة محتاجة شغل</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-3">
-            حلّيت <span className="tnum">{allCorrect}</span> سؤال صح. تقدر
-            تراجع أي فصل تحت.
+            ثبّتت <span className="tnum">{all.mastered}</span> سؤال. اللي فاضل
+            إنك تراجع.
           </p>
         </div>
       )}
 
+      {/*
+        المراجعة ليست جائزةً لمن خلّص: من نسي سؤالاً كان يعرفه محتاجٌ لها
+        ولو كان أمامه أسئلة لم يرها بعد. فالمدخل معروض دائماً، ونبرته تتبع
+        ما إذا كان هناك منسيٌّ فعلاً.
+      */}
+      {all.mastered > 0 ? (
+        <Link
+          href="/bank/practice?mode=review"
+          className="card card-hover mb-3 flex items-center gap-3 px-4 py-4"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-ink">
+              {all.forgot > 0 ? "راجع اللي بدأت تنساه" : "راجع اللي مثبَّت"}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-3">
+              {all.forgot > 0 ? (
+                <>
+                  <span className="tnum">{all.forgot}</span> سؤال كنت حالّه صح
+                  ورجعت غلطت فيه. المراجعة تبدأ بيهم.
+                </>
+              ) : (
+                <>
+                  تبدأ بأسئلة التفريق: لو عدّيتها يبقى لسه فاهم وتقفل بدري.
+                  والأقدم ييجي الأول.
+                </>
+              )}
+            </p>
+          </div>
+          <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+        </Link>
+      ) : null}
+
+      <Link
+        href="/bank/select"
+        className="card card-hover mb-6 flex items-center gap-3 px-4 py-3.5"
+      >
+        <SlidersHorizontal className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-ink">اختار دروسك بنفسك</p>
+          <p className="mt-0.5 text-xs text-ink-3">
+            درس، أو فصلين مع بعض، أو أسئلة الخلط وحدها.
+          </p>
+        </div>
+        <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+      </Link>
+
       <div className="flex flex-col gap-6">
         {chapters.map(([chapterId, chapter]) => {
           const totals = chapter.banks.reduce(
-            (acc, b) => {
-              const s = perBank.get(b.id);
-              return {
-                total: acc.total + (s?.total ?? 0),
-                correct: acc.correct + (s?.correct ?? 0),
-                todo: acc.todo + (s?.todo ?? 0),
-              };
-            },
-            { total: 0, correct: 0, todo: 0 },
+            (acc, b) => add(acc, perBank.get(b.id) ?? ZERO),
+            ZERO,
           );
 
           return (
@@ -165,7 +238,7 @@ export default async function BankPage() {
                   {chapterName(chapter.position, chapter.kind)}
                 </h2>
                 <span className="tnum text-xs text-ink-3">
-                  {totals.correct} من {totals.total} صح
+                  {totals.mastered} من {totals.total} مثبَّت
                 </span>
               </div>
 
@@ -188,10 +261,26 @@ export default async function BankPage() {
                       strokeWidth={1.5}
                     />
                   </Link>
-                ) : null}
+                ) : (
+                  <Link
+                    href={`/bank/practice?chapter=${chapterId}&mode=review`}
+                    className="card card-hover flex items-center gap-3 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-ink">راجع {chapter.title}</p>
+                      <p className="mt-0.5 text-xs text-ink-3">
+                        خلّصت الفصل ده — المراجعة تبدأ بأسئلة التفريق
+                      </p>
+                    </div>
+                    <ChevronLeft
+                      className="size-4 shrink-0 text-ink-3"
+                      strokeWidth={1.5}
+                    />
+                  </Link>
+                )}
 
                 {chapter.banks.map((bank) => {
-                  const stats = perBank.get(bank.id);
+                  const stats = perBank.get(bank.id) ?? ZERO;
                   return (
                     <Link
                       key={bank.id}
@@ -201,9 +290,10 @@ export default async function BankPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-ink">{bank.title}</p>
                         <p className="mt-0.5 text-xs text-ink-3">
-                          <span className="tnum">{stats?.correct ?? 0}</span> من{" "}
-                          <span className="tnum">{stats?.total ?? 0}</span> صح
-                          {stats?.todo ? ` · ${stats.todo} فاضل` : " · خلّصته"}
+                          <span className="tnum">{stats.mastered}</span> من{" "}
+                          <span className="tnum">{stats.total}</span> مثبَّت
+                          {stats.todo > 0 ? ` · ${stats.todo} محتاج شغل` : ""}
+                          {stats.forgot > 0 ? ` · ${stats.forgot} محتاج مراجعة` : ""}
                         </p>
                       </div>
                       <ChevronLeft

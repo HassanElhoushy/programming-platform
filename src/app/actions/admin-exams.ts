@@ -159,6 +159,46 @@ export async function archiveExamAction(
    ========================================================================== */
 
 /**
+ * المستوى مشروط في البنك وحده.
+ *
+ * الشرط هنا لا في الـ schema لأن الـ schema لا يعرف إلى أي عنصر يُستورَد
+ * الملف. وهو شرطٌ لأن ترتيب جلسة البنك يقوم على المستوى: سؤالٌ بلا مستوى
+ * يُعامَل معاملة التطبيق فيظهر في غير موضعه، ولا يشتكي أحد.
+ *
+ * والامتحانات لا تُشترط فيها ولا تُمنع منها: لو حُقن ملفٌ فيه مستويات في
+ * امتحان فلا ضرر — العمود يُخزَّن ولا يقرؤه شيء.
+ */
+async function tierErrorsFor(
+  examId: string,
+  questions: { tier?: string }[],
+): Promise<(ActionResult & { details?: string[] }) | null> {
+  const supabase = await createClient();
+
+  const { data: exam, error } = await supabase
+    .from("exams")
+    .select("kind")
+    .eq("id", examId)
+    .single();
+
+  if (error || !exam) return { error: GENERIC };
+  if (exam.kind !== "bank") return null;
+
+  const missing = questions
+    .map((q, i) => (q.tier ? null : i + 1))
+    .filter((n): n is number => n !== null);
+
+  if (missing.length === 0) return null;
+
+  return {
+    error: "أسئلة البنك لازم يكون لكل سؤال مستوى:",
+    details: [
+      `ناقص "tier" في: ${missing.map((n) => `السؤال ${n}`).join("، ")}`,
+      'القيم المسموحة: "definition" للتعريف، "application" للتطبيق، "trap" للتفريق بين مفهومين متقاربين.',
+    ],
+  };
+}
+
+/**
  * الاستيراد يستبدل كل أسئلة الامتحان. لذلك يُرفض إن كان أحد الطلاب قد بدأ
  * الامتحان بالفعل: استبدال الأسئلة تحت محاولة جارية يفسد إجاباتها ودرجاتها.
  *
@@ -194,6 +234,9 @@ export async function importQuestionsAction(
   if (logicErrors.length > 0) {
     return { error: "الملف فيه أخطاء:", details: logicErrors };
   }
+
+  const tierErrors = await tierErrorsFor(examId, parsed.data.questions);
+  if (tierErrors) return tierErrors;
 
   /*
    * أي محاولة غير ملغاة تمنع الاستبدال، لا الجارية وحدها: حذف الأسئلة
@@ -247,6 +290,7 @@ export async function importQuestionsAction(
         body: q.body.trim(),
         points: q.points,
         blank_count: plans[i].blankCount,
+        tier: q.tier ?? null,
       })),
     )
     .select("id, position");
@@ -380,6 +424,9 @@ export async function addQuestionAction(
     return { error: "سؤال إكمال الفراغات لازم يحتوي على [1] و [2] في نصه." };
   }
 
+  const tierErrors = await tierErrorsFor(examId, [question]);
+  if (tierErrors) return tierErrors;
+
   const { data: last } = await supabase
     .from("questions")
     .select("position")
@@ -400,6 +447,7 @@ export async function addQuestionAction(
       body: question.body.trim(),
       points: question.points,
       blank_count: plan.blankCount,
+      tier: question.tier ?? null,
     })
     .select("id")
     .single();

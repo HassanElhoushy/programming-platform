@@ -8,14 +8,24 @@ import {
   QueryError,
   SectionTitle,
 } from "@/components/ui/primitives";
-import { QUESTION_TYPE_LABELS, lessonPath } from "@/lib/format";
+import {
+  QUESTION_TIER_LABELS,
+  QUESTION_TYPE_LABELS,
+  lessonPath,
+} from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "بنك الأسئلة · لوحة المدرّس" };
 export const dynamic = "force-dynamic";
 
 interface Insights {
-  totals: { banks: number; questions: number; answered: number; students: number };
+  totals: {
+    banks: number;
+    questions: number;
+    answered: number;
+    forgot: number;
+    students: number;
+  };
   by_lesson: {
     chapter_position: number;
     chapter_kind: string;
@@ -24,14 +34,17 @@ interface Insights {
     lesson_title: string;
     wrong: number;
     correct: number;
+    forgot: number;
     students_wrong: number;
   }[];
   by_type: { type: string; wrong: number; correct: number }[];
+  by_tier: { tier: string; wrong: number; correct: number; forgot: number }[];
   by_student: {
     student_id: string;
     name: string;
     wrong: number;
     correct: number;
+    forgot: number;
     weak_type: string | null;
   }[];
   hardest: {
@@ -39,6 +52,7 @@ interface Insights {
     exam_id: string;
     body: string;
     type: string;
+    tier: string | null;
     wrong: number;
     correct: number;
   }[];
@@ -154,15 +168,18 @@ export default async function AdminBankPage() {
             <SectionTitle>فين الغلط — بالدرس</SectionTitle>
             <p className="mb-3 text-xs leading-relaxed text-ink-3">
               الدرس اللي بيغلط فيه عدد أكبر من الطلبة هو اللي محتاج إعادة شرح.
+              وعمود «نسيوه» غير عمود «غلط»: نسيوه معناها أسئلة كانوا حالّينها
+              صح ورجعوا غلطوا فيها، وعلاجها تمرير سريع مش إعادة شرح.
             </p>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[26rem] text-sm">
+              <table className="w-full min-w-[30rem] text-sm">
                 <thead>
                   <tr className="text-xs text-ink-3">
                     <th className="pb-2 text-start font-medium">الدرس</th>
                     <th className="pb-2 text-start font-medium">طلبة غلطوا</th>
                     <th className="pb-2 text-start font-medium">غلط</th>
+                    <th className="pb-2 text-start font-medium">نسيوه</th>
                     <th className="pb-2 text-start font-medium">صح</th>
                   </tr>
                 </thead>
@@ -185,6 +202,7 @@ export default async function AdminBankPage() {
                       </td>
                       <td className="tnum py-2 pe-3 text-ink">{row.students_wrong}</td>
                       <td className="tnum py-2 pe-3 text-ink-2">{row.wrong}</td>
+                      <td className="tnum py-2 pe-3 text-ink-2">{row.forgot}</td>
                       <td className="tnum py-2 text-ink-2">{row.correct}</td>
                     </tr>
                   ))}
@@ -224,6 +242,39 @@ export default async function AdminBankPage() {
           </section>
 
           {/* ----------------------------------------------------- */}
+          {insights.by_tier.length > 0 ? (
+            <section className="mb-8">
+              <SectionTitle>حفظ ولا فهم</SectionTitle>
+              <p className="mb-3 text-xs leading-relaxed text-ink-3">
+                أسئلة البنك ثلاث درجات: تعريف، وتطبيق على حالة جديدة، وتفريق
+                بين مفهومين متقاربين. تعريفات سليمة مع تطبيق ضعيف معناها إن
+                الفصل بيحفظ — والحل تمارين حالات لا إعادة تعريفات.
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {insights.by_tier.map((row) => {
+                  const total = row.wrong + row.correct;
+                  const pct = total > 0 ? Math.round((row.wrong / total) * 100) : 0;
+                  return (
+                    <div
+                      key={row.tier}
+                      className="card flex flex-wrap items-center gap-3 px-4 py-3"
+                    >
+                      <span className="min-w-0 flex-1 text-sm text-ink">
+                        {QUESTION_TIER_LABELS[row.tier] ?? row.tier}
+                      </span>
+                      <span className="tnum text-xs text-ink-3">
+                        {row.wrong} غلط من {total}
+                      </span>
+                      <span className="tnum text-sm font-medium text-ink">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          {/* ----------------------------------------------------- */}
           <section className="mb-8">
             <SectionTitle>كل طالب</SectionTitle>
 
@@ -241,6 +292,7 @@ export default async function AdminBankPage() {
                   ) : null}
                   <span className="tnum text-xs text-ink-3">
                     {row.correct} صح · {row.wrong} غلط
+                    {row.forgot > 0 ? ` · ${row.forgot} نسيهم` : ""}
                   </span>
                 </div>
               ))}
@@ -268,6 +320,11 @@ export default async function AdminBankPage() {
                       <Badge tone="muted">
                         {QUESTION_TYPE_LABELS[row.type] ?? row.type}
                       </Badge>
+                      {row.tier ? (
+                        <Badge tone="muted">
+                          {QUESTION_TIER_LABELS[row.tier] ?? row.tier}
+                        </Badge>
+                      ) : null}
                       <span className="tnum text-xs text-ink-3">
                         {row.wrong} غلط · {row.correct} صح
                       </span>
