@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ChevronLeft, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -56,6 +56,36 @@ export function SectionTitle({
       <h2 className="text-sm font-semibold text-ink-2">{children}</h2>
       {action}
     </div>
+  );
+}
+
+/**
+ * قسم مطويّ افتراضياً، بنفس أسلوب الإجابة النموذجية: details/summary بلا
+ * جافاسكربت، فيبقى على الخادم ويعمل بلوحة المفاتيح.
+ */
+export function Fold({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="group mb-8">
+      <summary className="mb-3 flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+        <ChevronLeft
+          className="size-3.5 shrink-0 text-ink-3 transition-transform group-open:-rotate-90"
+          strokeWidth={2}
+        />
+        <span className="text-sm font-semibold text-ink-2">{title}</span>
+        {hint ? (
+          <span className="tnum text-xs font-normal text-ink-3">{hint}</span>
+        ) : null}
+      </summary>
+      {children}
+    </details>
   );
 }
 

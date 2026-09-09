@@ -13,7 +13,7 @@ import {
   voidAttemptAction,
 } from "@/app/actions/admin-students";
 import { ActionButton } from "@/components/action-button";
-import { Badge, DataRow, SectionTitle } from "@/components/ui/primitives";
+import { Badge, DataRow, Fold } from "@/components/ui/primitives";
 import {
   formatDate,
   formatDateTime,
@@ -215,19 +215,18 @@ export default async function StudentDetailPage({
       </section>
 
       {/* ------------------------------------------------------------- */}
-      <section className="mb-8">
-        <SectionTitle
-          action={
-            <ActionButton
-              action={setFullAccessAction.bind(null, studentId, !student.full_access)}
-              className="btn btn-secondary text-xs"
-            >
-              {student.full_access ? "اسحب كل الصلاحيات" : "افتح كل الصلاحيات"}
-            </ActionButton>
-          }
-        >
-          الصلاحيات
-        </SectionTitle>
+      <Fold
+        title="الصلاحيات"
+        hint={student.full_access ? "مفتوح له كل حاجة" : undefined}
+      >
+        <div className="mb-3">
+          <ActionButton
+            action={setFullAccessAction.bind(null, studentId, !student.full_access)}
+            className="btn btn-secondary text-xs"
+          >
+            {student.full_access ? "اسحب كل الصلاحيات" : "افتح كل الصلاحيات"}
+          </ActionButton>
+        </div>
 
         <PermissionsPanel
           studentId={studentId}
@@ -235,12 +234,19 @@ export default async function StudentDetailPage({
           granted={granted}
           fullAccess={student.full_access}
         />
-      </section>
+      </Fold>
 
       {/* ------------------------------------------------------------- */}
-      <section className="mb-8">
-        <SectionTitle>الامتحانات</SectionTitle>
-
+      <Fold
+        title="الامتحانات"
+        hint={
+          attempts.length === 0
+            ? "ما دخلش أي امتحان لسه"
+            : attempts.length === 1
+              ? "محاولة واحدة"
+              : `${attempts.length} محاولة`
+        }
+      >
         {attempts.length === 0 ? (
           <p className="card px-4 py-6 text-center text-sm text-ink-3">
             ما دخلش أي امتحان لسه
@@ -338,12 +344,19 @@ export default async function StudentDetailPage({
             })}
           </div>
         )}
-      </section>
+      </Fold>
 
       {/* ------------------------------------------------------------- */}
-      <section>
-        <SectionTitle>الملفات اللي فتحها</SectionTitle>
-
+      <Fold
+        title="الملفات اللي فتحها"
+        hint={
+          fileStats.size === 0
+            ? "ما فتحش أي ملف لسه"
+            : fileStats.size === 1
+              ? "ملف واحد"
+              : `${fileStats.size} ملف`
+        }
+      >
         {fileStats.size === 0 ? (
           <p className="card px-4 py-6 text-center text-sm text-ink-3">
             ما فتحش أي ملف لسه
@@ -365,7 +378,7 @@ export default async function StudentDetailPage({
             </div>
           </div>
         )}
-      </section>
+      </Fold>
     </>
   );
 }

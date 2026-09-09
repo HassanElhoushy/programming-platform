@@ -51,7 +51,12 @@ export function KindBadge({ kind }: { kind: ExamKind }) {
   );
 }
 
-/** صف ملف بعنوانه ونوعه، يفتح عبر مسار موقّع على السيرفر */
+/**
+ * صف ملف بعنوانه ونوعه، يفتح عبر مسار موقّع على السيرفر.
+ *
+ * `<a>` عمداً لا `Link`: المسار يحوّل إلى تخزين خارجي ويسجّل الفتح، و`Link`
+ * كان يجهّز الرابط قبل الضغط فيُحسب فتحاً كل مرة تظهر الصفحة.
+ */
 export function FileRow({
   id,
   title,
@@ -74,7 +79,7 @@ export function FileRow({
 
   return (
     <div className="card card-hover flex items-center gap-1 pl-2 pr-4">
-      <Link
+      <a
         href={`/files/${id}`}
         target="_blank"
         rel="noreferrer"
@@ -92,7 +97,7 @@ export function FileRow({
             {createdAt ? ` · ${formatDate(createdAt)}` : ""}
           </p>
         </div>
-      </Link>
+      </a>
 
       <a
         href={`/files/${id}?download=1`}
