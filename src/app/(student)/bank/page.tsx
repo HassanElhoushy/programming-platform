@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterName } from "@/lib/format";
+import { chapterName, lessonName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "بنك الأسئلة · منصة البرمجة" };
@@ -34,6 +34,21 @@ function add(a: Counts, b: Counts): Counts {
     mastered: a.mastered + b.mastered,
     todo: a.todo + b.todo,
     forgot: a.forgot + b.forgot,
+  };
+}
+
+function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
+  const lesson = bank.lessons;
+  if (!lesson) return { title: bank.title, blurb: null };
+  if (lesson.kind === "review") {
+    return {
+      title: "ختام الفصل",
+      blurb: "أسئلة تخلط دروس الفصل مع بعض — مش درس جديد، عشان تفرّق بين اللي فات",
+    };
+  }
+  return {
+    title: `${lessonName(lesson.position, lesson.kind)} · ${lesson.title}`,
+    blurb: null,
   };
 }
 
@@ -136,6 +151,9 @@ export default async function BankPage() {
       banks: [],
     };
     entry.banks.push(bank);
+    entry.banks.sort(
+      (a, b) => (a.lessons?.position ?? 0) - (b.lessons?.position ?? 0),
+    );
     byChapter.set(chapter.id, entry);
   }
 
@@ -249,10 +267,9 @@ export default async function BankPage() {
                     className="card card-hover flex items-center gap-3 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-ink">
-                        تدرّب على {chapter.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-3">
+                      <p className="text-sm text-ink">كل أسئلة الفصل مخلوطة</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+                        من أول درس لختام الفصل، مش درس لوحده —{" "}
                         <span className="tnum">{totals.todo}</span> سؤال محتاج شغل
                       </p>
                     </div>
@@ -267,9 +284,9 @@ export default async function BankPage() {
                     className="card card-hover flex items-center gap-3 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-ink">راجع {chapter.title}</p>
-                      <p className="mt-0.5 text-xs text-ink-3">
-                        خلّصت الفصل ده — المراجعة تبدأ بأسئلة التفريق
+                      <p className="text-sm text-ink">راجع الفصل كله مخلوط</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+                        خلّصت أسئلة الفصل — المراجعة تبدأ بأسئلة التفريق
                       </p>
                     </div>
                     <ChevronLeft
@@ -281,6 +298,7 @@ export default async function BankPage() {
 
                 {chapter.banks.map((bank) => {
                   const stats = perBank.get(bank.id) ?? ZERO;
+                  const { title, blurb } = bankLabel(bank);
                   return (
                     <Link
                       key={bank.id}
@@ -288,7 +306,12 @@ export default async function BankPage() {
                       className="card card-hover flex items-center gap-3 px-4 py-3"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-ink">{bank.title}</p>
+                        <p className="text-sm leading-relaxed text-ink">{title}</p>
+                        {blurb ? (
+                          <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+                            {blurb}
+                          </p>
+                        ) : null}
                         <p className="mt-0.5 text-xs text-ink-3">
                           <span className="tnum">{stats.mastered}</span> من{" "}
                           <span className="tnum">{stats.total}</span> مثبَّت

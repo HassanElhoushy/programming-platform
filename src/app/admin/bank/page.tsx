@@ -72,7 +72,7 @@ interface BankRow {
 export default async function AdminBankPage() {
   const supabase = await createClient();
 
-  const [banksRes, insightsRes, questionsRes] = await Promise.all([
+  const [banksRes, insightsRes] = await Promise.all([
     supabase
       .from("exams")
       .select("id, title, is_open, lessons(position, kind, chapters(position, kind))")
@@ -80,7 +80,6 @@ export default async function AdminBankPage() {
       .is("archived_at", null)
       .order("created_at"),
     supabase.rpc("bank_insights"),
-    supabase.from("questions").select("id, exam_id"),
   ]);
 
   if (banksRes.error) return <QueryError message={banksRes.error.message} />;
@@ -88,6 +87,19 @@ export default async function AdminBankPage() {
 
   const banks = (banksRes.data ?? []) as unknown as BankRow[];
   const insights = insightsRes.data as Insights;
+
+  /*
+   * لا تجلب جدول questions كله: واجهة PostgREST تقصّ عند ١٠٠٠ صف بلا
+   * error. كان العدّ يظهر ٢٢ و١ و٣ و٠ بينما البنوك مليانة — الصفحة
+   * الداخلية تفلتر بـ exam_id فترى الكل. نفس قيد صفحة بنك الطالب.
+   */
+  const bankIds = banks.map((b) => b.id);
+  const questionsRes =
+    bankIds.length === 0
+      ? { data: [] as { exam_id: string }[], error: null }
+      : await supabase.from("questions").select("exam_id").in("exam_id", bankIds);
+
+  if (questionsRes.error) return <QueryError message={questionsRes.error.message} />;
 
   const countByBank = new Map<string, number>();
   for (const q of questionsRes.data ?? []) {
