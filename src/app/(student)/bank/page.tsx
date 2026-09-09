@@ -180,8 +180,9 @@ export default async function BankPage() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-ink">ابدأ اللي محتاج شغل</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
-              <span className="tnum">{all.todo}</span> سؤال لسه محتاج منك —
-              اللي غلطت فيه الأول، وبعده اللي ما شفتهوش.
+              <span className="tnum">{all.todo}</span> سؤال لسه ما ثبّتتْهمش:
+              إمّا غلطت فيهم وإمّا ما شفتهمش. ادخل هنا وأنت بتتعلم أو بتصلح
+              غلط — مش وأنت بتراجع حاجة خلّصتها.
             </p>
           </div>
           <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
@@ -189,10 +190,10 @@ export default async function BankPage() {
       ) : (
         <div className="card mb-3 px-4 py-4">
           <p className="text-sm font-medium text-ink">مفيش حاجة محتاجة شغل</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-3">
-            ثبّتت <span className="tnum">{all.mastered}</span> سؤال. اللي فاضل
-            إنك تراجع.
-          </p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-3">
+              ثبّتت كل الأسئلة. اللي فاضل المراجعة من الخانة اللي تحت — مش
+              هتلاقي هنا أسئلة جديدة.
+            </p>
         </div>
       )}
 
@@ -213,13 +214,15 @@ export default async function BankPage() {
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
               {all.forgot > 0 ? (
                 <>
-                  <span className="tnum">{all.forgot}</span> سؤال كنت حالّه صح
-                  ورجعت غلطت فيه. المراجعة تبدأ بيهم.
+                  <span className="tnum">{all.forgot}</span> سؤال ثبّتّه وبعدين
+                  رجعت غلطت فيه. ادخل هنا ترجّع اللي نسيته — دي مراجعة، مش
+                  درساً جديداً.
                 </>
               ) : (
                 <>
-                  تبدأ بأسئلة التفريق: لو عدّيتها يبقى لسه فاهم وتقفل بدري.
-                  والأقدم ييجي الأول.
+                  الأسئلة اللي حلّيتها صح قبل كده. ادخل هنا لما تخلّص وعايز
+                  تتأكد إنك لسه فاكر، خصوصاً بعد فترة. لو لسه بتتعرّف على
+                  الدرس، الخانة اللي فوق أنسب.
                 </>
               )}
             </p>

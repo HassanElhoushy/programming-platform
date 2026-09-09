@@ -158,13 +158,13 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
             checked={mode === "work"}
             onSelect={() => setMode("work")}
             title="اللي محتاج شغل"
-            hint="اللي غلطت فيه الأول، وبعده اللي ما شفتهوش. الترتيب من التعريف للتطبيق للتفريق."
+            hint="الأسئلة اللي لسه ما ثبّتتْهاش: غلط أو ما اتشافت. اختار ده وأنت بتتعلم."
           />
           <ModeRow
             checked={mode === "review"}
             onSelect={() => setMode("review")}
             title="مراجعة اللي مثبَّت"
-            hint="يبدأ بأسئلة التفريق: لو عدّيتها يبقى لسه فاهم وتقفل بدري. والأقدم ييجي الأول."
+            hint="الأسئلة اللي خلّصتها صح. اختار ده لما تراجع بعد فترة وتتأكد إنك لسه فاكر."
           />
         </div>
       </div>
