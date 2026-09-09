@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import { LessonPicker, type PickerChapter } from "./lesson-picker";
 import { PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "اختار دروسك · بنك الأسئلة" };
@@ -110,6 +110,10 @@ export default async function BankSelectPage() {
       ({
         id: chapter.id,
         label: chapterName(chapter.position, chapter.kind),
+        hint:
+          chapter.kind === "review"
+            ? chapterHint(chapter.kind, chapter.title)
+            : null,
         position: chapter.kind === "review" ? Number.MAX_SAFE_INTEGER : chapter.position,
         lessons: [],
       } satisfies PickerChapter);

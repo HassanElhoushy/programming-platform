@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "بنك الأسئلة · منصة البرمجة" };
@@ -40,6 +40,16 @@ function add(a: Counts, b: Counts): Counts {
 function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
   const lesson = bank.lessons;
   if (!lesson) return { title: bank.title, blurb: null };
+  /*
+   * مراجعة عابرة للفصول (حاوية المراجعات) عنوانها هو اسم المراجعة نفسه:
+   * «ختام الترم الأول» لا «ختام الفصل» ولا «الفصل الثامن».
+   */
+  if (lesson.chapters?.kind === "review") {
+    return {
+      title: lesson.title,
+      blurb: "مش فصل جديد — أسئلة بتجمع أكتر من فصل عشان تفرّق بين اللي فات",
+    };
+  }
   if (lesson.kind === "review") {
     return {
       title: "ختام الفصل",
@@ -56,7 +66,9 @@ function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
  * خانة الخلط فوق دروس الفصل. جواها البنوك الظاهرة للطالب فقط —
  * RLS والصلاحية — فلا نقول «من أول درس لختام الفصل» وهو فاتح درسين.
  */
-function mixScope(banks: BankRow[]): string {
+function mixScope(banks: BankRow[], chapterKind: string): string {
+  if (chapterKind === "review") return "المراجعات اللي قدامك";
+
   const n = banks.filter((b) => b.lessons?.kind !== "review").length;
   const hasReview = banks.some((b) => b.lessons?.kind === "review");
   const lessonsWord = n === 1 ? "درس" : n === 2 ? "درسان" : `${n} دروس`;
@@ -270,9 +282,16 @@ export default async function BankPage() {
           return (
             <section key={chapterId}>
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-sm font-semibold text-ink">
-                  {chapterName(chapter.position, chapter.kind)}
-                </h2>
+                <div>
+                  <h2 className="text-sm font-semibold text-ink">
+                    {chapterName(chapter.position, chapter.kind)}
+                  </h2>
+                  {chapter.kind === "review" ? (
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      {chapterHint(chapter.kind, chapter.title)}
+                    </p>
+                  ) : null}
+                </div>
                 <span className="tnum text-xs text-ink-3">
                   {totals.mastered} من {totals.total} مثبَّت
                 </span>
@@ -287,12 +306,14 @@ export default async function BankPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-ink">
-                          الأسئلة المفتوحة في الفصل مخلوطة
+                          {chapter.kind === "review"
+                            ? "الأسئلة المفتوحة في المراجعات مخلوطة"
+                            : "الأسئلة المفتوحة في الفصل مخلوطة"}
                         </p>
                         <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-                          {mixScope(chapter.banks)} مع بعض — مش درس لوحده —{" "}
-                          <span className="tnum">{totals.todo}</span> سؤال
-                          محتاج شغل
+                          {mixScope(chapter.banks, chapter.kind)} مع بعض — مش درس
+                          لوحده — <span className="tnum">{totals.todo}</span>{" "}
+                          سؤال محتاج شغل
                         </p>
                       </div>
                       <ChevronLeft
@@ -307,11 +328,13 @@ export default async function BankPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-ink">
-                          راجع المفتوح في الفصل مخلوط
+                          {chapter.kind === "review"
+                            ? "راجع المفتوح في المراجعات مخلوط"
+                            : "راجع المفتوح في الفصل مخلوط"}
                         </p>
                         <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-                          خلّصت {mixScope(chapter.banks)} — المراجعة تبدأ
-                          بأسئلة التفريق
+                          خلّصت {mixScope(chapter.banks, chapter.kind)} —
+                          المراجعة تبدأ بأسئلة التفريق
                         </p>
                       </div>
                       <ChevronLeft

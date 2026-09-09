@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookOpen, ChevronLeft } from "lucide-react";
 
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
-import { chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "المحتوى · منصة البرمجة" };
@@ -70,7 +70,9 @@ export default async function ContentPage() {
                 <h2 className="text-sm font-semibold text-ink">
                   {chapterName(chapter.position, chapter.kind)}
                 </h2>
-                <p className="text-xs text-ink-3">{chapter.title}</p>
+                <p className="text-xs text-ink-3">
+                  {chapterHint(chapter.kind, chapter.title)}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">

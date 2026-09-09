@@ -18,6 +18,7 @@ export interface PickerLesson {
 export interface PickerChapter {
   id: string;
   label: string;
+  hint: string | null;
   position: number;
   lessons: PickerLesson[];
 }
@@ -112,7 +113,16 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
                   onChange={() => toggleChapter(chapter)}
                   className="size-4 shrink-0 accent-[var(--color-accent)]"
                 />
-                <span className="text-sm font-semibold text-ink">{chapter.label}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-ink">
+                    {chapter.label}
+                  </span>
+                  {chapter.hint ? (
+                    <span className="mt-0.5 block text-xs text-ink-3">
+                      {chapter.hint}
+                    </span>
+                  ) : null}
+                </span>
               </label>
 
               <div className="flex flex-col gap-1.5 ps-6">

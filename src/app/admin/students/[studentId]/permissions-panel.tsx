@@ -8,7 +8,7 @@ import {
   setLessonBundleAction,
   setPermissionAction,
 } from "@/app/actions/admin-students";
-import { chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName } from "@/lib/format";
 import type { PermissionResource } from "@/lib/types";
 
 export interface PermissionLesson {
@@ -113,7 +113,9 @@ export function PermissionsPanel({
             <h3 className="text-sm font-semibold text-ink">
               {chapterName(chapter.position, chapter.kind)}
             </h3>
-            <p className="text-xs text-ink-3">{chapter.title}</p>
+            <p className="text-xs text-ink-3">
+              {chapterHint(chapter.kind, chapter.title)}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2">

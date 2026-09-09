@@ -12,7 +12,7 @@ import {
 } from "@/app/actions/admin-content";
 import { ActionButton } from "@/components/action-button";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
-import { chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "المحتوى · لوحة المدرّس" };
@@ -91,7 +91,9 @@ export default async function AdminContentPage() {
                       </h2>
                       {chapter.archived_at ? <Badge tone="muted">مؤرشف</Badge> : null}
                     </div>
-                    <p className="text-xs text-ink-3">{chapter.title}</p>
+                    <p className="text-xs text-ink-3">
+                      {chapterHint(chapter.kind, chapter.title)}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-1">

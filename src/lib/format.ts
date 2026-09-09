@@ -36,10 +36,18 @@ export function ordinal(n: number): string {
  * "الفصل الأول" أو "مراجعة شاملة".
  *
  * حاوية المراجعات العابرة للفصول لا تأخذ رقماً: ترتيبها بين الفصول لا
- * معنى له، وهي أختٌ لها لا واحدةٌ منها.
+ * معنى له، وهي أختٌ لها لا واحدةٌ منها. الطالب لا يرى «الفصل الثامن»
+ * حتى لو كان رقمها الداخلي ٨.
  */
 export function chapterName(position: number, kind: string = "chapter"): string {
   return kind === "review" ? "مراجعة شاملة" : `الفصل ${ordinal(position)}`;
+}
+
+/** سطر تحت عنوان الحاوية — يوضح أنها ليست فصلاً دراسياً جديداً. */
+export function chapterHint(kind: string, title: string): string {
+  return kind === "review"
+    ? "مش فصل جديد — مراجعات بتجمع فصول فاتت"
+    : title;
 }
 
 /**

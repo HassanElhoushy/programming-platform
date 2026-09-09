@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     supabase
       .from("exam_attempts")
       .select(
-        "id, exam_id, status, submitted_at, auto_score, manual_score, total_points, feedback_seen_at, exams(title, level, lessons(position, title, chapters(position)))",
+        "id, exam_id, status, submitted_at, auto_score, manual_score, total_points, feedback_seen_at, exams(title, level, lessons(position, title, kind, chapters(position, kind)))",
       )
       .is("voided_at", null)
       .order("started_at", { ascending: false }),
