@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookOpen, ChevronLeft } from "lucide-react";
 
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "المحتوى · منصة البرمجة" };
@@ -100,6 +100,11 @@ export default async function ContentPage() {
                         <p className="mt-0.5 truncate text-sm font-medium text-ink">
                           {lesson.title}
                         </p>
+                        {chapter.kind === "review" ? (
+                          <p className="mt-1 text-xs leading-relaxed text-ink-3">
+                            {reviewScope(lesson.position)}
+                          </p>
+                        ) : null}
                         <p className="mt-1 text-xs text-ink-3">
                           {parts.length > 0 ? parts.join(" · ") : "لا يوجد محتوى متاح"}
                         </p>

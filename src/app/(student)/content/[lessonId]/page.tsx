@@ -4,7 +4,7 @@ import { ChevronRight, FileText } from "lucide-react";
 
 import { ExamCard, FileRow } from "@/components/shared";
 import { Badge, EmptyState, SectionTitle } from "@/components/ui/primitives";
-import { chapterHint, lessonPath } from "@/lib/format";
+import { lessonPath, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -68,8 +68,8 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
           {lessonPath(chapter?.position ?? 0, lesson.position, lesson.kind, chapter?.kind)}
         </p>
         {chapter?.kind === "review" ? (
-          <p className="mt-0.5 text-xs text-ink-3">
-            {chapterHint(chapter.kind, chapter.title)}
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+            {reviewScope(lesson.position)}
           </p>
         ) : null}
         <h1 className="mt-1 text-xl font-semibold text-ink sm:text-2xl">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "بنك الأسئلة · منصة البرمجة" };
@@ -47,7 +47,7 @@ function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
   if (lesson.chapters?.kind === "review") {
     return {
       title: lesson.title,
-      blurb: "مش فصل جديد — أسئلة بتجمع أكتر من فصل عشان تفرّق بين اللي فات",
+      blurb: reviewScope(lesson.position),
     };
   }
   if (lesson.kind === "review") {

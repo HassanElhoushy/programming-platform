@@ -8,7 +8,7 @@ import {
   setLessonBundleAction,
   setPermissionAction,
 } from "@/app/actions/admin-students";
-import { chapterHint, chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
 import type { PermissionResource } from "@/lib/types";
 
 export interface PermissionLesson {
@@ -140,6 +140,11 @@ export function PermissionsPanel({
                       <p className="mt-0.5 truncate text-sm font-medium text-ink">
                         {lesson.title}
                       </p>
+                      {chapter.kind === "review" ? (
+                        <p className="mt-1 text-xs leading-relaxed text-ink-3">
+                          {reviewScope(lesson.position)}
+                        </p>
+                      ) : null}
                     </div>
 
                     <button

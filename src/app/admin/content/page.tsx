@@ -12,7 +12,7 @@ import {
 } from "@/app/actions/admin-content";
 import { ActionButton } from "@/components/action-button";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "المحتوى · لوحة المدرّس" };
@@ -165,6 +165,11 @@ export default async function AdminContentPage() {
                             <p className="mt-0.5 truncate text-sm font-medium text-ink">
                               {lesson.title}
                             </p>
+                            {chapter.kind === "review" ? (
+                              <p className="mt-1 text-xs leading-relaxed text-ink-3">
+                                {reviewScope(lesson.position)}
+                              </p>
+                            ) : null}
                             <p className="mt-1 text-xs text-ink-3">
                               {parts.join(" · ")}
                             </p>

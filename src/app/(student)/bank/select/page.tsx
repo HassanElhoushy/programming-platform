@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import { LessonPicker, type PickerChapter } from "./lesson-picker";
 import { PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName } from "@/lib/format";
+import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "اختار دروسك · بنك الأسئلة" };
@@ -132,7 +132,8 @@ export default async function BankSelectPage() {
        * داخل حاوية المراجعات لا يُكتب "مراجعة الفصل" فوق كل صف: العناوين
        * هناك تقول ما تغطّيه ("ختام الترم الأول")، والكلمة تكرارٌ يشوّش.
        */
-      label: chapter.kind === "review" ? null : lessonName(lesson.position, lesson.kind),
+      label: chapter.kind === "review" ? "مراجعة" : lessonName(lesson.position, lesson.kind),
+      blurb: chapter.kind === "review" ? reviewScope(lesson.position) : null,
       position: lesson.position,
       ...stats,
     });

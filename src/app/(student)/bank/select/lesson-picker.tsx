@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 export interface PickerLesson {
   id: string;
   title: string;
-  /** "الدرس الثاني" أو "مراجعة الفصل"، و null داخل حاوية المراجعات */
+  /** "الدرس الثاني" أو "مراجعة" داخل الحاوية */
   label: string | null;
+  /** جملة «أسئلة على إيه» لمراجعات الحاوية */
+  blurb: string | null;
   position: number;
   total: number;
   mastered: number;
@@ -142,6 +144,11 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
                         <span className="block text-xs text-ink-3">{lesson.label}</span>
                       ) : null}
                       <span className="block text-sm text-ink">{lesson.title}</span>
+                      {lesson.blurb ? (
+                        <span className="mt-0.5 block text-xs leading-relaxed text-ink-3">
+                          {lesson.blurb}
+                        </span>
+                      ) : null}
                       <span className="tnum mt-0.5 block text-xs text-ink-3">
                         {lesson.mastered} من {lesson.total} مثبَّت
                         {lesson.todo > 0 ? ` · ${lesson.todo} محتاج شغل` : ""}
