@@ -68,6 +68,8 @@ create table if not exists public.profiles (
   role        public.user_role   not null default 'student',
   status      public.user_status not null default 'pending',
   full_access boolean            not null default false,
+  -- آخر مرة فتح فيها المنصة وهو داخل، لا وقت كلمة السر. انظر 28_last_seen.sql.
+  last_seen_at timestamptz,
   created_at  timestamptz        not null default now(),
   constraint profiles_full_name_len check (char_length(trim(full_name)) between 3 and 80),
   constraint profiles_phone_format check (phone ~ '^01[0125][0-9]{8}$')

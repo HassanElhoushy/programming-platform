@@ -42,6 +42,20 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 });
 
 /**
+ * وقت كلمة السر مش وقت فتح المنصة: الجلسة تفضل شهور والـ last_sign_in_at
+ * ما بيتحركش. نكتب last_seen_at هنا، وعلى الأكثر مرة كل دقيقتين.
+ */
+const SEEN_GAP_MS = 2 * 60 * 1000;
+
+export async function recordPresence(profile: Profile) {
+  const last = profile.last_seen_at ? Date.parse(profile.last_seen_at) : 0;
+  if (Number.isFinite(last) && Date.now() - last < SEEN_GAP_MS) return;
+
+  const supabase = await createClient();
+  await supabase.rpc("touch_last_seen");
+}
+
+/**
  * جلسة قائمة بلا ملف مستخدم.
  *
  * تحدث إذا أُنشئ الحساب قبل وجود جدول profiles، أو حُذف الصف يدوياً. لولا
@@ -63,6 +77,7 @@ export async function requireStudent(): Promise<SessionUser> {
   if (session.profile.role === "admin") redirect("/admin");
   if (session.profile.status !== "active") redirect("/pending");
 
+  await recordPresence(session.profile);
   return session;
 }
 

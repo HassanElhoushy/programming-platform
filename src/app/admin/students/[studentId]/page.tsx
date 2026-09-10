@@ -49,7 +49,7 @@ export default async function StudentDetailPage({
 
   const { data: student } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, status, full_access, created_at, role")
+    .select("id, full_name, phone, status, full_access, created_at, last_seen_at, role")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -147,6 +147,7 @@ export default async function StudentDetailPage({
 
   const attempts = attemptsRes.data ?? [];
   const badge = STATUS_BADGE[student.status as UserStatus];
+  const lastSeen = student.last_seen_at;
 
   return (
     <>
@@ -169,8 +170,11 @@ export default async function StudentDetailPage({
         <p dir="ltr" className="tnum mt-1 text-right text-sm text-ink-2">
           {student.phone}
         </p>
-        <p className="mt-0.5 text-xs text-ink-3">
+        <p className="tnum mt-0.5 text-xs text-ink-3">
           سجّل في {formatDate(student.created_at)}
+          {lastSeen
+            ? ` · آخر دخول ${formatDateTime(lastSeen)}`
+            : " · ما دخلش بعد"}
         </p>
       </div>
 

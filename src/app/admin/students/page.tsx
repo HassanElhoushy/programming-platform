@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Users } from "lucide-react";
 
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { UserStatus } from "@/lib/types";
 
@@ -32,7 +32,7 @@ export default async function StudentsPage({
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, phone, status, full_access, created_at")
+    .select("id, full_name, phone, status, full_access, created_at, last_seen_at")
     .eq("role", "student")
     .order("created_at", { ascending: false });
 
@@ -79,6 +79,7 @@ export default async function StudentsPage({
         <div className="flex flex-col gap-2">
           {students.map((student) => {
             const badge = STATUS_BADGE[student.status as UserStatus];
+            const lastSeen = student.last_seen_at;
 
             return (
               <Link
@@ -98,8 +99,11 @@ export default async function StudentsPage({
                     {student.full_access ? (
                       <Badge tone="accent">كل الصلاحيات</Badge>
                     ) : null}
-                    <span className="text-xs text-ink-3">
+                    <span className="tnum text-xs text-ink-3">
                       سجّل {formatDate(student.created_at)}
+                      {lastSeen
+                        ? ` · آخر دخول ${formatDateTime(lastSeen)}`
+                        : " · ما دخلش بعد"}
                     </span>
                   </div>
                 </div>

@@ -3,7 +3,7 @@ import { Clock, Ban } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { AuthShell } from "@/components/auth-shell";
-import { getAuthUser, getSessionUser } from "@/lib/auth";
+import { getAuthUser, getSessionUser, recordPresence } from "@/lib/auth";
 
 export const metadata = { title: "بانتظار الموافقة · منصة البرمجة" };
 
@@ -36,6 +36,8 @@ export default async function PendingPage() {
 
   if (session.profile.role === "admin") redirect("/admin");
   if (session.profile.status === "active") redirect("/dashboard");
+
+  await recordPresence(session.profile);
 
   const blocked = session.profile.status === "blocked";
   const Icon = blocked ? Ban : Clock;
