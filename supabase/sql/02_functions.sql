@@ -185,7 +185,10 @@ $$;
 -- محتوىً بذاته. فلو منح المدرّس الطالب امتحاناً واحداً داخل درس ولم يمنحه
 -- الدرس، وجب أن يظهر اسم الدرس وإلا استحال كتابة
 -- "الفصل الأول · الدرس الثاني" فوق ذلك الامتحان.
--- ما يبقى محجوباً هو محتوى الدرس نفسه: كل ملف وكل امتحان يُفحص على حدة.
+--
+-- صلاحية الدرس وحدها لا تكفي: بطاقة فارغة («لا يوجد محتوى متاح») كانت
+-- تظهر مراجعة شاملة لم يُفتح منها ملف ولا امتحان، لأن صفاً قديماً على
+-- عنوان الدرس بقي بعد سحب المحتوى. الظهور مربوط بمحتوى يُفتح فعلاً.
 -- ---------------------------------------------------------------------------
 create or replace function public.can_see_lesson(p_lesson_id uuid)
 returns boolean
@@ -197,7 +200,6 @@ as $$
   select case
     when public.is_admin() then true
     when not public.is_active_student() then false
-    when public.can_access_lesson(p_lesson_id) then true
     else exists (
       select 1 from public.lesson_files f
       where f.lesson_id = p_lesson_id and public.can_access_file(f.id)

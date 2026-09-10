@@ -25,7 +25,7 @@ export default async function ContentPage() {
       .is("archived_at", null)
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
-    supabase.from("exams").select("id, lesson_id").is("archived_at", null),
+    supabase.from("exams").select("id, lesson_id, kind").is("archived_at", null),
   ]);
 
   const chapters = chaptersRes.data ?? [];
@@ -37,15 +37,24 @@ export default async function ContentPage() {
 
   const examCounts = new Map<string, number>();
   for (const e of examsRes.data ?? []) {
+    if (e.kind === "bank") continue;
     examCounts.set(e.lesson_id, (examCounts.get(e.lesson_id) ?? 0) + 1);
   }
 
+  /*
+   * الدرس عنوان فوق محتوى. لو مفيش ملف ولا امتحان ظاهر (RLS شالتهم)،
+   * البطاقة هتقول «لا يوجد محتوى متاح» وتوهِم إن المدرّس فتح المراجعة.
+   */
   const visible = chapters
     .map((c) => ({
       ...c,
-      lessons: ((c.lessons as unknown as LessonRow[]) ?? []).sort(
-        (a, b) => a.position - b.position,
-      ),
+      lessons: ((c.lessons as unknown as LessonRow[]) ?? [])
+        .sort((a, b) => a.position - b.position)
+        .filter(
+          (lesson) =>
+            (fileCounts.get(lesson.id) ?? 0) + (examCounts.get(lesson.id) ?? 0) >
+            0,
+        ),
     }))
     .filter((c) => c.lessons.length > 0);
 

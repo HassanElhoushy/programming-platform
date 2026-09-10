@@ -48,7 +48,12 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
   ]);
 
   const files = filesRes.data ?? [];
-  const exams = examsRes.data ?? [];
+  /*
+   * البنك له خانته في الشريط. المحتوى هنا ملف ثم تدريب/امتحان — لو البنك
+   * ظهر جوّه الدرس انخلط مع الامتحان (مؤقّت ومحاولة واحدة) والطالب يفتكرهم
+   * حاجة واحدة.
+   */
+  const exams = (examsRes.data ?? []).filter((exam) => exam.kind !== "bank");
   const attemptByExam = new Map(
     (attemptsRes.data ?? []).map((a) => [a.exam_id, a]),
   );
@@ -102,27 +107,6 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
           <SectionTitle>الأسئلة</SectionTitle>
           <div className="flex flex-col gap-2">
             {exams.map((exam) => {
-              if (exam.kind === "bank") {
-                return (
-                  <ExamCard
-                    key={exam.id}
-                    href={`/bank/practice?exam=${exam.id}`}
-                    title={exam.title}
-                    level={exam.level}
-                    kind={exam.kind}
-                    durationMinutes={null}
-                    chapterPosition={chapter?.position ?? 0}
-                    lessonPosition={lesson.position}
-                    lessonKind={lesson.kind}
-                    chapterKind={chapter?.kind}
-                    cta={exam.is_open ? "ابدأ حل" : undefined}
-                    right={
-                      exam.is_open ? null : <Badge tone="muted">مغلق</Badge>
-                    }
-                  />
-                );
-              }
-
               const attempt = attemptByExam.get(exam.id);
 
               const status = attempt
