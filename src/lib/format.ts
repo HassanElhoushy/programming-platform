@@ -51,6 +51,25 @@ export function chapterHint(kind: string, title: string): string {
 }
 
 /**
+ * تسميات البنك وحدها. المحتوى يبقي «مراجعة» و«ختام» لأن الملف هناك ختام
+ * درس، والبنك أسئلة تخلط فصولاً — فالطالب لا يظنها درساً جديداً ولا مراجعة
+ * بالمعنى الدراسي.
+ */
+export function bankChapterName(position: number, kind: string = "chapter"): string {
+  return kind === "review" ? "أسئلة شاملة" : chapterName(position, kind);
+}
+
+export function bankChapterHint(kind: string): string | null {
+  return kind === "review" ? "أسئلة بتربط أكتر من فصل" : null;
+}
+
+/** «ختام الترم الأول» → «الترم الأول» في قائمة البنك فقط. */
+export function bankLessonTitle(title: string): string {
+  const stripped = title.replace(/^ختام\s+/u, "").trim();
+  return stripped.length > 0 ? stripped : title;
+}
+
+/**
  * ماذا تغطي كل مراجعة في حاوية المراجعات، بجملة يقرأها الطالب قبل ما يدخل.
  *
  * الترتيب هو ترتيب الدروس داخل الحاوية لا رقم فصل.

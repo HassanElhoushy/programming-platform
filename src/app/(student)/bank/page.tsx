@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
+import { bankChapterHint, bankChapterName, bankLessonTitle, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "بنك الأسئلة · منصة البرمجة" };
@@ -41,18 +41,18 @@ function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
   const lesson = bank.lessons;
   if (!lesson) return { title: bank.title, blurb: null };
   /*
-   * مراجعة عابرة للفصول (حاوية المراجعات) عنوانها هو اسم المراجعة نفسه:
-   * «ختام الترم الأول» لا «ختام الفصل» ولا «الفصل الثامن».
+   * حاوية الأسئلة الشاملة عنوانها اسم الدرس بلا «ختام»: «الترم الأول»
+   * لا «ختام الترم» ولا «الفصل الثامن».
    */
   if (lesson.chapters?.kind === "review") {
     return {
-      title: lesson.title,
+      title: bankLessonTitle(lesson.title),
       blurb: reviewScope(lesson.position),
     };
   }
   if (lesson.kind === "review") {
     return {
-      title: "ختام الفصل",
+      title: "أسئلة الفصل",
       blurb: "أسئلة تخلط دروس الفصل مع بعض — مش درس جديد، عشان تفرّق بين اللي فات",
     };
   }
@@ -64,17 +64,17 @@ function bankLabel(bank: BankRow): { title: string; blurb: string | null } {
 
 /**
  * خانة الخلط فوق دروس الفصل. جواها البنوك الظاهرة للطالب فقط —
- * RLS والصلاحية — فلا نقول «من أول درس لختام الفصل» وهو فاتح درسين.
+ * RLS والصلاحية — فلا نقول «من أول درس لآخر الفصل» وهو فاتح درسين.
  */
 function mixScope(banks: BankRow[], chapterKind: string): string {
-  if (chapterKind === "review") return "المراجعات اللي قدامك";
+  if (chapterKind === "review") return "الأسئلة الشاملة اللي قدامك";
 
   const n = banks.filter((b) => b.lessons?.kind !== "review").length;
   const hasReview = banks.some((b) => b.lessons?.kind === "review");
   const lessonsWord = n === 1 ? "درس" : n === 2 ? "درسان" : `${n} دروس`;
 
-  if (hasReview && n === 0) return "ختام الفصل اللي قدامك";
-  if (hasReview) return `${lessonsWord} وختام الفصل اللي قدامك`;
+  if (hasReview && n === 0) return "أسئلة الفصل اللي قدامك";
+  if (hasReview) return `${lessonsWord} وأسئلة الفصل اللي قدامك`;
   if (n === 2) return "الدرسان اللي قدامك";
   return `${lessonsWord} اللي قدامك`;
 }
@@ -205,21 +205,21 @@ export default async function BankPage() {
           className="card card-hover mb-3 flex items-center gap-3 px-4 py-4"
         >
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-ink">ابدأ اللي محتاج شغل</p>
+            <p className="text-sm font-medium text-ink">ابدأ حل</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
-              <span className="tnum">{all.todo}</span> سؤال لسه ما ثبّتتْهمش:
-              إمّا غلطت فيهم وإمّا ما شفتهمش. ادخل هنا وأنت بتتعلم أو بتصلح
-              غلط — مش وأنت بتراجع حاجة خلّصتها.
+              دي كل أسئلة البنك اللي لسه ما حليتهاش:{" "}
+              <span className="tnum">{all.todo}</span> سؤال — إمّا غلطت فيهم
+              وإمّا ما شفتهمش. ادخل هنا وأنت بتحل، مش وأنت بتراجع حاجة خلّصتها.
             </p>
           </div>
           <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
         </Link>
       ) : (
         <div className="card mb-3 px-4 py-4">
-          <p className="text-sm font-medium text-ink">مفيش حاجة محتاجة شغل</p>
+          <p className="text-sm font-medium text-ink">حليت كل أسئلة البنك</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
-              ثبّتت كل الأسئلة. اللي فاضل المراجعة من الخانة اللي تحت — مش
-              هتلاقي هنا أسئلة جديدة.
+              اللي فاضل تراجع اللي اتحل من الخانة اللي تحت — مش هتلاقي هنا
+              أسئلة جديدة.
             </p>
         </div>
       )}
@@ -236,14 +236,14 @@ export default async function BankPage() {
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-ink">
-              {all.forgot > 0 ? "راجع اللي بدأت تنساه" : "راجع اللي مثبَّت"}
+              {all.forgot > 0 ? "راجع اللي بدأت تنساه" : "راجع اللي اتحل"}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-ink-3">
               {all.forgot > 0 ? (
                 <>
-                  <span className="tnum">{all.forgot}</span> سؤال ثبّتّه وبعدين
-                  رجعت غلطت فيه. ادخل هنا ترجّع اللي نسيته — دي مراجعة، مش
-                  درساً جديداً.
+                  <span className="tnum">{all.forgot}</span> سؤال حليته وبعدين
+                  رجعت غلطت فيه. ادخل هنا ترجّع اللي نسيته — دي مراجعة للي
+                  اتحل، مش أسئلة جديدة.
                 </>
               ) : (
                 <>
@@ -284,16 +284,16 @@ export default async function BankPage() {
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold text-ink">
-                    {chapterName(chapter.position, chapter.kind)}
+                    {bankChapterName(chapter.position, chapter.kind)}
                   </h2>
-                  {chapter.kind === "review" ? (
+                  {bankChapterHint(chapter.kind) ? (
                     <p className="mt-0.5 text-xs text-ink-3">
-                      {chapterHint(chapter.kind, chapter.title)}
+                      {bankChapterHint(chapter.kind)}
                     </p>
                   ) : null}
                 </div>
                 <span className="tnum text-xs text-ink-3">
-                  {totals.mastered} من {totals.total} مثبَّت
+                  {totals.mastered} من {totals.total} اتحل
                 </span>
               </div>
 
@@ -307,13 +307,13 @@ export default async function BankPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-ink">
                           {chapter.kind === "review"
-                            ? "الأسئلة المفتوحة في المراجعات مخلوطة"
+                            ? "الأسئلة المفتوحة هنا مخلوطة"
                             : "الأسئلة المفتوحة في الفصل مخلوطة"}
                         </p>
                         <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
                           {mixScope(chapter.banks, chapter.kind)} مع بعض — مش درس
                           لوحده — <span className="tnum">{totals.todo}</span>{" "}
-                          سؤال محتاج شغل
+                          سؤال لسه ما اتحلتش
                         </p>
                       </div>
                       <ChevronLeft
@@ -329,8 +329,8 @@ export default async function BankPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-ink">
                           {chapter.kind === "review"
-                            ? "راجع المفتوح في المراجعات مخلوط"
-                            : "راجع المفتوح في الفصل مخلوط"}
+                            ? "راجع اللي اتحل هنا مخلوط"
+                            : "راجع اللي اتحل في الفصل مخلوط"}
                         </p>
                         <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
                           خلّصت {mixScope(chapter.banks, chapter.kind)} —
@@ -363,9 +363,9 @@ export default async function BankPage() {
                         ) : null}
                         <p className="mt-0.5 text-xs text-ink-3">
                           <span className="tnum">{stats.mastered}</span> من{" "}
-                          <span className="tnum">{stats.total}</span> مثبَّت
-                          {stats.todo > 0 ? ` · ${stats.todo} محتاج شغل` : ""}
-                          {stats.forgot > 0 ? ` · ${stats.forgot} محتاج مراجعة` : ""}
+                          <span className="tnum">{stats.total}</span> اتحل
+                          {stats.todo > 0 ? ` · ${stats.todo} لسه ما اتحلتش` : ""}
+                          {stats.forgot > 0 ? ` · ${stats.forgot} بدأت تنساه` : ""}
                         </p>
                       </div>
                       <ChevronLeft

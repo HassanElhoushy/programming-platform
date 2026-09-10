@@ -150,9 +150,9 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
                         </span>
                       ) : null}
                       <span className="tnum mt-0.5 block text-xs text-ink-3">
-                        {lesson.mastered} من {lesson.total} مثبَّت
-                        {lesson.todo > 0 ? ` · ${lesson.todo} محتاج شغل` : ""}
-                        {lesson.forgot > 0 ? ` · ${lesson.forgot} محتاج مراجعة` : ""}
+                        {lesson.mastered} من {lesson.total} اتحل
+                        {lesson.todo > 0 ? ` · ${lesson.todo} لسه ما اتحلتش` : ""}
+                        {lesson.forgot > 0 ? ` · ${lesson.forgot} بدأت تنساه` : ""}
                       </span>
                     </span>
                   </label>
@@ -174,14 +174,14 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
           <ModeRow
             checked={mode === "work"}
             onSelect={() => setMode("work")}
-            title="اللي محتاج شغل"
-            hint="الأسئلة اللي لسه ما ثبّتتْهاش: غلط أو ما اتشافت. اختار ده وأنت بتتعلم."
+            title="ابدأ حل"
+            hint="كل أسئلة البنك في اللي اخترته اللي لسه ما حليتهاش: غلط أو ما اتشافت. اختار ده وأنت بتحل."
           />
           <ModeRow
             checked={mode === "review"}
             onSelect={() => setMode("review")}
-            title="مراجعة اللي مثبَّت"
-            hint="الأسئلة اللي خلّصتها صح. اختار ده لما تراجع بعد فترة وتتأكد إنك لسه فاكر."
+            title="راجع اللي اتحل"
+            hint="الأسئلة اللي حلّيتها صح. اختار ده لما تراجع بعد فترة وتتأكد إنك لسه فاكر."
           />
         </div>
       </div>
@@ -197,7 +197,7 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
             ? "اختار درس على الأقل"
             : available === 0
               ? mode === "review"
-                ? "مفيش حاجة مثبَّتة في اللي اخترته"
+                ? "مفيش حاجة اتحلت في اللي اخترته"
                 : "خلّصت كل اللي اخترته"
               : going
                 ? "بيفتح…"

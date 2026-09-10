@@ -5,6 +5,8 @@ import { Badge, Fold } from "@/components/ui/primitives";
 import {
   QUESTION_TIER_LABELS,
   QUESTION_TYPE_LABELS,
+  bankChapterName,
+  bankLessonTitle,
   formatDateTime,
   lessonPath,
 } from "@/lib/format";
@@ -102,13 +104,16 @@ export async function StudentBankSection({ studentId }: { studentId: string }) {
     if (!group) {
       group = {
         examId: exam.id,
-        title: lesson?.title ?? exam.title,
-        crumb: lessonPath(
-          lesson?.chapters?.position ?? 0,
-          lesson?.position ?? 0,
-          lesson?.kind,
-          lesson?.chapters?.kind,
-        ),
+        title: bankLessonTitle(lesson?.title ?? exam.title),
+        crumb:
+          lesson?.chapters?.kind === "review"
+            ? bankChapterName(0, "review")
+            : lessonPath(
+                lesson?.chapters?.position ?? 0,
+                lesson?.position ?? 0,
+                lesson?.kind,
+                lesson?.chapters?.kind,
+              ),
         total: totals.get(exam.id) ?? 0,
         mastered: 0,
         todo: 0,
@@ -142,8 +147,8 @@ export async function StudentBankSection({ studentId }: { studentId: string }) {
     banks.length === 0
       ? "ما حلّش حاجة لسه"
       : [
-          `${mastered} مثبَّت`,
-          todo > 0 ? `${todo} محتاج شغل` : null,
+          `${mastered} اتحل`,
+          todo > 0 ? `${todo} لسه ما اتحلتش` : null,
           forgot > 0 ? `${forgot} بدأ ينساه` : null,
         ]
           .filter(Boolean)
@@ -154,7 +159,7 @@ export async function StudentBankSection({ studentId }: { studentId: string }) {
       {banks.length === 0 ? (
         <p className="card px-4 py-6 text-center text-sm text-ink-3">
           ما حلّش أي سؤال في البنك لسه. أول ما يبدأ، هتشوف هنا بدأ أنهي
-          درس، ثبّت كام، والأسئلة اللي لسه غلط فيها.
+          درس، حل كام، والأسئلة اللي لسه غلط فيها.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -167,8 +172,8 @@ export async function StudentBankSection({ studentId }: { studentId: string }) {
                     {bank.title}
                   </p>
                   <p className="tnum mt-2 text-xs text-ink-3">
-                    {bank.mastered} من {bank.total || "—"} مثبَّت
-                    {bank.todo > 0 ? ` · ${bank.todo} محتاج شغل` : ""}
+                    {bank.mastered} من {bank.total || "—"} اتحل
+                    {bank.todo > 0 ? ` · ${bank.todo} لسه ما اتحلتش` : ""}
                     {bank.forgot > 0 ? ` · ${bank.forgot} بدأ ينساه` : ""}
                     {` · آخر مرة ${formatDateTime(bank.last)}`}
                   </p>

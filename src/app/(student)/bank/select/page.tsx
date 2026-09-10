@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import { LessonPicker, type PickerChapter } from "./lesson-picker";
 import { PageHeader, QueryError } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
+import { bankChapterHint, bankChapterName, bankLessonTitle, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "اختار دروسك · بنك الأسئلة" };
@@ -109,11 +109,8 @@ export default async function BankSelectPage() {
       byChapter.get(chapter.id) ??
       ({
         id: chapter.id,
-        label: chapterName(chapter.position, chapter.kind),
-        hint:
-          chapter.kind === "review"
-            ? chapterHint(chapter.kind, chapter.title)
-            : null,
+        label: bankChapterName(chapter.position, chapter.kind),
+        hint: bankChapterHint(chapter.kind),
         position: chapter.kind === "review" ? Number.MAX_SAFE_INTEGER : chapter.position,
         lessons: [],
       } satisfies PickerChapter);
@@ -127,12 +124,17 @@ export default async function BankSelectPage() {
 
     entry.lessons.push({
       id: lesson.id,
-      title: lesson.title,
+      title: chapter.kind === "review" ? bankLessonTitle(lesson.title) : lesson.title,
       /*
-       * داخل حاوية المراجعات لا يُكتب "مراجعة الفصل" فوق كل صف: العناوين
-       * هناك تقول ما تغطّيه ("ختام الترم الأول")، والكلمة تكرارٌ يشوّش.
+       * داخل الأسئلة الشاملة لا يُكتب "مراجعة الفصل" فوق كل صف: العنوان
+       * يقول ما تغطّيه («الترم الأول»)، والكلمة تكرار.
        */
-      label: chapter.kind === "review" ? "مراجعة" : lessonName(lesson.position, lesson.kind),
+      label:
+        chapter.kind === "review"
+          ? "أسئلة"
+          : lesson.kind === "review"
+            ? "أسئلة الفصل"
+            : lessonName(lesson.position, lesson.kind),
       blurb: chapter.kind === "review" ? reviewScope(lesson.position) : null,
       position: lesson.position,
       ...stats,

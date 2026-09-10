@@ -287,7 +287,7 @@ function NothingHere({ review }: { review: boolean }) {
       </Link>
       <p className="card px-4 py-8 text-center text-sm leading-relaxed text-ink-3">
         {review
-          ? "مفيش حاجة مثبّتة في النطاق ده تراجعها. حلّ الأسئلة الأول وبعدين ارجع راجعها."
+          ? "مفيش حاجة اتحلت في النطاق ده تراجعها. حلّ الأسئلة الأول وبعدين ارجع راجعها."
           : "مفيش أسئلة في النطاق ده."}
       </p>
     </>
