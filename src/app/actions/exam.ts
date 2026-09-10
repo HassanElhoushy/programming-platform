@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const RPC_MESSAGES: Record<string, string> = {
   EXAM_CLOSED: "ده مقفول دلوقتي.",
+  BANK_NOT_AN_EXAM: "ده بنك أسئلة، مش امتحان. ادخل من بنك الأسئلة.",
   FORBIDDEN: "ده مش متاح لحسابك.",
   ATTEMPT_NOT_FOUND: "مش لاقيين المحاولة دي.",
   ATTEMPT_VOIDED: "المحاولة دي اتلغت. ابدأ من جديد.",

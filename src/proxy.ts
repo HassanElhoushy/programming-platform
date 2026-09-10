@@ -25,31 +25,6 @@ export default async function proxy(request: NextRequest) {
   const isPublic = matchesPath(pathname, PUBLIC_PATHS);
   const isAuthPage = matchesPath(pathname, AUTH_PAGES);
 
-  // #region agent log
-  if (
-    pathname === "/icon" ||
-    pathname.startsWith("/icon/") ||
-    pathname === "/apple-icon" ||
-    pathname.startsWith("/apple-icon/")
-  ) {
-    fetch("http://127.0.0.1:7488/ingest/7364cfdd-9ab8-40c6-a8cc-c4b17f786867", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "2f25a8",
-      },
-      body: JSON.stringify({
-        sessionId: "2f25a8",
-        hypothesisId: "A",
-        location: "src/proxy.ts:icon",
-        message: "icon request through proxy",
-        data: { pathname, hasUser: Boolean(user), isPublic, isAuthPage },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-
   if (!user && !isPublic && pathname !== "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

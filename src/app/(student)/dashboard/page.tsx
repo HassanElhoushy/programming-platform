@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     supabase
       .from("exam_attempts")
       .select(
-        "id, exam_id, status, submitted_at, auto_score, manual_score, total_points, feedback_seen_at, exams(title, level, lessons(position, title, kind, chapters(position, kind)))",
+        "id, exam_id, status, submitted_at, auto_score, manual_score, total_points, feedback_seen_at, exams(title, level, kind, lessons(position, title, kind, chapters(position, kind)))",
       )
       .is("voided_at", null)
       .order("started_at", { ascending: false }),
@@ -51,8 +51,11 @@ export default async function DashboardPage() {
       .limit(4),
   ]);
 
-  const attempts = attemptsRes.data ?? [];
-  const openExams = openExamsRes.data ?? [];
+  const attempts = (attemptsRes.data ?? []).filter((a) => {
+    const exam = a.exams as unknown as { kind?: string } | null;
+    return exam?.kind !== "bank";
+  });
+  const openExams = (openExamsRes.data ?? []).filter((e) => e.kind !== "bank");
   const files = filesRes.data ?? [];
 
   const inProgress = attempts.find((a) => a.status === "in_progress");

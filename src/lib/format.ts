@@ -277,6 +277,7 @@ export function kindNoun(kind: string): string {
  * فتتبع الكلمة نوع العنصر بدل كلمة واحدة تخيف في موضع وتُضلّل في آخر.
  */
 export function kindDefinite(kind: string): string {
+  if (kind === "bank") return "بنك الأسئلة";
   return `ال${kindNoun(kind)}`;
 }
 

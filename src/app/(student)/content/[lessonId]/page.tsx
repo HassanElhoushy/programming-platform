@@ -102,6 +102,27 @@ export default async function LessonPage({ params }: PageProps<"/content/[lesson
           <SectionTitle>الأسئلة</SectionTitle>
           <div className="flex flex-col gap-2">
             {exams.map((exam) => {
+              if (exam.kind === "bank") {
+                return (
+                  <ExamCard
+                    key={exam.id}
+                    href={`/bank/practice?exam=${exam.id}`}
+                    title={exam.title}
+                    level={exam.level}
+                    kind={exam.kind}
+                    durationMinutes={null}
+                    chapterPosition={chapter?.position ?? 0}
+                    lessonPosition={lesson.position}
+                    lessonKind={lesson.kind}
+                    chapterKind={chapter?.kind}
+                    cta={exam.is_open ? "ابدأ حل" : undefined}
+                    right={
+                      exam.is_open ? null : <Badge tone="muted">مغلق</Badge>
+                    }
+                  />
+                );
+              }
+
               const attempt = attemptByExam.get(exam.id);
 
               const status = attempt

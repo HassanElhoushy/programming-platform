@@ -50,6 +50,12 @@ begin
 
   select * into v_exam from public.exams where id = p_exam_id;
 
+  -- البنك بلا محاولة: محرّك الامتحان يخوّف ويوقف بعد مرة. جلسته في
+  -- check_bank_answer لا هنا.
+  if v_exam.kind = 'bank' then
+    raise exception 'BANK_NOT_AN_EXAM' using errcode = '42501';
+  end if;
+
   select * into v_attempt
   from public.exam_attempts
   where exam_id = p_exam_id and student_id = v_uid and voided_at is null;

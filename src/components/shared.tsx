@@ -151,9 +151,11 @@ export function ExamCard({
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <KindBadge kind={kind} />
             <LevelBadge level={level} />
-            <Badge tone="muted">
-              {durationMinutes ? `${durationMinutes} دقيقة` : "بدون وقت محدد"}
-            </Badge>
+            {kind !== "bank" ? (
+              <Badge tone="muted">
+                {durationMinutes ? `${durationMinutes} دقيقة` : "بدون وقت محدد"}
+              </Badge>
+            ) : null}
             {right}
           </div>
         </div>

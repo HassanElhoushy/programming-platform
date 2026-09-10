@@ -33,6 +33,11 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
 
   if (!exam) notFound();
 
+  // البنك بلا محاولة: محرّك الامتحان يخوّف ويحسب مؤقّتاً. جلسته في /bank.
+  if (exam.kind === "bank") {
+    redirect(`/bank/practice?exam=${exam.id}`);
+  }
+
   const lesson = exam.lessons as unknown as {
     position: number;
     title: string;
