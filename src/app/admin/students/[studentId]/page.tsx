@@ -7,6 +7,7 @@ import {
   type PermissionChapter,
 } from "./permissions-panel";
 import { ResetPassword } from "./reset-password";
+import { StudentBankSection } from "./bank-section";
 import {
   setFullAccessAction,
   setStudentStatusAction,
@@ -345,6 +346,9 @@ export default async function StudentDetailPage({
           </div>
         )}
       </Fold>
+
+      {/* ------------------------------------------------------------- */}
+      <StudentBankSection studentId={studentId} />
 
       {/* ------------------------------------------------------------- */}
       <Fold
