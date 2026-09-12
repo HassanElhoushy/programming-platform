@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, Layers, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Layers } from "lucide-react";
 
 import { EmptyState, PageHeader, QueryError } from "@/components/ui/primitives";
 import { bankChapterHint, bankChapterName, bankLessonTitle, lessonName, reviewScope } from "@/lib/format";
@@ -232,7 +232,6 @@ export default async function BankPage() {
             : "card card-hover mb-6 flex items-center gap-3 px-4 py-3.5"
         }
       >
-        <SlidersHorizontal className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
         <div className="min-w-0 flex-1">
           <p className="text-sm text-ink">اختار دروسك بنفسك</p>
           <p className="mt-0.5 text-xs text-ink-3">
