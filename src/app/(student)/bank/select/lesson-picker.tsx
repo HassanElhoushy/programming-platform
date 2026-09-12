@@ -25,39 +25,43 @@ export interface PickerChapter {
   lessons: PickerLesson[];
 }
 
-type Mode = "work" | "review";
-
 /**
  * شجرة اختيار الدروس.
  *
- * تشييك الفصل يشيّك دروسه كلها ومنها مراجعة ختامه، ويستطيع الطالب أن
- * يشيّل التشييك عن أي درس بعدها — فيحلّ على أول درسين من فصل، أو على
- * أسئلة الخلط وحدها بلا إعادة الدروس المنفردة.
+ * الوضع يجي من الصفحة اللي فتحتها: «اختار دروسك» شغل جديد، و«راجع اللي
+ * اتحل» مراجعة. مش اختيار جوّه الشاشة — الخانتين على رأس البنك هما اللي
+ * يفرّقوا، وهنا الطالب يحدّد النطاق بس.
  *
- * ولا زر "اختر الكل": من يريد المنهج كله يدخل البنك ويبدأ من الصفحة
- * الأولى، والزر هنا يجعل الشاشة كلها خياراً واحداً يُضغط بلا قراءة.
+ * تشييك الفصل يشيّك دروسه كلها ومنها مراجعة ختامه، ويستطيع أن يشيّل
+ * التشييك عن أي درس بعدها.
+ *
+ * ولا زر "اختر الكل": من يريد المنهج كله وهو بيحل يدخل «ابدأ حل» من
+ * الصفحة الأولى. في المراجعة يشيّك الفصول اللي عايزها، بما فيها الكل.
  */
-export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
+export function LessonPicker({
+  chapters,
+  review = false,
+}: {
+  chapters: PickerChapter[];
+  review?: boolean;
+}) {
   const router = useRouter();
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [mode, setMode] = useState<Mode>("work");
   const [going, setGoing] = useState(false);
 
   const totals = useMemo(() => {
     let todo = 0;
     let mastered = 0;
-    let forgot = 0;
 
     for (const chapter of chapters) {
       for (const lesson of chapter.lessons) {
         if (!picked.has(lesson.id)) continue;
         todo += lesson.todo;
         mastered += lesson.mastered;
-        forgot += lesson.forgot;
       }
     }
 
-    return { todo, mastered, forgot };
+    return { todo, mastered };
   }, [chapters, picked]);
 
   function toggleLesson(id: string) {
@@ -88,12 +92,12 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
     setGoing(true);
 
     const params = new URLSearchParams({ lessons: [...picked].join(",") });
-    if (mode === "review") params.set("mode", "review");
+    if (review) params.set("mode", "review");
     router.push(`/bank/practice?${params.toString()}`);
   }
 
   /* ما سيحصل عليه فعلاً بالاختيار الحالي — لا عدد الأسئلة الكلي */
-  const available = mode === "review" ? totals.mastered : totals.todo;
+  const available = review ? totals.mastered : totals.todo;
 
   return (
     <>
@@ -163,29 +167,6 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
         })}
       </div>
 
-      {/*
-        الوضع سؤال منفصل عن النطاق: من راجع بعد ستة أشهر كل أسئلته مثبَّتة،
-        فلو كان الوضع مشتقّاً من العدّادات لقالت له الصفحة "مفيش حاجة" وهو
-        بالضبط ما جاء من أجله.
-      */}
-      <div className="divider mt-8 pt-5">
-        <p className="mb-2 text-sm font-semibold text-ink">تحلّ على إيه؟</p>
-        <div className="flex flex-col gap-1.5">
-          <ModeRow
-            checked={mode === "work"}
-            onSelect={() => setMode("work")}
-            title="ابدأ حل"
-            hint="كل أسئلة البنك في اللي اخترته اللي لسه ما حليتهاش: غلط أو ما اتشافت. اختار ده وأنت بتحل."
-          />
-          <ModeRow
-            checked={mode === "review"}
-            onSelect={() => setMode("review")}
-            title="راجع اللي اتحل"
-            hint="الأسئلة اللي حلّيتها صح. اختار ده لما تراجع بعد فترة وتتأكد إنك لسه فاكر."
-          />
-        </div>
-      </div>
-
       <div className="sticky bottom-4 mt-6">
         <button
           type="button"
@@ -196,7 +177,7 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
           {picked.size === 0
             ? "اختار درس على الأقل"
             : available === 0
-              ? mode === "review"
+              ? review
                 ? "مفيش حاجة اتحلت في اللي اخترته"
                 : "خلّصت كل اللي اخترته"
               : going
@@ -205,34 +186,6 @@ export function LessonPicker({ chapters }: { chapters: PickerChapter[] }) {
         </button>
       </div>
     </>
-  );
-}
-
-function ModeRow({
-  checked,
-  onSelect,
-  title,
-  hint,
-}: {
-  checked: boolean;
-  onSelect: () => void;
-  title: string;
-  hint: string;
-}) {
-  return (
-    <label className={rowClass(checked)}>
-      <input
-        type="radio"
-        name="bank-mode"
-        checked={checked}
-        onChange={onSelect}
-        className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]"
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm text-ink">{title}</span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink-3">{hint}</span>
-      </span>
-    </label>
   );
 }
 

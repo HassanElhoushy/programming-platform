@@ -224,15 +224,33 @@ export default async function BankPage() {
         </div>
       )}
 
+      <Link
+        href="/bank/select"
+        className={
+          all.mastered > 0
+            ? "card card-hover mb-3 flex items-center gap-3 px-4 py-3.5"
+            : "card card-hover mb-6 flex items-center gap-3 px-4 py-3.5"
+        }
+      >
+        <SlidersHorizontal className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-ink">اختار دروسك بنفسك</p>
+          <p className="mt-0.5 text-xs text-ink-3">
+            اللي لسه ما اتحلتش: درس، أو فصلين، أو أسئلة الخلط.
+          </p>
+        </div>
+        <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+      </Link>
+
       {/*
         المراجعة ليست جائزةً لمن خلّص: من نسي سؤالاً كان يعرفه محتاجٌ لها
         ولو كان أمامه أسئلة لم يرها بعد. فالمدخل معروض دائماً، ونبرته تتبع
-        ما إذا كان هناك منسيٌّ فعلاً.
+        ما إذا كان هناك منسيٌّ فعلاً. تحت اختيار الدروس لأنها بعد الشغل لا قبله.
       */}
       {all.mastered > 0 ? (
         <Link
-          href="/bank/practice?mode=review"
-          className="card card-hover mb-3 flex items-center gap-3 px-4 py-4"
+          href="/bank/select?mode=review"
+          className="card card-hover mb-6 flex items-center gap-3 px-4 py-4"
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-ink">
@@ -242,14 +260,13 @@ export default async function BankPage() {
               {all.forgot > 0 ? (
                 <>
                   <span className="tnum">{all.forgot}</span> سؤال حليته وبعدين
-                  رجعت غلطت فيه. ادخل هنا ترجّع اللي نسيته — دي مراجعة للي
-                  اتحل، مش أسئلة جديدة.
+                  رجعت غلطت فيه. اختار الدرس وراجع اللي نسيته — مش أسئلة جديدة.
                 </>
               ) : (
                 <>
-                  الأسئلة اللي حلّيتها صح قبل كده. ادخل هنا لما تخلّص وعايز
-                  تتأكد إنك لسه فاكر، خصوصاً بعد فترة. لو لسه بتتعرّف على
-                  الدرس، الخانة اللي فوق أنسب.
+                  الأسئلة اللي حلّيتها صح. اختار الدرس أو الفصل اللي عايز
+                  تتأكد إنك لسه فاكره، خصوصاً بعد فترة. لو لسه بتتعرّف على
+                  الدرس، ابدأ حل فوق أنسب.
                 </>
               )}
             </p>
@@ -257,20 +274,6 @@ export default async function BankPage() {
           <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
         </Link>
       ) : null}
-
-      <Link
-        href="/bank/select"
-        className="card card-hover mb-6 flex items-center gap-3 px-4 py-3.5"
-      >
-        <SlidersHorizontal className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-ink">اختار دروسك بنفسك</p>
-          <p className="mt-0.5 text-xs text-ink-3">
-            درس، أو فصلين مع بعض، أو أسئلة الخلط وحدها.
-          </p>
-        </div>
-        <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
-      </Link>
 
       <div className="flex flex-col gap-6">
         {chapters.map(([chapterId, chapter]) => {

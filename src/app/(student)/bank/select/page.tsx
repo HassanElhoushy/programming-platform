@@ -6,8 +6,19 @@ import { PageHeader, QueryError } from "@/components/ui/primitives";
 import { bankChapterHint, bankChapterName, bankLessonTitle, lessonName, reviewScope } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "اختار دروسك · بنك الأسئلة" };
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/bank/select">) {
+  const params = await searchParams;
+  return {
+    title:
+      params.mode === "review"
+        ? "راجع اللي اتحل · بنك الأسئلة"
+        : "اختار دروسك · بنك الأسئلة",
+  };
+}
 
 interface BankRow {
   id: string;
@@ -32,7 +43,12 @@ interface BankRow {
  * والأمر الثاني هو الذي يجعل هذه الصفحة ضرورية: من شيّك الفصول الأربعة
  * الأولى لا تصله أسئلة ختام الترم أبداً، لأنها ليست ابنة أي فصل منها.
  */
-export default async function BankSelectPage() {
+export default async function BankSelectPage({
+  searchParams,
+}: PageProps<"/bank/select">) {
+  const params = await searchParams;
+  const review = params.mode === "review";
+
   const supabase = await createClient();
 
   const banksRes = await supabase
@@ -155,10 +171,14 @@ export default async function BankSelectPage() {
     <>
       <BackLink />
       <PageHeader
-        title="اختار دروسك"
-        subtitle="حدّد اللي عايز تتدرّب عليه — درس، فصل، أو خلطة من عندك"
+        title={review ? "راجع اللي اتحل" : "اختار دروسك"}
+        subtitle={
+          review
+            ? "حدّد الدرس أو الفصل اللي عايز تتأكد إنك لسه فاكره"
+            : "حدّد اللي لسه ما اتحلّش — درس، فصل، أو خلطة من عندك"
+        }
       />
-      <LessonPicker chapters={chapters} />
+      <LessonPicker chapters={chapters} review={review} />
     </>
   );
 }
