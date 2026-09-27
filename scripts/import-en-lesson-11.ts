@@ -51,9 +51,10 @@ async function main() {
       })
       .select("id")
       .single();
-    if (error || !data) throw error ?? new Error("chapter");
+    if (error || !data?.id) throw error ?? new Error("chapter");
     chapterId = data.id;
   }
+  if (!chapterId) throw new Error("chapter");
 
   const { data: lessonRow } = await supabase
     .from("lessons")
@@ -76,9 +77,10 @@ async function main() {
       })
       .select("id")
       .single();
-    if (error || !data) throw error ?? new Error("lesson");
+    if (error || !data?.id) throw error ?? new Error("lesson");
     lessonId = data.id;
   }
+  if (!lessonId) throw new Error("lesson");
 
   await ensureExam(lessonId, {
     title: "Lesson 1 practice",
