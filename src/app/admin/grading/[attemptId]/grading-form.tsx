@@ -111,7 +111,7 @@ export function GradingForm({
                 </span>
               </div>
 
-              <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
+              <p dir="auto" className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
                 {question.body}
               </p>
 

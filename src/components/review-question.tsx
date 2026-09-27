@@ -83,7 +83,7 @@ export function ReviewQuestionCard({
       </div>
 
       {question.type !== "fill_blank" ? (
-        <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
+        <p dir="auto" className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
           {withChoiceList(question.type, question.body, question.options)}
         </p>
       ) : null}

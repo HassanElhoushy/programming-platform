@@ -284,7 +284,7 @@ export default async function AdminExamPage({
                   ) : null}
                 </div>
 
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
+                <p dir="auto" className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
                   {withChoiceList(
                     question.type,
                     question.body,

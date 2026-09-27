@@ -373,32 +373,34 @@ export function ExamRunner({
               </span>
             </div>
 
-            {question.type !== "fill_blank" ? (
-              <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-                {withChoiceList(question.type, question.body, question.options)}
-              </p>
-            ) : null}
+            <div dir="auto">
+              {question.type !== "fill_blank" ? (
+                <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
+                  {withChoiceList(question.type, question.body, question.options)}
+                </p>
+              ) : null}
 
-            {question.type === "essay" ? (
-              <EssayInput
-                attemptId={attemptId}
-                questionId={question.id}
-                text={
-                  answers[question.id] && "text" in answers[question.id]!
-                    ? (answers[question.id] as { text: string }).text
-                    : ""
-                }
-                imagePath={images[question.id] ?? null}
-                onChangeText={(text) => setResponse(question.id, { text })}
-                onChangeImage={(path) => setImage(question.id, path)}
-              />
-            ) : (
-              <QuestionInput
-                question={question}
-                value={answers[question.id] ?? null}
-                onChange={(value) => setResponse(question.id, value)}
-              />
-            )}
+              {question.type === "essay" ? (
+                <EssayInput
+                  attemptId={attemptId}
+                  questionId={question.id}
+                  text={
+                    answers[question.id] && "text" in answers[question.id]!
+                      ? (answers[question.id] as { text: string }).text
+                      : ""
+                  }
+                  imagePath={images[question.id] ?? null}
+                  onChangeText={(text) => setResponse(question.id, { text })}
+                  onChangeImage={(path) => setImage(question.id, path)}
+                />
+              ) : (
+                <QuestionInput
+                  question={question}
+                  value={answers[question.id] ?? null}
+                  onChange={(value) => setResponse(question.id, value)}
+                />
+              )}
+            </div>
           </li>
         ))}
       </ol>

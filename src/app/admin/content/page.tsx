@@ -32,7 +32,8 @@ export default async function AdminContentPage() {
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
     supabase
       .from("chapters")
-      .select("id, title, position, kind, archived_at, lessons(id, title, position, kind, archived_at)")
+      .select("id, title, position, kind, track, archived_at, lessons(id, title, position, kind, archived_at)")
+      .order("track")
       .order("position"),
     supabase.from("lesson_files").select("id, lesson_id").is("archived_at", null),
     supabase.from("exams").select("id, lesson_id, is_open").is("archived_at", null),
@@ -90,6 +91,7 @@ export default async function AdminContentPage() {
                         {chapterName(chapter.position, chapter.kind)}
                       </h2>
                       {chapter.archived_at ? <Badge tone="muted">مؤرشف</Badge> : null}
+                      {chapter.track === "en" ? <Badge tone="accent">لغات</Badge> : null}
                     </div>
                     <p className="text-xs text-ink-3">
                       {chapterHint(chapter.kind, chapter.title)}
