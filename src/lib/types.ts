@@ -1,5 +1,6 @@
 export type UserRole = "admin" | "student";
 export type UserStatus = "pending" | "active" | "blocked";
+export type ContentTrack = "ar" | "en";
 export type FileKind = "explanation" | "slides";
 export type ExamLevel = "basic" | "advanced";
 export type ExamKind = "practice" | "exam" | "bank";
@@ -53,6 +54,7 @@ export interface Profile {
   role: UserRole;
   status: UserStatus;
   full_access: boolean;
+  track: ContentTrack;
   last_seen_at: string | null;
   created_at: string;
 }

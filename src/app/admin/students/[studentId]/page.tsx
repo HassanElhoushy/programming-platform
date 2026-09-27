@@ -11,6 +11,7 @@ import { StudentBankSection } from "./bank-section";
 import {
   setFullAccessAction,
   setStudentStatusAction,
+  setStudentTrackAction,
   voidAttemptAction,
 } from "@/app/actions/admin-students";
 import { ActionButton } from "@/components/action-button";
@@ -49,7 +50,7 @@ export default async function StudentDetailPage({
 
   const { data: student } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, status, full_access, created_at, last_seen_at, role")
+    .select("id, full_name, phone, status, full_access, track, created_at, last_seen_at, role")
     .eq("id", studentId)
     .maybeSingle();
 
@@ -59,7 +60,8 @@ export default async function StudentDetailPage({
     await Promise.all([
       supabase
         .from("chapters")
-        .select("id, title, position, kind, lessons(id, title, position, kind)")
+        .select("id, title, position, kind, track, lessons(id, title, position, kind)")
+        .eq("track", student.track)
         .is("archived_at", null)
         .order("position"),
       supabase
@@ -166,6 +168,7 @@ export default async function StudentDetailPage({
           </h1>
           <Badge tone={badge.tone}>{badge.label}</Badge>
           {student.full_access ? <Badge tone="accent">كل الصلاحيات</Badge> : null}
+          <Badge tone="muted">{student.track === "en" ? "لغات" : "عربي"}</Badge>
         </div>
         <p dir="ltr" className="tnum mt-1 text-right text-sm text-ink-2">
           {student.phone}
@@ -183,7 +186,39 @@ export default async function StudentDetailPage({
         <SectionTitle>الحساب</SectionTitle>
 
         <div className="card flex flex-col gap-4 px-4 py-4 sm:px-5">
-          <div className="flex flex-wrap items-center gap-2">
+          <div>
+            <p className="text-sm font-medium text-ink">المسار</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
+              عربي أو لغات. الطالب يشوف محتوى مساره بس، حتى لو فتحت له كل
+              الصلاحيات. اختاره قبل ما تفعّل الحساب.
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <ActionButton
+                action={setStudentTrackAction.bind(null, studentId, "ar")}
+                className={student.track === "ar" ? "btn btn-primary" : "btn btn-secondary"}
+                confirm={
+                  student.track !== "ar" && student.status === "active"
+                    ? "هيشوف محتوى العربي بس. دروس اللغات هتختفي من عنده."
+                    : undefined
+                }
+              >
+                عربي
+              </ActionButton>
+              <ActionButton
+                action={setStudentTrackAction.bind(null, studentId, "en")}
+                className={student.track === "en" ? "btn btn-primary" : "btn btn-secondary"}
+                confirm={
+                  student.track !== "en" && student.status === "active"
+                    ? "هيشوف محتوى اللغات بس. دروس العربي هتختفي من عنده."
+                    : undefined
+                }
+              >
+                لغات
+              </ActionButton>
+            </div>
+          </div>
+
+          <div className="divider flex flex-wrap items-center gap-2 pt-4">
             {student.status !== "active" ? (
               <ActionButton
                 action={setStudentStatusAction.bind(null, studentId, "active")}
@@ -222,7 +257,13 @@ export default async function StudentDetailPage({
       {/* ------------------------------------------------------------- */}
       <Fold
         title="الصلاحيات"
-        hint={student.full_access ? "مفتوح له كل حاجة" : undefined}
+        hint={
+          student.full_access
+            ? student.track === "en"
+              ? "مفتوح له كل محتوى اللغات"
+              : "مفتوح له كل محتوى العربي"
+            : undefined
+        }
       >
         <div className="mb-3">
           <ActionButton

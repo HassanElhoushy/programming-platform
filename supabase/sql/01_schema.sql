@@ -50,6 +50,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type public.content_track as enum ('ar', 'en');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
   create type public.permission_resource as enum ('lesson', 'file', 'exam');
 exception when duplicate_object then null; end $$;
 
@@ -68,6 +72,8 @@ create table if not exists public.profiles (
   role        public.user_role   not null default 'student',
   status      public.user_status not null default 'pending',
   full_access boolean            not null default false,
+  -- عربي أو لغات. الصلاحية الشاملة لا تعبر المسار. انظر 29_content_track.sql.
+  track       public.content_track not null default 'ar',
   -- آخر مرة فتح فيها المنصة وهو داخل، لا وقت كلمة السر. انظر 28_last_seen.sql.
   last_seen_at timestamptz,
   created_at  timestamptz        not null default now(),
@@ -89,6 +95,7 @@ create table if not exists public.chapters (
   -- فصل عادي أم حاوية للمراجعات العابرة للفصول. حاوية المراجعات لا تأخذ
   -- رقماً في العرض لأن ترتيبها بين الفصول لا معنى له.
   kind        public.chapter_kind not null default 'chapter',
+  track       public.content_track not null default 'ar',
   archived_at timestamptz,
   created_at  timestamptz not null default now()
 );

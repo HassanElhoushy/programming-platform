@@ -45,8 +45,23 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- مسار المستدعي: عربي أو لغات. المدرّس لا يُستدعى من هنا.
+-- ---------------------------------------------------------------------------
+create or replace function public.my_content_track()
+returns public.content_track
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.track
+  from public.profiles p
+  where p.id = (select auth.uid());
+$$;
+
+-- ---------------------------------------------------------------------------
 -- هل للمستدعي صلاحية على عنصر بعينه؟
--- إما full_access (يشمل المحتوى الجديد تلقائياً) أو صف في جدول permissions.
+-- إما full_access (محتوى مساره فقط، لا المسار الآخر) أو صف في جدول permissions.
 -- ---------------------------------------------------------------------------
 create or replace function public.has_grant(
   p_type public.permission_resource,
@@ -94,6 +109,7 @@ as $$
       where l.id = p_lesson_id
         and l.archived_at is null
         and c.archived_at is null
+        and c.track = public.my_content_track()
     ) and public.has_grant('lesson', p_lesson_id)
   end;
 $$;
@@ -120,6 +136,7 @@ as $$
         and f.archived_at is null
         and l.archived_at is null
         and c.archived_at is null
+        and c.track = public.my_content_track()
     ) and public.has_grant('file', p_file_id)
   end;
 $$;
@@ -146,6 +163,7 @@ as $$
         and e.archived_at is null
         and l.archived_at is null
         and c.archived_at is null
+        and c.track = public.my_content_track()
     ) and public.has_grant('exam', p_exam_id)
   end;
 $$;

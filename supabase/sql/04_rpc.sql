@@ -484,6 +484,7 @@ revoke all on function public.jsonb_arr(jsonb)                  from public, ano
 revoke all on function public.is_admin()                        from public, anon;
 revoke all on function public.is_active_student()               from public, anon;
 revoke all on function public.has_grant(public.permission_resource, uuid) from public, anon;
+revoke all on function public.my_content_track()                from public, anon;
 revoke all on function public.can_access_lesson(uuid)           from public, anon;
 revoke all on function public.can_see_lesson(uuid)              from public, anon;
 revoke all on function public.can_read_exam_questions(uuid)     from public, anon;
@@ -500,6 +501,7 @@ grant execute on function public.mark_feedback_seen(uuid)          to authentica
 grant execute on function public.jsonb_arr(jsonb)                  to authenticated;
 grant execute on function public.is_admin()                        to authenticated;
 grant execute on function public.is_active_student()               to authenticated;
+grant execute on function public.my_content_track()                to authenticated;
 grant execute on function public.has_grant(public.permission_resource, uuid) to authenticated;
 grant execute on function public.can_access_lesson(uuid)           to authenticated;
 grant execute on function public.can_see_lesson(uuid)              to authenticated;

@@ -32,7 +32,7 @@ export default async function StudentsPage({
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, phone, status, full_access, created_at, last_seen_at")
+    .select("id, full_name, phone, status, full_access, track, created_at, last_seen_at")
     .eq("role", "student")
     .order("created_at", { ascending: false });
 
@@ -99,6 +99,7 @@ export default async function StudentsPage({
                     {student.full_access ? (
                       <Badge tone="accent">كل الصلاحيات</Badge>
                     ) : null}
+                    <Badge tone="muted">{student.track === "en" ? "لغات" : "عربي"}</Badge>
                     <span className="tnum text-xs text-ink-3">
                       سجّل {formatDate(student.created_at)}
                       {lastSeen

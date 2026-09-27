@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { PermissionResource, UserStatus } from "@/lib/types";
+import type { PermissionResource, UserStatus, ContentTrack } from "@/lib/types";
 import type { ActionResult } from "@/app/actions/admin-content";
 
 const GENERIC = "حصلت مشكلة أثناء الحفظ. حاول تاني.";
@@ -30,10 +30,31 @@ export async function setStudentStatusAction(
   return { ok: true };
 }
 
+/** عربي أو لغات. الصلاحية الشاملة لا تعبر هذا الاختيار. */
+export async function setStudentTrackAction(
+  studentId: string,
+  track: ContentTrack,
+): Promise<ActionResult> {
+  await requireAdmin();
+  if (track !== "ar" && track !== "en") return { error: "اختار المسار." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ track })
+    .eq("id", studentId)
+    .eq("role", "student");
+
+  if (error) return { error: GENERIC };
+
+  revalidatePath("/admin/students");
+  revalidatePath(`/admin/students/${studentId}`);
+  return { ok: true };
+}
+
 /**
- * "فتح كل الصلاحيات". هذا العَلَم يتخطّى جدول الصلاحيات التفصيلي، ومعناه
- * أن أي درس أو ملف أو امتحان تضيفه لاحقاً يظهر لهذا الطالب فوراً بلا خطوة
- * إضافية. سحبه يعيده إلى الصلاحيات التفصيلية المسجّلة له، ولا يمسحها.
+ * "فتح كل الصلاحيات" داخل مسار الطالب. عربي ما يشوفش لغات والعكس، حتى
+ * بهذا العلم. سحبه يعيده إلى الصلاحيات التفصيلية، ولا يمسحها.
  */
 export async function setFullAccessAction(
   studentId: string,
