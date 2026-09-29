@@ -2,10 +2,17 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { BankRunner, type BankQuestion } from "./bank-runner";
+import { requireStudent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import type { UiLocale } from "@/lib/format";
 import { tierRank } from "@/lib/types";
 
-export const metadata = { title: "تدريب · بنك الأسئلة" };
+export async function generateMetadata() {
+  const session = await requireStudent();
+  return {
+    title: session.profile.track === "en" ? "Practice · Question bank" : "تدريب · بنك الأسئلة",
+  };
+}
 export const dynamic = "force-dynamic";
 
 /** أقصى ما تحمله الجلسة الواحدة. أطول من ذلك يُرهق ولا يُذاكَر. */
@@ -29,6 +36,8 @@ export default async function BankPracticePage({
   searchParams,
 }: PageProps<"/bank/practice">) {
   const params = await searchParams;
+  const sessionUser = await requireStudent();
+  const locale: UiLocale = sessionUser.profile.track === "en" ? "en" : "ar";
   const examParam = typeof params.exam === "string" ? params.exam : null;
   const chapterParam = typeof params.chapter === "string" ? params.chapter : null;
   const review = params.mode === "review";
@@ -60,7 +69,7 @@ export default async function BankPracticePage({
   if (lessonParam) banksQuery = banksQuery.in("lesson_id", lessonParam);
 
   const { data: bankRows, error: banksError } = await banksQuery;
-  if (banksError) return <NothingHere review={review} />;
+  if (banksError) return <NothingHere review={review} locale={locale} />;
 
   const banks = (bankRows ?? []).filter((b) => {
     if (!chapterParam) return true;
@@ -71,7 +80,7 @@ export default async function BankPracticePage({
   const bankIds = banks.map((b) => b.id);
 
   if (bankIds.length === 0) {
-    return <NothingHere review={review} />;
+    return <NothingHere review={review} locale={locale} />;
   }
 
   const [questionsRes, optionsRes, progressRes] = await Promise.all([
@@ -91,7 +100,7 @@ export default async function BankPracticePage({
   ]);
 
   if (questionsRes.error || optionsRes.error || progressRes.error) {
-    return <NothingHere review={review} />;
+    return <NothingHere review={review} locale={locale} />;
   }
 
   const progressOf = new Map<string, Progress>(
@@ -139,7 +148,7 @@ export default async function BankPracticePage({
   const ordered = review ? reviewOrder(all) : workOrder(all);
   const session = ordered.slice(0, SESSION_SIZE);
 
-  if (session.length === 0) return <NothingHere review={review} />;
+  if (session.length === 0) return <NothingHere review={review} locale={locale} />;
 
   /*
    * "جلسة تانية" لازم ترجع بالنطاق نفسه. بدون هذا كان من يتدرّب على فصل
@@ -158,8 +167,8 @@ export default async function BankPracticePage({
         href="/bank"
         className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
       >
-        <ChevronRight className="size-4" strokeWidth={1.5} />
-        بنك الأسئلة
+        <ChevronRight className="size-4 ltr:rotate-180" strokeWidth={1.5} />
+        {locale === "en" ? "Question bank" : "بنك الأسئلة"}
       </Link>
 
       <BankRunner
@@ -167,6 +176,7 @@ export default async function BankPracticePage({
         remaining={ordered.length - session.length}
         review={review}
         nextHref={query ? `/bank/practice?${query}` : "/bank/practice"}
+        locale={locale}
       />
     </>
   );
@@ -275,20 +285,25 @@ function spreadByLesson<T extends { exam_id: string }>(items: T[]): T[] {
   return out;
 }
 
-function NothingHere({ review }: { review: boolean }) {
+function NothingHere({ review, locale = "ar" }: { review: boolean; locale?: UiLocale }) {
+  const en = locale === "en";
   return (
     <>
       <Link
         href="/bank"
         className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
       >
-        <ChevronRight className="size-4" strokeWidth={1.5} />
-        بنك الأسئلة
+        <ChevronRight className="size-4 ltr:rotate-180" strokeWidth={1.5} />
+        {en ? "Question bank" : "بنك الأسئلة"}
       </Link>
       <p className="card px-4 py-8 text-center text-sm leading-relaxed text-ink-3">
         {review
-          ? "مفيش حاجة اتحلت في النطاق ده تراجعها. حلّ الأسئلة الأول وبعدين ارجع راجعها."
-          : "مفيش أسئلة في النطاق ده."}
+          ? en
+            ? "Nothing in this range has been solved yet. Solve the questions first, then come back to review them."
+            : "مفيش حاجة اتحلت في النطاق ده تراجعها. حلّ الأسئلة الأول وبعدين ارجع راجعها."
+          : en
+            ? "There are no questions in this range."
+            : "مفيش أسئلة في النطاق ده."}
       </p>
     </>
   );

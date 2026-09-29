@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
-import { choiceShortLabel } from "@/lib/format";
+import { choiceShortLabel, type UiLocale } from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
 export interface RunnerQuestion {
@@ -20,27 +20,45 @@ interface Props {
   question: RunnerQuestion;
   value: AnswerResponse;
   onChange: (value: AnswerResponse) => void;
+  locale?: UiLocale;
 }
 
-/* الأحرف المستخدمة في ترقيم الخيارات، بترتيب أبجدي عربي مألوف للطالب */
-const OPTION_LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح"];
+const AR_LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح"];
+const EN_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export function QuestionInput({ question, value, onChange }: Props) {
+export function QuestionInput({ question, value, onChange, locale = "ar" }: Props) {
+  const letters = locale === "en" ? EN_LETTERS : AR_LETTERS;
   switch (question.type) {
     case "mcq_single":
-      return <SingleChoice question={question} value={value} onChange={onChange} />;
+      return <SingleChoice question={question} value={value} onChange={onChange} letters={letters} />;
     case "mcq_multi":
-      return <MultiChoice question={question} value={value} onChange={onChange} />;
+      return <MultiChoice question={question} value={value} onChange={onChange} letters={letters} locale={locale} />;
     case "true_false":
-      return <TrueFalse question={question} value={value} onChange={onChange} />;
+      return <TrueFalse question={question} value={value} onChange={onChange} locale={locale} />;
     case "fill_blank":
-      return <FillBlank question={question} value={value} onChange={onChange} />;
+      return <FillBlank question={question} value={value} onChange={onChange} locale={locale} />;
     case "matching":
-      return <Assign question={question} value={value} onChange={onChange} hint="اختر المصطلح المناسب لكل وصف" />;
+      return (
+        <Assign
+          question={question}
+          value={value}
+          onChange={onChange}
+          hint={locale === "en" ? "Choose the matching term for each description" : "اختر المصطلح المناسب لكل وصف"}
+          locale={locale}
+        />
+      );
     case "classification":
-      return <Assign question={question} value={value} onChange={onChange} hint="اختر السلّة المناسبة لكل عنصر" />;
+      return (
+        <Assign
+          question={question}
+          value={value}
+          onChange={onChange}
+          hint={locale === "en" ? "Choose the right group for each item" : "اختر السلّة المناسبة لكل عنصر"}
+          locale={locale}
+        />
+      );
     case "ordering":
-      return <Ordering question={question} value={value} onChange={onChange} />;
+      return <Ordering question={question} value={value} onChange={onChange} locale={locale} />;
     default:
       return null;
   }
@@ -55,7 +73,12 @@ function optionRowClass(selected: boolean) {
   ].join(" ");
 }
 
-function SingleChoice({ question, value, onChange }: Props) {
+function SingleChoice({
+  question,
+  value,
+  onChange,
+  letters = AR_LETTERS,
+}: Props & { letters?: string[] }) {
   const selected =
     value && "option_ids" in value ? (value.option_ids[0] ?? null) : null;
 
@@ -71,7 +94,7 @@ function SingleChoice({ question, value, onChange }: Props) {
             onChange={() => onChange({ option_ids: [option.id] })}
           />
           <span className="mt-px shrink-0 text-sm font-medium text-ink-3">
-            {OPTION_LETTERS[i] ?? i + 1}
+            {letters[i] ?? i + 1}
           </span>
           <span className="text-sm leading-relaxed text-ink">{option.body}</span>
         </label>
@@ -80,7 +103,13 @@ function SingleChoice({ question, value, onChange }: Props) {
   );
 }
 
-function MultiChoice({ question, value, onChange }: Props) {
+function MultiChoice({
+  question,
+  value,
+  onChange,
+  letters = AR_LETTERS,
+  locale = "ar",
+}: Props & { letters?: string[] }) {
   const selected = value && "option_ids" in value ? value.option_ids : [];
 
   function toggle(id: string) {
@@ -92,7 +121,9 @@ function MultiChoice({ question, value, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="mb-0.5 text-xs text-ink-3">اختر كل الإجابات الصحيحة</p>
+      <p className="mb-0.5 text-xs text-ink-3">
+        {locale === "en" ? "Choose every correct answer" : "اختر كل الإجابات الصحيحة"}
+      </p>
       {question.options.map((option, i) => (
         <label key={option.id} className={optionRowClass(selected.includes(option.id))}>
           <input
@@ -102,7 +133,7 @@ function MultiChoice({ question, value, onChange }: Props) {
             onChange={() => toggle(option.id)}
           />
           <span className="mt-px shrink-0 text-sm font-medium text-ink-3">
-            {OPTION_LETTERS[i] ?? i + 1}
+            {letters[i] ?? i + 1}
           </span>
           <span className="text-sm leading-relaxed text-ink">{option.body}</span>
         </label>
@@ -111,14 +142,14 @@ function MultiChoice({ question, value, onChange }: Props) {
   );
 }
 
-function TrueFalse({ question, value, onChange }: Props) {
+function TrueFalse({ question, value, onChange, locale = "ar" }: Props) {
   const current = value && "value" in value ? value.value : null;
 
   return (
     <div className="grid grid-cols-2 gap-2">
       {[
-        { label: "صح", val: true },
-        { label: "خطأ", val: false },
+        { label: locale === "en" ? "True" : "صح", val: true },
+        { label: locale === "en" ? "False" : "خطأ", val: false },
       ].map((choice) => (
         <label
           key={choice.label}
@@ -142,7 +173,7 @@ function TrueFalse({ question, value, onChange }: Props) {
  * الفراغات مكتوبة في نص السؤال بالصيغة [1] و [2]، فنقسم النص عليها ونضع
  * حقل الإدخال في موضعه من الجملة بدل قائمة منفصلة تحت السؤال.
  */
-function FillBlank({ question, value, onChange }: Props) {
+function FillBlank({ question, value, onChange, locale = "ar" }: Props) {
   const blanks = value && "blanks" in value ? value.blanks : [];
   const parts = question.body.split(/(\[\d+\])/g);
 
@@ -164,7 +195,7 @@ function FillBlank({ question, value, onChange }: Props) {
           <input
             key={i}
             type="text"
-            aria-label={`الفراغ رقم ${index + 1}`}
+            aria-label={locale === "en" ? `Blank ${index + 1}` : `الفراغ رقم ${index + 1}`}
             value={blanks[index] ?? ""}
             onChange={(e) => setBlank(index, e.target.value)}
             className="input mx-1 inline-block w-32 px-2 py-1 align-middle text-sm sm:w-40"
@@ -199,9 +230,11 @@ function Assign({
   value,
   onChange,
   hint,
+  locale = "ar",
 }: Props & { hint: string }) {
   const rows = items(question);
   const picks = choices(question);
+  const letters = locale === "en" ? EN_LETTERS : AR_LETTERS;
   const assign = currentAssign(value, rows.length);
 
   function setAt(index: number, choiceId: string) {
@@ -222,15 +255,15 @@ function Assign({
             {row.body}
           </span>
           <select
-            aria-label={`الاختيار للعنصر رقم ${i + 1}`}
+            aria-label={locale === "en" ? `Choice for item ${i + 1}` : `الاختيار للعنصر رقم ${i + 1}`}
             value={typeof assign[i] === "string" ? (assign[i] as string) : ""}
             onChange={(e) => setAt(i, e.target.value)}
             className="input w-40 shrink-0 px-2 py-1.5 text-sm sm:w-52"
           >
-            <option value="">— اختر —</option>
+            <option value="">{locale === "en" ? "— Choose —" : "— اختر —"}</option>
             {picks.map((choice, ci) => (
               <option key={choice.id} value={choice.id}>
-                {OPTION_LETTERS[ci] ? `${OPTION_LETTERS[ci]}. ` : ""}
+                {letters[ci] ? `${letters[ci]}. ` : ""}
                 {choiceShortLabel(choice.body)}
               </option>
             ))}
@@ -251,7 +284,7 @@ function Assign({
  * المخزَّن assign[i] = مكان العنصر i المعروض. فترتيب العرض هو الإجابة،
  * ولا يتغيّر ترتيب الصفوف نفسها إلا بيد الطالب.
  */
-function Ordering({ question, value, onChange }: Props) {
+function Ordering({ question, value, onChange, locale = "ar" }: Props) {
   const rows = items(question);
 
   // ترتيب المعروض حالياً: قائمة فهارس العناصر من الأول إلى الأخير
@@ -280,7 +313,7 @@ function Ordering({ question, value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <p className="mb-0.5 text-xs text-ink-3">
-        رتّب من الأول للأخير بالسهمين
+        {locale === "en" ? "Order from first to last with the arrows" : "رتّب من الأول للأخير بالسهمين"}
       </p>
       {placed.map((itemIndex, slot) => (
         <div
@@ -296,7 +329,7 @@ function Ordering({ question, value, onChange }: Props) {
           <div className="flex shrink-0 gap-1">
             <button
               type="button"
-              aria-label="حرّك لفوق"
+              aria-label={locale === "en" ? "Move up" : "حرّك لفوق"}
               disabled={slot === 0}
               onClick={() => move(slot, -1)}
               className="btn btn-ghost px-2 py-1 disabled:opacity-30"
@@ -305,7 +338,7 @@ function Ordering({ question, value, onChange }: Props) {
             </button>
             <button
               type="button"
-              aria-label="حرّك لتحت"
+              aria-label={locale === "en" ? "Move down" : "حرّك لتحت"}
               disabled={slot === placed.length - 1}
               onClick={() => move(slot, 1)}
               className="btn btn-ghost px-2 py-1 disabled:opacity-30"

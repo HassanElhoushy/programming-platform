@@ -16,11 +16,11 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-export function LogoWordmark({ className }: { className?: string }) {
+export function LogoWordmark({ className, label = "منصة البرمجة" }: { className?: string; label?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <Logo />
-      <span className="text-[15px] font-semibold text-ink">منصة البرمجة</span>
+      <span className="text-[15px] font-semibold text-ink">{label}</span>
     </span>
   );
 }

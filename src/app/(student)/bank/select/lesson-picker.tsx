@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { UiLocale } from "@/lib/format";
+
 export interface PickerLesson {
   id: string;
   title: string;
@@ -41,10 +43,13 @@ export interface PickerChapter {
 export function LessonPicker({
   chapters,
   review = false,
+  locale = "ar",
 }: {
   chapters: PickerChapter[];
   review?: boolean;
+  locale?: UiLocale;
 }) {
+  const en = locale === "en";
   const router = useRouter();
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [going, setGoing] = useState(false);
@@ -154,9 +159,19 @@ export function LessonPicker({
                         </span>
                       ) : null}
                       <span className="tnum mt-0.5 block text-xs text-ink-3">
-                        {lesson.mastered} من {lesson.total} اتحل
-                        {lesson.todo > 0 ? ` · ${lesson.todo} لسه ما اتحلتش` : ""}
-                        {lesson.forgot > 0 ? ` · ${lesson.forgot} بدأت تنساه` : ""}
+                        {en
+                          ? `${lesson.mastered} of ${lesson.total} solved`
+                          : `${lesson.mastered} من ${lesson.total} اتحل`}
+                        {lesson.todo > 0
+                          ? en
+                            ? ` · ${lesson.todo} still unsolved`
+                            : ` · ${lesson.todo} لسه ما اتحلتش`
+                          : ""}
+                        {lesson.forgot > 0
+                          ? en
+                            ? ` · ${lesson.forgot} starting to slip`
+                            : ` · ${lesson.forgot} بدأت تنساه`
+                          : ""}
                       </span>
                     </span>
                   </label>
@@ -175,14 +190,24 @@ export function LessonPicker({
           className="btn btn-primary w-full text-sm"
         >
           {picked.size === 0
-            ? "اختار درس على الأقل"
+            ? en
+              ? "Choose at least one lesson"
+              : "اختار درس على الأقل"
             : available === 0
               ? review
-                ? "مفيش حاجة اتحلت في اللي اخترته"
-                : "خلّصت كل اللي اخترته"
+                ? en
+                  ? "Nothing you chose has been solved yet"
+                  : "مفيش حاجة اتحلت في اللي اخترته"
+                : en
+                  ? "You finished everything you chose"
+                  : "خلّصت كل اللي اخترته"
               : going
-                ? "بيفتح…"
-                : `ابدأ · ${available} سؤال متاح`}
+                ? en
+                  ? "Opening…"
+                  : "بيفتح…"
+                : en
+                  ? `Start · ${available} questions ready`
+                  : `ابدأ · ${available} سؤال متاح`}
         </button>
       </div>
     </>

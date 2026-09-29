@@ -2,10 +2,16 @@ import Link from "next/link";
 import { BookOpen, ChevronLeft } from "lucide-react";
 
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
-import { chapterHint, chapterName, lessonName, reviewScope } from "@/lib/format";
+import { requireStudent } from "@/lib/auth";
+import { chapterHint, chapterName, lessonName, reviewScope, type UiLocale } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "المحتوى · منصة البرمجة" };
+export async function generateMetadata() {
+  const session = await requireStudent();
+  return {
+    title: session.profile.track === "en" ? "Content · Programming" : "المحتوى · منصة البرمجة",
+  };
+}
 export const dynamic = "force-dynamic";
 
 interface LessonRow {
@@ -16,6 +22,9 @@ interface LessonRow {
 }
 
 export default async function ContentPage() {
+  const session = await requireStudent();
+  const locale: UiLocale = session.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
   const supabase = await createClient();
 
   const [chaptersRes, filesRes, examsRes] = await Promise.all([
@@ -61,15 +70,19 @@ export default async function ContentPage() {
   return (
     <>
       <PageHeader
-        title="المحتوى"
-        subtitle="دروسك وملفاتها مرتبة بالفصول"
+        title={en ? "Content" : "المحتوى"}
+        subtitle={en ? "Your lessons and files, by chapter" : "دروسك وملفاتها مرتبة بالفصول"}
       />
 
       {visible.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="لسه ما اتفتحش لك أي درس"
-          hint="أول ما المدرّس يفتح لك درساً هتلاقيه هنا بملفاته."
+          title={en ? "No lesson is open for you yet" : "لسه ما اتفتحش لك أي درس"}
+          hint={
+            en
+              ? "When your teacher opens a lesson, you will find it here with its files."
+              : "أول ما المدرّس يفتح لك درساً هتلاقيه هنا بملفاته."
+          }
         />
       ) : (
         <div className="flex flex-col gap-8">
@@ -77,10 +90,10 @@ export default async function ContentPage() {
             <section key={chapter.id}>
               <div className="mb-3">
                 <h2 className="text-sm font-semibold text-ink">
-                  {chapterName(chapter.position, chapter.kind)}
+                  {chapterName(chapter.position, chapter.kind, locale)}
                 </h2>
                 <p className="text-xs text-ink-3">
-                  {chapterHint(chapter.kind, chapter.title)}
+                  {chapterHint(chapter.kind, chapter.title, locale)}
                 </p>
               </div>
 
@@ -90,8 +103,12 @@ export default async function ContentPage() {
                   const nExams = examCounts.get(lesson.id) ?? 0;
 
                   const parts = [
-                    nFiles > 0 ? `${nFiles} ملف` : null,
-                    nExams > 0 ? `${nExams} تدريب أو امتحان` : null,
+                    nFiles > 0 ? (en ? `${nFiles} file${nFiles === 1 ? "" : "s"}` : `${nFiles} ملف`) : null,
+                    nExams > 0
+                      ? en
+                        ? `${nExams} practice or exam`
+                        : `${nExams} تدريب أو امتحان`
+                      : null,
                   ].filter(Boolean);
 
                   return (
@@ -103,23 +120,29 @@ export default async function ContentPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-ink-3">
                           {chapter.kind === "review"
-                            ? "مراجعة"
-                            : lessonName(lesson.position, lesson.kind)}
+                            ? en
+                              ? "Review"
+                              : "مراجعة"
+                            : lessonName(lesson.position, lesson.kind, locale)}
                         </p>
                         <p className="mt-0.5 truncate text-sm font-medium text-ink">
                           {lesson.title}
                         </p>
                         {chapter.kind === "review" ? (
                           <p className="mt-1 text-xs leading-relaxed text-ink-3">
-                            {reviewScope(lesson.position)}
+                            {reviewScope(lesson.position, locale)}
                           </p>
                         ) : null}
                         <p className="mt-1 text-xs text-ink-3">
-                          {parts.length > 0 ? parts.join(" · ") : "لا يوجد محتوى متاح"}
+                          {parts.length > 0
+                            ? parts.join(" · ")
+                            : en
+                              ? "Nothing is available"
+                              : "لا يوجد محتوى متاح"}
                         </p>
                       </div>
                       <ChevronLeft
-                        className="size-4 shrink-0 text-ink-3"
+                        className="size-4 shrink-0 text-ink-3 ltr:rotate-180"
                         strokeWidth={1.5}
                       />
                     </Link>

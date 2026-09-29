@@ -4,12 +4,14 @@ import { CheckCircle2, ChevronRight } from "lucide-react";
 
 import { ReviewQuestionCard } from "@/components/review-question";
 import { Badge, DataRow } from "@/components/ui/primitives";
+import { requireStudent } from "@/lib/auth";
 import {
   formatDateTime,
   formatDuration,
   formatScore,
   lessonPath,
   percentage,
+  type UiLocale,
 } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { AttemptReview } from "@/lib/types";
@@ -62,25 +64,33 @@ export default async function ResultPage({
   const essayCount = essayQuestions.length;
   const essayPending = attempt.manual_score === null;
 
+  const sessionUser = await requireStudent();
+  const locale: UiLocale = sessionUser.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
+
   return (
     <>
       <Link
         href="/results"
         className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
       >
-        <ChevronRight className="size-4" strokeWidth={1.5} />
-        النتائج
+        <ChevronRight className="size-4 ltr:rotate-180" strokeWidth={1.5} />
+        {en ? "Results" : "النتائج"}
       </Link>
 
       {submitted === "1" ? (
         <div className="card mb-5 flex items-start gap-3 px-4 py-4">
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-ink-3" strokeWidth={1.5} />
           <div>
-            <p className="text-sm font-medium text-ink">تم التسليم</p>
+            <p className="text-sm font-medium text-ink">{en ? "Submitted" : "تم التسليم"}</p>
             <p className="mt-0.5 text-sm leading-relaxed text-ink-2">
               {essayCount > 0
-                ? "الأسئلة الموضوعية اتصححت على طول، والأسئلة المقالية عند المدرّس دلوقتي وهتوصلك درجتها والملاحظات عليها هنا."
-                : "اتصحح بالكامل. درجتك تحت."}
+                ? en
+                  ? "The short questions are marked already. The written questions are with your teacher, and the marks and notes will show up here."
+                  : "الأسئلة الموضوعية اتصححت على طول، والأسئلة المقالية عند المدرّس دلوقتي وهتوصلك درجتها والملاحظات عليها هنا."
+                : en
+                  ? "Fully marked. Your score is below."
+                  : "اتصحح بالكامل. درجتك تحت."}
             </p>
           </div>
         </div>
@@ -88,57 +98,59 @@ export default async function ResultPage({
 
       <div className="mb-6">
         <p className="text-xs text-ink-3">
-          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind, review.chapter_kind)}
+          {lessonPath(review.chapter_position, review.lesson_position, review.lesson_kind, review.chapter_kind, locale)}
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-semibold text-ink sm:text-2xl">{exam.title}</h1>
           {graded ? (
-            <Badge tone="ok">تم التصحيح</Badge>
+            <Badge tone="ok">{en ? "Marked" : "تم التصحيح"}</Badge>
           ) : (
-            <Badge tone="wait">بانتظار التصحيح</Badge>
+            <Badge tone="wait">{en ? "Waiting to be marked" : "بانتظار التصحيح"}</Badge>
           )}
-          {attempt.exceeded_duration ? <Badge tone="muted">تجاوز الوقت</Badge> : null}
+          {attempt.exceeded_duration ? <Badge tone="muted">{en ? "Over time" : "تجاوز الوقت"}</Badge> : null}
         </div>
       </div>
 
       <div className="card mb-8 px-4 py-2 sm:px-5">
         <div className="divide-y-[0.5px] divide-line">
-          <DataRow label="الدرجة النهائية">
+          <DataRow label={en ? "Final score" : "الدرجة النهائية"}>
             {graded ? (
               <>
-                {formatScore(earned, attempt.total_points)}{" "}
+                {formatScore(earned, attempt.total_points, locale)}{" "}
                 <span className="text-ink-2">
                   ({percentage(earned, attempt.total_points)})
                 </span>
               </>
             ) : (
               <span className="font-normal text-ink-2">
-                هتكتمل بعد تصحيح المقالي
+                {en ? "It will be complete after the written questions are marked" : "هتكتمل بعد تصحيح المقالي"}
               </span>
             )}
           </DataRow>
 
           {objectiveQuestions.length > 0 ? (
-            <DataRow label="الأسئلة الموضوعية">
-              {formatScore(attempt.auto_score ?? 0, objectiveTotal)}
+            <DataRow label={en ? "Short questions" : "الأسئلة الموضوعية"}>
+              {formatScore(attempt.auto_score ?? 0, objectiveTotal, locale)}
             </DataRow>
           ) : null}
 
           {essayCount > 0 ? (
-            <DataRow label="الأسئلة المقالية">
+            <DataRow label={en ? "Written questions" : "الأسئلة المقالية"}>
               {essayPending ? (
-                <Badge tone="wait">بانتظار التصحيح</Badge>
+                <Badge tone="wait">{en ? "Waiting to be marked" : "بانتظار التصحيح"}</Badge>
               ) : (
-                formatScore(attempt.manual_score, essayTotal)
+                formatScore(attempt.manual_score, essayTotal, locale)
               )}
             </DataRow>
           ) : null}
 
-          <DataRow label="وقت التسليم">{formatDateTime(attempt.submitted_at)}</DataRow>
-          <DataRow label="الوقت المستغرق">
-            {formatDuration(attempt.time_spent_seconds)}
+          <DataRow label={en ? "Submitted" : "وقت التسليم"}>{formatDateTime(attempt.submitted_at, locale)}</DataRow>
+          <DataRow label={en ? "Time spent" : "الوقت المستغرق"}>
+            {formatDuration(attempt.time_spent_seconds, locale)}
             {exam.duration_minutes ? (
-              <span className="text-ink-3"> · المدة {exam.duration_minutes} دقيقة</span>
+              <span className="text-ink-3">
+                {en ? ` · limit ${exam.duration_minutes} min` : ` · المدة ${exam.duration_minutes} دقيقة`}
+              </span>
             ) : null}
           </DataRow>
         </div>
@@ -151,6 +163,7 @@ export default async function ResultPage({
             question={question}
             index={index}
             attemptId={attempt.id}
+            locale={locale}
           />
         ))}
       </ol>

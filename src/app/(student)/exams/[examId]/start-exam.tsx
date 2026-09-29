@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, PlayCircle } from "lucide-react";
 
 import { startExamAction } from "@/app/actions/exam";
-import { kindDefinite } from "@/lib/format";
+import { kindDefinite, type UiLocale } from "@/lib/format";
 import type { ExamKind } from "@/lib/types";
 
 /**
@@ -22,17 +22,20 @@ export function StartExamButton({
   examId,
   kind,
   durationMinutes,
+  locale = "ar",
 }: {
   examId: string;
   kind: ExamKind;
   durationMinutes: number | null;
+  locale?: UiLocale;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [armed, setArmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const noun = kindDefinite(kind);
+  const noun = kindDefinite(kind, locale);
+  const en = locale === "en";
   const isExam = kind === "exam";
 
   function start() {
@@ -57,7 +60,7 @@ export function StartExamButton({
           onClick={() => setArmed(true)}
         >
           <PlayCircle className="size-4" strokeWidth={1.5} />
-          ابدأ {noun}
+          {en ? `Start ${noun}` : `ابدأ ${noun}`}
         </button>
 
         {error ? (
@@ -76,26 +79,43 @@ export function StartExamButton({
         />
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink">
-            {isExam ? "ده امتحان — اقرا ده قبل ما تبدأ" : `قبل ما تبدأ ${noun}`}
+            {en
+              ? isExam
+                ? "This is an exam. Read this before you start"
+                : `Before you start ${noun}`
+              : isExam
+                ? "ده امتحان — اقرا ده قبل ما تبدأ"
+                : `قبل ما تبدأ ${noun}`}
           </p>
 
-          <ul className="mt-2 flex list-disc flex-col gap-1.5 pr-4 text-sm leading-relaxed text-ink-2">
+          <ul className="mt-2 flex list-disc flex-col gap-1.5 ps-4 text-sm leading-relaxed text-ink-2">
             <li>
-              <span className="font-medium text-ink">عندك محاولة واحدة بس.</span>{" "}
-              أول ما تدوس ابدأ، تكون بدأت فعلاً.
+              <span className="font-medium text-ink">
+                {en ? "You only get one attempt." : "عندك محاولة واحدة بس."}
+              </span>{" "}
+              {en ? "The moment you press start, you have started." : "أول ما تدوس ابدأ، تكون بدأت فعلاً."}
             </li>
             <li>
-              لو قفلت الصفحة أو النت قطع، هترجع تكمّل من نفس المكان بإجاباتك —
-              بس <span className="font-medium text-ink">مش هتقدر تبدأ من الأول</span>.
+              {en
+                ? "If you close the page or the connection drops, you come back and continue from the same place with your answers, but "
+                : "لو قفلت الصفحة أو النت قطع، هترجع تكمّل من نفس المكان بإجاباتك — بس "}
+              <span className="font-medium text-ink">
+                {en ? "you cannot start over" : "مش هتقدر تبدأ من الأول"}
+              </span>
+              {en ? "." : "."}
             </li>
             {durationMinutes ? (
               <li>
-                الوقت ({durationMinutes} دقيقة) بيبدأ من دلوقتي ومش بيقف لو خرجت.
+                {en
+                  ? `The time (${durationMinutes} min) starts now and does not stop if you leave.`
+                  : `الوقت (${durationMinutes} دقيقة) بيبدأ من دلوقتي ومش بيقف لو خرجت.`}
               </li>
             ) : null}
             {isExam ? (
               <li>
-                لو حصلت مشكلة حقيقية، المدرّس وحده اللي يقدر يفتحه لك من جديد.
+                {en
+                  ? "If something really goes wrong, only your teacher can open it for you again."
+                  : "لو حصلت مشكلة حقيقية، المدرّس وحده اللي يقدر يفتحه لك من جديد."}
               </li>
             ) : null}
           </ul>
@@ -116,7 +136,13 @@ export function StartExamButton({
               ) : (
                 <PlayCircle className="size-4" strokeWidth={1.5} />
               )}
-              {pending ? "جارٍ الفتح…" : `أيوه، ابدأ ${noun}`}
+              {pending
+                ? en
+                  ? "Opening…"
+                  : "جارٍ الفتح…"
+                : en
+                  ? `Yes, start ${noun}`
+                  : `أيوه، ابدأ ${noun}`}
             </button>
             <button
               type="button"
@@ -124,7 +150,7 @@ export function StartExamButton({
               onClick={() => setArmed(false)}
               disabled={pending}
             >
-              مش دلوقتي
+              {en ? "Not now" : "مش دلوقتي"}
             </button>
           </div>
         </div>

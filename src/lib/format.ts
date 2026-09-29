@@ -4,6 +4,8 @@
  * قاعدة ثابتة: نكتب دائماً "الفصل الأول · الدرس الثاني" ولا نكتب "1-2".
  */
 
+export type UiLocale = "ar" | "en";
+
 const ORDINALS = [
   "",
   "الأول",
@@ -39,15 +41,23 @@ export function ordinal(n: number): string {
  * معنى له، وهي أختٌ لها لا واحدةٌ منها. الطالب لا يرى «الفصل الثامن»
  * حتى لو كان رقمها الداخلي ٨.
  */
-export function chapterName(position: number, kind: string = "chapter"): string {
+export function chapterName(
+  position: number,
+  kind: string = "chapter",
+  locale: UiLocale = "ar",
+): string {
+  if (locale === "en") {
+    return kind === "review" ? "Closing reviews" : `Chapter ${position}`;
+  }
   return kind === "review" ? "مراجعة شاملة" : `الفصل ${ordinal(position)}`;
 }
 
 /** سطر تحت عنوان الحاوية — يوضح أنها ليست فصلاً دراسياً جديداً. */
-export function chapterHint(kind: string, title: string): string {
-  return kind === "review"
-    ? "مش فصل جديد — مراجعات بتجمع فصول فاتت"
-    : title;
+export function chapterHint(kind: string, title: string, locale: UiLocale = "ar"): string {
+  if (locale === "en" && kind === "review") {
+    return "Not a new chapter. These reviews pull earlier chapters together.";
+  }
+  return kind === "review" ? "مش فصل جديد — مراجعات بتجمع فصول فاتت" : title;
 }
 
 /**
@@ -55,17 +65,28 @@ export function chapterHint(kind: string, title: string): string {
  * درس، والبنك أسئلة تخلط فصولاً — فالطالب لا يظنها درساً جديداً ولا مراجعة
  * بالمعنى الدراسي.
  */
-export function bankChapterName(position: number, kind: string = "chapter"): string {
+export function bankChapterName(
+  position: number,
+  kind: string = "chapter",
+  locale: UiLocale = "ar",
+): string {
+  if (locale === "en") return kind === "review" ? "Mixed questions" : chapterName(position, kind, locale);
   return kind === "review" ? "أسئلة شاملة" : chapterName(position, kind);
 }
 
-export function bankChapterHint(kind: string): string | null {
-  return kind === "review" ? "أسئلة بتربط أكتر من فصل" : null;
+export function bankChapterHint(kind: string, locale: UiLocale = "ar"): string | null {
+  if (kind !== "review") return null;
+  return locale === "en"
+    ? "Questions that connect more than one chapter"
+    : "أسئلة بتربط أكتر من فصل";
 }
 
 /** «ختام الترم الأول» → «الترم الأول» في قائمة البنك فقط. */
-export function bankLessonTitle(title: string): string {
-  const stripped = title.replace(/^ختام\s+/u, "").trim();
+export function bankLessonTitle(title: string, locale: UiLocale = "ar"): string {
+  const stripped =
+    locale === "en"
+      ? title.replace(/^Closing\s+(the\s+)?/i, "").trim()
+      : title.replace(/^ختام\s+/u, "").trim();
   return stripped.length > 0 ? stripped : title;
 }
 
@@ -74,7 +95,25 @@ export function bankLessonTitle(title: string): string {
  *
  * الترتيب هو ترتيب الدروس داخل الحاوية لا رقم فصل.
  */
-export function reviewScope(position: number): string {
+export function reviewScope(position: number, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    switch (position) {
+      case 1:
+        return "Questions that mix chapters 1 and 2: information technology and society, and cybersecurity.";
+      case 2:
+        return "Questions that mix chapters 3 and 4: web applications, and website and media design.";
+      case 3:
+        return "Questions on the whole first term: society, security, web applications, and media design.";
+      case 4:
+        return "Questions that mix chapters 5 and 6: collecting and cleaning data, and analysis and communication.";
+      case 5:
+        return "Questions on the whole second term: data, statistical analysis, and machine learning.";
+      case 6:
+        return "Questions on the whole course, from society and security through to language models.";
+      default:
+        return "Questions that mix more than one chapter. This is not a new chapter.";
+    }
+  }
   switch (position) {
     case 1:
       return "أسئلة تخلط الفصل الأول والثاني: تكنولوجيا المعلومات والمجتمع، والأمن السيبراني.";
@@ -100,7 +139,12 @@ export function reviewScope(position: number): string {
  * ليست درساً خامساً بل ختام الفصل — فالترقيم يبقى داخلياً للترتيب، والكلمة
  * وحدها تتبع النوع.
  */
-export function lessonName(position: number, kind: string = "lesson"): string {
+export function lessonName(
+  position: number,
+  kind: string = "lesson",
+  locale: UiLocale = "ar",
+): string {
+  if (locale === "en") return kind === "review" ? "Chapter close" : `Lesson ${position}`;
   return kind === "review" ? "مراجعة الفصل" : `الدرس ${ordinal(position)}`;
 }
 
@@ -110,11 +154,12 @@ export function lessonPath(
   lessonPosition: number,
   lessonKind: string = "lesson",
   chapterKind: string = "chapter",
+  locale: UiLocale = "ar",
 ): string {
   // داخل حاوية المراجعات لا رقم فصل ولا رقم درس — العنوان وحده يكفي،
   // و"مراجعة شاملة · مراجعة الفصل" تكرار بلا فائدة.
-  if (chapterKind === "review") return chapterName(0, "review");
-  return `${chapterName(chapterPosition)} · ${lessonName(lessonPosition, lessonKind)}`;
+  if (chapterKind === "review") return chapterName(0, "review", locale);
+  return `${chapterName(chapterPosition, "chapter", locale)} · ${lessonName(lessonPosition, lessonKind, locale)}`;
 }
 
 export const CHAPTER_KIND_LABELS: Record<string, string> = {
@@ -157,21 +202,39 @@ const DATETIME_OPTS: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-const LOCALE = "ar-EG-u-nu-latn";
-
-export function formatDate(value: string | Date | null | undefined): string {
+export function formatDate(
+  value: string | Date | null | undefined,
+  locale: UiLocale = "ar",
+): string {
   if (!value) return "—";
-  return new Intl.DateTimeFormat(LOCALE, DATE_OPTS).format(new Date(value));
+  const tag = locale === "en" ? "en-GB" : "ar-EG-u-nu-latn";
+  return new Intl.DateTimeFormat(tag, DATE_OPTS).format(new Date(value));
 }
 
-export function formatDateTime(value: string | Date | null | undefined): string {
+export function formatDateTime(
+  value: string | Date | null | undefined,
+  locale: UiLocale = "ar",
+): string {
   if (!value) return "—";
-  return new Intl.DateTimeFormat(LOCALE, DATETIME_OPTS).format(new Date(value));
+  const tag = locale === "en" ? "en-GB" : "ar-EG-u-nu-latn";
+  return new Intl.DateTimeFormat(tag, DATETIME_OPTS).format(new Date(value));
 }
 
 /** "٢٣ دقيقة و ١٢ ثانية" بصيغة مختصرة مناسبة للجداول */
-export function formatDuration(seconds: number | null | undefined): string {
+export function formatDuration(
+  seconds: number | null | undefined,
+  locale: UiLocale = "ar",
+): string {
   if (seconds == null) return "—";
+  if (locale === "en") {
+    if (seconds < 60) return `${seconds} sec`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins < 60) return secs === 0 ? `${mins} min` : `${mins} min ${secs} sec`;
+    const hours = Math.floor(mins / 60);
+    const restMins = mins % 60;
+    return restMins === 0 ? `${hours} hr` : `${hours} hr ${restMins} min`;
+  }
   if (seconds < 60) return `${seconds} ثانية`;
 
   const mins = Math.floor(seconds / 60);
@@ -225,9 +288,11 @@ export function formatPoints(value: number | string | null | undefined): string 
 export function formatScore(
   earned: number | null | undefined,
   total: number | null | undefined,
+  locale: UiLocale = "ar",
 ): string {
   if (earned == null || total == null) return "—";
-  return `${formatPoints(earned)} من ${formatPoints(total)}`;
+  const of = locale === "en" ? "of" : "من";
+  return `${formatPoints(earned)} ${of} ${formatPoints(total)}`;
 }
 
 export function percentage(
@@ -238,8 +303,15 @@ export function percentage(
   return `${Math.round((Number(earned) / Number(total)) * 100)}%`;
 }
 
-export function formatFileSize(bytes: number | null | undefined): string {
+export function formatFileSize(
+  bytes: number | null | undefined,
+  locale: UiLocale = "ar",
+): string {
   if (!bytes) return "—";
+  if (locale === "en") {
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} كيلوبايت`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;
 }
@@ -266,8 +338,60 @@ export const EXAM_KIND_LABELS: Record<string, string> = {
   bank: "بنك أسئلة",
 };
 
+export function tierLabel(tier: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    if (tier === "definition") return "Definition";
+    if (tier === "application") return "Application";
+    if (tier === "trap") return "Distinction";
+  }
+  return QUESTION_TIER_LABELS[tier] ?? tier;
+}
+
+export function questionTypeLabel(type: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    const en: Record<string, string> = {
+      mcq_single: "Multiple choice",
+      mcq_multi: "Choose all that apply",
+      true_false: "True or false",
+      fill_blank: "Fill in the blanks",
+      essay: "Essay",
+      matching: "Matching",
+      ordering: "Ordering",
+      classification: "Classification",
+    };
+    return en[type] ?? type;
+  }
+  return QUESTION_TYPE_LABELS[type] ?? type;
+}
+
+export function examKindLabel(kind: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    if (kind === "practice") return "Practice";
+    if (kind === "exam") return "Exam";
+    if (kind === "bank") return "Question bank";
+  }
+  return EXAM_KIND_LABELS[kind] ?? kind;
+}
+
+export function examLevelLabel(level: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    if (level === "basic") return "Basic";
+    if (level === "advanced") return "Advanced";
+  }
+  return EXAM_LEVEL_LABELS[level] ?? level;
+}
+
+export function fileKindLabel(kind: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    if (kind === "explanation") return "Explanation";
+    if (kind === "slides") return "Slides";
+  }
+  return FILE_KIND_LABELS[kind] ?? kind;
+}
+
 /** نكرة: "تدريب" أو "امتحان" */
-export function kindNoun(kind: string): string {
+export function kindNoun(kind: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") return examKindLabel(kind, "en").toLowerCase();
   return EXAM_KIND_LABELS[kind] ?? "تدريب";
 }
 
@@ -276,7 +400,11 @@ export function kindNoun(kind: string): string {
  * تُستخدم في الجمل الموجّهة للطالب — "ابدأ الامتحان"، "أسئلة التدريب" —
  * فتتبع الكلمة نوع العنصر بدل كلمة واحدة تخيف في موضع وتُضلّل في آخر.
  */
-export function kindDefinite(kind: string): string {
+export function kindDefinite(kind: string, locale: UiLocale = "ar"): string {
+  if (locale === "en") {
+    if (kind === "bank") return "the question bank";
+    return `the ${kindNoun(kind, "en")}`;
+  }
   if (kind === "bank") return "بنك الأسئلة";
   return `ال${kindNoun(kind)}`;
 }
@@ -313,6 +441,7 @@ export function withChoiceList(
   type: string,
   body: string,
   options: { role?: string; body: string }[],
+  locale: UiLocale = "ar",
 ): string {
   if (type !== "matching" && type !== "classification") return body;
   const picks = options
@@ -320,7 +449,8 @@ export function withChoiceList(
     .map((o) => o.body.trim())
     .filter(Boolean);
   if (picks.length === 0) return body;
-  const wrapped = `(${picks.join("، ")})`;
+  const sep = locale === "en" ? ", " : "، ";
+  const wrapped = `(${picks.join(sep)})`;
   const trimmed = body.trim();
   if (trimmed.includes(wrapped)) return trimmed;
   const stem = trimmed.replace(/[.\s]+$/, "");

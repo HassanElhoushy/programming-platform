@@ -10,11 +10,17 @@ export function AppShell({
   items,
   userName,
   homeHref,
+  wordmark = "منصة البرمجة",
+  signOutLabel = "تسجيل الخروج",
+  navLabel = "التنقل الرئيسي",
   children,
 }: {
   items: NavItem[];
   userName: string;
   homeHref: string;
+  wordmark?: string;
+  signOutLabel?: string;
+  navLabel?: string;
   children: ReactNode;
 }) {
   return (
@@ -23,7 +29,7 @@ export function AppShell({
         <div className="mx-auto w-full max-w-5xl px-4">
           <div className="flex h-14 items-center justify-between gap-4">
             <Link href={homeHref} className="shrink-0">
-              <LogoWordmark />
+              <LogoWordmark label={wordmark} />
             </Link>
 
             <div className="flex items-center gap-1">
@@ -34,8 +40,8 @@ export function AppShell({
                 <button
                   type="submit"
                   className="btn btn-ghost px-2"
-                  aria-label="تسجيل الخروج"
-                  title="تسجيل الخروج"
+                  aria-label={signOutLabel}
+                  title={signOutLabel}
                 >
                   <LogOut className="size-4" strokeWidth={1.5} />
                 </button>
@@ -44,7 +50,7 @@ export function AppShell({
           </div>
 
           <div className="pb-1.5">
-            <Nav items={items} />
+            <Nav items={items} label={navLabel} />
           </div>
         </div>
       </header>

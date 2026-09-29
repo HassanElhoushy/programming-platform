@@ -7,7 +7,7 @@ import { EssayInput } from "./essay-input";
 import { QuestionInput, type RunnerQuestion } from "./question-input";
 import { submitExamAction } from "@/app/actions/exam";
 import { Badge } from "@/components/ui/primitives";
-import { formatClock, formatPoints, QUESTION_TYPE_LABELS, withChoiceList } from "@/lib/format";
+import { formatClock, formatPoints, questionTypeLabel, withChoiceList, type UiLocale } from "@/lib/format";
 import {
   clearDraft,
   draftGain,
@@ -26,6 +26,7 @@ interface Props {
   initialElapsedSeconds: number;
   /** الطالب عاد إلى محاولة بدأها، لا يبدأ الآن */
   resuming?: boolean;
+  locale?: UiLocale;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -39,7 +40,9 @@ export function ExamRunner({
   durationMinutes,
   initialElapsedSeconds,
   resuming = false,
+  locale = "ar",
 }: Props) {
+  const en = locale === "en";
   const [answers, setAnswers] = useState<Record<string, AnswerResponse>>(() =>
     Object.fromEntries(
       Object.entries(initialAnswers).map(([k, v]) => [k, v.response]),
@@ -232,7 +235,11 @@ export function ExamRunner({
     await flush();
 
     if (queueRef.current.size > 0) {
-      setSubmitError("لسه فيه إجابات ما اتحفظتش. اتأكد من النت وجرّب تاني.");
+      setSubmitError(
+        en
+          ? "Some answers are not saved yet. Check the connection and try again."
+          : "لسه فيه إجابات ما اتحفظتش. اتأكد من النت وجرّب تاني.",
+      );
       setSubmitting(false);
       return;
     }
@@ -257,7 +264,7 @@ export function ExamRunner({
               </span>
             ) : overtime ? (
               <Badge tone="wait">
-                تجاوزت الوقت بـ {formatClock(-remaining)}
+                {en ? `Over time by ${formatClock(-remaining)}` : `تجاوزت الوقت بـ ${formatClock(-remaining)}`}
               </Badge>
             ) : (
               <span className="tnum text-sm font-medium text-ink">
@@ -268,9 +275,9 @@ export function ExamRunner({
 
           <div className="flex items-center gap-3">
             <span className="tnum text-xs text-ink-2">
-              {answeredCount} من {questions.length}
+              {en ? `${answeredCount} of ${questions.length}` : `${answeredCount} من ${questions.length}`}
             </span>
-            <SaveIndicator state={saveState} />
+            <SaveIndicator state={saveState} locale={locale} />
           </div>
         </div>
       </div>
@@ -286,22 +293,43 @@ export function ExamRunner({
       */}
       {resuming && restorable.length === 0 ? (
         <p className="card mb-5 px-4 py-3 text-sm leading-relaxed text-ink-2">
-          إنت بتكمّل محاولة بدأتها قبل كده — <strong>إجاباتك محفوظة زي ما
-          سبتها</strong>
-          {durationMinutes ? "، والوقت كان ماشي وإنت بره" : ""}. كمّل عادي
-          ولما تخلص اضغط إرسال.
+          {en ? (
+            <>
+              You are continuing an attempt you already started — <strong>your answers are saved as you left them</strong>
+              {durationMinutes ? ", and the clock kept running while you were away" : ""}. Carry on, and press submit when you finish.
+            </>
+          ) : (
+            <>
+              إنت بتكمّل محاولة بدأتها قبل كده — <strong>إجاباتك محفوظة زي ما
+              سبتها</strong>
+              {durationMinutes ? "، والوقت كان ماشي وإنت بره" : ""}. كمّل عادي
+              ولما تخلص اضغط إرسال.
+            </>
+          )}
         </p>
       ) : null}
 
       {restorable.length > 0 ? (
         <div className="card mb-5 px-4 py-4">
           <p className="text-sm font-medium text-ink">
-            لقينا إجابات كتبتها على جهازك وما وصلتش المنصة
+            {en
+              ? "We found answers you wrote on this device that never reached the platform"
+              : "لقينا إجابات كتبتها على جهازك وما وصلتش المنصة"}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-ink-3">
-            غالباً النت اتقطع وإنت بتكتب. عندنا نص{" "}
-            <span className="tnum">{restorable.length}</span>{" "}
-            {restorable.length === 1 ? "سؤال" : "أسئلة"} محفوظ على الجهاز.
+            {en ? (
+              <>
+                The connection probably dropped while you were writing. Text for{" "}
+                <span className="tnum">{restorable.length}</span>{" "}
+                {restorable.length === 1 ? "question is" : "questions is"} saved on this device.
+              </>
+            ) : (
+              <>
+                غالباً النت اتقطع وإنت بتكتب. عندنا نص{" "}
+                <span className="tnum">{restorable.length}</span>{" "}
+                {restorable.length === 1 ? "سؤال" : "أسئلة"} محفوظ على الجهاز.
+              </>
+            )}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -309,14 +337,14 @@ export function ExamRunner({
               onClick={restoreDraft}
               className="btn btn-primary text-sm"
             >
-              رجّع اللي كتبته
+              {en ? "Bring back what I wrote" : "رجّع اللي كتبته"}
             </button>
             <button
               type="button"
               onClick={() => setRestorable([])}
               className="btn btn-ghost text-sm"
             >
-              تجاهل
+              {en ? "Ignore" : "تجاهل"}
             </button>
           </div>
         </div>
@@ -324,7 +352,9 @@ export function ExamRunner({
 
       {restored ? (
         <p className="card mb-5 px-4 py-3 text-sm text-ink-2">
-          رجّعنا اللي كان محفوظ على جهازك. راجعه قبل ما تسلّم.
+          {en
+            ? "We brought back what was saved on this device. Check it before you submit."
+            : "رجّعنا اللي كان محفوظ على جهازك. راجعه قبل ما تسلّم."}
         </p>
       ) : null}
 
@@ -336,20 +366,30 @@ export function ExamRunner({
       {saveState === "error" && failedTries >= 2 ? (
         <div className="card mb-5 border-bad px-4 py-4">
           <p className="text-sm font-medium text-ink">
-            إجابتك مش بتتحفظ دلوقتي
+            {en ? "Your answers are not being saved right now" : "إجابتك مش بتتحفظ دلوقتي"}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-ink-2">
-            النت مقطوع أو ضعيف. <strong>متقفلش الصفحة ومتعملش تحديث</strong> —
-            اللي كتبته محفوظ على جهازك وهنكمّل المحاولة لوحدنا. أول ما النت
-            يرجع هيتحفظ. لو اضطررت تقفل، صوّر الشاشة الأول.
+            {en ? (
+              <>
+                The connection is down or weak. <strong>Do not close the page and do not refresh</strong> —
+                what you wrote is saved on this device and we will keep trying. It will be saved as soon as the connection comes back. If you have to close, take a photo of the screen first.
+              </>
+            ) : (
+              <>
+                النت مقطوع أو ضعيف. <strong>متقفلش الصفحة ومتعملش تحديث</strong> —
+                اللي كتبته محفوظ على جهازك وهنكمّل المحاولة لوحدنا. أول ما النت
+                يرجع هيتحفظ. لو اضطررت تقفل، صوّر الشاشة الأول.
+              </>
+            )}
           </p>
         </div>
       ) : null}
 
       {overtime ? (
         <p className="card mb-5 px-4 py-3 text-sm leading-relaxed text-ink-2">
-          الوقت المحدد خلص، بس لسه مفتوح وتقدر تكمّل عادي. المدرّس
-          هيشوف إنك أخدت وقتاً أطول.
+          {en
+            ? "The time limit is over, but the exam is still open and you can keep going. Your teacher will see that you took longer."
+            : "الوقت المحدد خلص، بس لسه مفتوح وتقدر تكمّل عادي. المدرّس هيشوف إنك أخدت وقتاً أطول."}
         </p>
       ) : null}
 
@@ -364,24 +404,27 @@ export function ExamRunner({
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="tnum text-sm font-semibold text-ink">
-                  السؤال {index + 1}
+                  {en ? `Question ${index + 1}` : `السؤال ${index + 1}`}
                 </span>
-                <Badge tone="muted">{QUESTION_TYPE_LABELS[question.type]}</Badge>
+                <Badge tone="muted">{questionTypeLabel(question.type, locale)}</Badge>
               </div>
               <span className="tnum text-xs text-ink-3">
-                {formatPoints(question.points)} درجة
+                {en
+                  ? `${formatPoints(question.points)} points`
+                  : `${formatPoints(question.points)} درجة`}
               </span>
             </div>
 
             <div dir="auto">
               {question.type !== "fill_blank" ? (
                 <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-                  {withChoiceList(question.type, question.body, question.options)}
+                  {withChoiceList(question.type, question.body, question.options, locale)}
                 </p>
               ) : null}
 
               {question.type === "essay" ? (
                 <EssayInput
+                  locale={locale}
                   attemptId={attemptId}
                   questionId={question.id}
                   text={
@@ -398,6 +441,7 @@ export function ExamRunner({
                   question={question}
                   value={answers[question.id] ?? null}
                   onChange={(value) => setResponse(question.id, value)}
+                  locale={locale}
                 />
               )}
             </div>
@@ -410,8 +454,12 @@ export function ExamRunner({
           <>
             <p className="text-sm text-ink-2">
               {unanswered === 0
-                ? "جاوبت على كل الأسئلة."
-                : `لسه فاضل ${unanswered} ${unanswered === 1 ? "سؤال" : "أسئلة"} من غير إجابة.`}
+                ? en
+                  ? "You answered every question."
+                  : "جاوبت على كل الأسئلة."
+                : en
+                  ? `${unanswered} ${unanswered === 1 ? "question" : "questions"} still unanswered.`
+                  : `لسه فاضل ${unanswered} ${unanswered === 1 ? "سؤال" : "أسئلة"} من غير إجابة.`}
             </p>
             <button
               type="button"
@@ -419,16 +467,22 @@ export function ExamRunner({
               onClick={() => setConfirming(true)}
             >
               <Send className="size-4" strokeWidth={1.5} />
-              إرسال الإجابات
+              {en ? "Submit answers" : "إرسال الإجابات"}
             </button>
           </>
         ) : (
           <>
-            <p className="text-sm font-medium text-ink">متأكد إنك عايز تسلّم؟</p>
+            <p className="text-sm font-medium text-ink">
+              {en ? "Are you sure you want to submit?" : "متأكد إنك عايز تسلّم؟"}
+            </p>
             <p className="mt-1 text-sm leading-relaxed text-ink-2">
-              بعد التسليم مش هتقدر تعدّل إجاباتك.
+              {en
+                ? "After you submit, you cannot change your answers."
+                : "بعد التسليم مش هتقدر تعدّل إجاباتك."}
               {unanswered > 0
-                ? ` وفيه ${unanswered} ${unanswered === 1 ? "سؤال" : "أسئلة"} من غير إجابة هتتحسب صفر.`
+                ? en
+                  ? ` ${unanswered} ${unanswered === 1 ? "question is" : "questions are"} still unanswered and will score zero.`
+                  : ` وفيه ${unanswered} ${unanswered === 1 ? "سؤال" : "أسئلة"} من غير إجابة هتتحسب صفر.`
                 : ""}
             </p>
 
@@ -450,7 +504,7 @@ export function ExamRunner({
                 ) : (
                   <Send className="size-4" strokeWidth={1.5} />
                 )}
-                {submitting ? "جارٍ التسليم…" : "أيوه، سلّم"}
+                {submitting ? (en ? "Submitting…" : "جارٍ التسليم…") : en ? "Yes, submit" : "أيوه، سلّم"}
               </button>
               <button
                 type="button"
@@ -458,7 +512,7 @@ export function ExamRunner({
                 onClick={() => setConfirming(false)}
                 disabled={submitting}
               >
-                رجوع للحل
+                {en ? "Back to the questions" : "رجوع للحل"}
               </button>
             </div>
           </>
@@ -468,14 +522,15 @@ export function ExamRunner({
   );
 }
 
-function SaveIndicator({ state }: { state: SaveState }) {
+function SaveIndicator({ state, locale = "ar" }: { state: SaveState; locale?: UiLocale }) {
+  const en = locale === "en";
   if (state === "idle") return null;
 
   if (state === "saving") {
     return (
       <span className="flex items-center gap-1 text-xs text-ink-3">
         <Loader2 className="size-3 animate-spin" strokeWidth={1.5} />
-        جارٍ الحفظ
+        {en ? "Saving" : "جارٍ الحفظ"}
       </span>
     );
   }
@@ -484,7 +539,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
     return (
       <span className="flex items-center gap-1 text-xs text-ink-3">
         <Check className="size-3" strokeWidth={1.5} />
-        اتحفظ
+        {en ? "Saved" : "اتحفظ"}
       </span>
     );
   }
@@ -492,7 +547,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
   return (
     <Badge tone="bad">
       <AlertCircle className="size-3" strokeWidth={1.5} />
-      الحفظ متأخر، بنحاول تاني
+      {en ? "Saving is delayed. Trying again." : "الحفظ متأخر، بنحاول تاني"}
     </Badge>
   );
 }

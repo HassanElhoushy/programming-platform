@@ -3,7 +3,15 @@ import { ChevronRight } from "lucide-react";
 
 import { LessonPicker, type PickerChapter } from "./lesson-picker";
 import { PageHeader, QueryError } from "@/components/ui/primitives";
-import { bankChapterHint, bankChapterName, bankLessonTitle, lessonName, reviewScope } from "@/lib/format";
+import { requireStudent } from "@/lib/auth";
+import {
+  bankChapterHint,
+  bankChapterName,
+  bankLessonTitle,
+  lessonName,
+  reviewScope,
+  type UiLocale,
+} from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +20,14 @@ export async function generateMetadata({
   searchParams,
 }: PageProps<"/bank/select">) {
   const params = await searchParams;
+  const session = await requireStudent();
+  const en = session.profile.track === "en";
   return {
-    title:
-      params.mode === "review"
+    title: en
+      ? params.mode === "review"
+        ? "Review what you solved · Question bank"
+        : "Choose your lessons · Question bank"
+      : params.mode === "review"
         ? "راجع اللي اتحل · بنك الأسئلة"
         : "اختار دروسك · بنك الأسئلة",
   };
@@ -48,6 +61,9 @@ export default async function BankSelectPage({
 }: PageProps<"/bank/select">) {
   const params = await searchParams;
   const review = params.mode === "review";
+  const sessionUser = await requireStudent();
+  const locale: UiLocale = sessionUser.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
 
   const supabase = await createClient();
 
@@ -60,7 +76,7 @@ export default async function BankSelectPage({
     .eq("is_open", true)
     .is("archived_at", null);
 
-  if (banksRes.error) return <QueryError message={banksRes.error.message} />;
+  if (banksRes.error) return <QueryError message={banksRes.error.message} locale={locale} />;
 
   const banks = (banksRes.data ?? []) as unknown as BankRow[];
   const bankIds = banks.map((b) => b.id);
@@ -68,9 +84,9 @@ export default async function BankSelectPage({
   if (bankIds.length === 0) {
     return (
       <>
-        <BackLink />
+        <BackLink locale={locale} />
         <p className="card px-4 py-8 text-center text-sm text-ink-3">
-          مفيش بنوك متاحة لك دلوقتي.
+          {en ? "No question banks are open for you right now." : "مفيش بنوك متاحة لك دلوقتي."}
         </p>
       </>
     );
@@ -81,8 +97,8 @@ export default async function BankSelectPage({
     supabase.from("bank_progress").select("question_id, state, forgot"),
   ]);
 
-  if (questionsRes.error) return <QueryError message={questionsRes.error.message} />;
-  if (progressRes.error) return <QueryError message={progressRes.error.message} />;
+  if (questionsRes.error) return <QueryError message={questionsRes.error.message} locale={locale} />;
+  if (progressRes.error) return <QueryError message={progressRes.error.message} locale={locale} />;
 
   const progressOf = new Map(
     (progressRes.data ?? []).map((p) => [
@@ -125,8 +141,8 @@ export default async function BankSelectPage({
       byChapter.get(chapter.id) ??
       ({
         id: chapter.id,
-        label: bankChapterName(chapter.position, chapter.kind),
-        hint: bankChapterHint(chapter.kind),
+        label: bankChapterName(chapter.position, chapter.kind, locale),
+        hint: bankChapterHint(chapter.kind, locale),
         position: chapter.kind === "review" ? Number.MAX_SAFE_INTEGER : chapter.position,
         lessons: [],
       } satisfies PickerChapter);
@@ -140,18 +156,22 @@ export default async function BankSelectPage({
 
     entry.lessons.push({
       id: lesson.id,
-      title: chapter.kind === "review" ? bankLessonTitle(lesson.title) : lesson.title,
+      title: chapter.kind === "review" ? bankLessonTitle(lesson.title, locale) : lesson.title,
       /*
        * داخل الأسئلة الشاملة لا يُكتب "مراجعة الفصل" فوق كل صف: العنوان
        * يقول ما تغطّيه («الترم الأول»)، والكلمة تكرار.
        */
       label:
         chapter.kind === "review"
-          ? "أسئلة"
+          ? en
+            ? "Questions"
+            : "أسئلة"
           : lesson.kind === "review"
-            ? "أسئلة الفصل"
-            : lessonName(lesson.position, lesson.kind),
-      blurb: chapter.kind === "review" ? reviewScope(lesson.position) : null,
+            ? en
+              ? "Chapter questions"
+              : "أسئلة الفصل"
+            : lessonName(lesson.position, lesson.kind, locale),
+      blurb: chapter.kind === "review" ? reviewScope(lesson.position, locale) : null,
       position: lesson.position,
       ...stats,
     });
@@ -169,28 +189,32 @@ export default async function BankSelectPage({
 
   return (
     <>
-      <BackLink />
+      <BackLink locale={locale} />
       <PageHeader
-        title={review ? "راجع اللي اتحل" : "اختار دروسك"}
+        title={review ? (en ? "Review what you solved" : "راجع اللي اتحل") : en ? "Choose your lessons" : "اختار دروسك"}
         subtitle={
           review
-            ? "حدّد الدرس أو الفصل اللي عايز تتأكد إنك لسه فاكره"
-            : "حدّد اللي لسه ما اتحلّش — درس، فصل، أو خلطة من عندك"
+            ? en
+              ? "Pick the lesson or chapter you want to check you still remember"
+              : "حدّد الدرس أو الفصل اللي عايز تتأكد إنك لسه فاكره"
+            : en
+              ? "Pick what you have not solved yet — a lesson, a chapter, or a mix of your own"
+              : "حدّد اللي لسه ما اتحلّش — درس، فصل، أو خلطة من عندك"
         }
       />
-      <LessonPicker chapters={chapters} review={review} />
+      <LessonPicker chapters={chapters} review={review} locale={locale} />
     </>
   );
 }
 
-function BackLink() {
+function BackLink({ locale = "ar" }: { locale?: UiLocale }) {
   return (
     <Link
       href="/bank"
       className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
     >
-      <ChevronRight className="size-4" strokeWidth={1.5} />
-      بنك الأسئلة
+      <ChevronRight className="size-4 ltr:rotate-180" strokeWidth={1.5} />
+      {locale === "en" ? "Question bank" : "بنك الأسئلة"}
     </Link>
   );
 }

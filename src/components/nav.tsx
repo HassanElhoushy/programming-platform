@@ -37,13 +37,13 @@ function activeHref(pathname: string, items: NavItem[]): string | null {
   return best?.href ?? null;
 }
 
-export function Nav({ items }: { items: NavItem[] }) {
+export function Nav({ items, label = "التنقل الرئيسي" }: { items: NavItem[]; label?: string }) {
   const pathname = usePathname();
   const current = activeHref(pathname, items);
 
   return (
     <nav
-      aria-label="التنقل الرئيسي"
+      aria-label={label}
       className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <ul className="flex min-w-max items-center gap-1">

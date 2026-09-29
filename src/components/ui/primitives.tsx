@@ -132,17 +132,20 @@ export function Badge({
  * البديل الصامت — عرض قائمة فارغة عند الخطأ — أخطر من الخطأ نفسه: يقول
  * للمدرّس إن لا شيء ينتظر التصحيح بينما هناك تسليم فعلاً.
  */
-export function QueryError({ message }: { message?: string }) {
+export function QueryError({ message, locale = "ar" }: { message?: string; locale?: "ar" | "en" }) {
+  const en = locale === "en";
   return (
     <div className="card px-4 py-6 sm:px-5">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-ink-3" strokeWidth={1.5} />
         <div>
-          <p className="text-sm font-medium text-ink">تعذّر تحميل البيانات</p>
+          <p className="text-sm font-medium text-ink">
+            {en ? "Could not load the data" : "تعذّر تحميل البيانات"}
+          </p>
           <p className="mt-1 text-sm leading-relaxed text-ink-2">
-            حصلت مشكلة في قراءة البيانات، فالصفحة دي مش بتعرض كل اللي عندك.
-            حدّث الصفحة، ولو المشكلة فضلت اتصرف على أساس إن فيه بيانات مش
-            ظاهرة هنا.
+            {en
+              ? "Something went wrong while reading the data, so this page is not showing everything you have. Refresh the page. If it stays like this, treat anything missing here as still there."
+              : "حصلت مشكلة في قراءة البيانات، فالصفحة دي مش بتعرض كل اللي عندك. حدّث الصفحة، ولو المشكلة فضلت اتصرف على أساس إن فيه بيانات مش ظاهرة هنا."}
           </p>
           {message ? (
             <p

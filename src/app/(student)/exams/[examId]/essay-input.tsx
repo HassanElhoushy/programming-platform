@@ -6,12 +6,14 @@ import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 import { createAnswerImageUploadAction } from "@/app/actions/exam";
 import { createClient } from "@/lib/supabase/client";
+import type { UiLocale } from "@/lib/format";
 
 interface Props {
   attemptId: string;
   questionId: string;
   text: string;
   imagePath: string | null;
+  locale?: UiLocale;
   onChangeText: (text: string) => void;
   onChangeImage: (path: string | null) => void;
 }
@@ -37,9 +39,11 @@ export function EssayInput({
   questionId,
   text,
   imagePath,
+  locale = "ar",
   onChangeText,
   onChangeImage,
 }: Props) {
+  const en = locale === "en";
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +65,7 @@ export function EssayInput({
 
       const slot = await createAnswerImageUploadAction(attemptId, questionId);
       if (slot.error || !slot.path || !slot.token) {
-        setError(slot.error ?? "تعذّر رفع الصورة.");
+        setError(slot.error ?? (en ? "Could not upload the photo." : "تعذّر رفع الصورة."));
         return;
       }
 
@@ -74,14 +78,14 @@ export function EssayInput({
         });
 
       if (uploadError) {
-        setError("الرفع فشل. اتأكد من النت وجرّب تاني.");
+        setError(en ? "Upload failed. Check the connection and try again." : "الرفع فشل. اتأكد من النت وجرّب تاني.");
         return;
       }
 
       setLocalPreview(URL.createObjectURL(compressed));
       onChangeImage(slot.path);
     } catch {
-      setError("مقدرناش نجهّز الصورة. جرّب صورة تانية.");
+      setError(en ? "Could not prepare the photo. Try a different one." : "مقدرناش نجهّز الصورة. جرّب صورة تانية.");
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -95,12 +99,14 @@ export function EssayInput({
         onChange={(e) => onChangeText(e.target.value)}
         rows={5}
         className="input resize-y leading-relaxed"
-        placeholder="اكتب إجابتك هنا…"
+        placeholder={en ? "Write your answer here…" : "اكتب إجابتك هنا…"}
       />
 
       <div className="divider pt-3">
         <p className="mb-2 text-xs text-ink-3">
-          أو ارفع صورة لإجابتك المكتوبة بخط اليد. تقدر تكتب وترفع صورة مع بعض.
+          {en
+            ? "Or upload a photo of a handwritten answer. You can write and upload a photo together."
+            : "أو ارفع صورة لإجابتك المكتوبة بخط اليد. تقدر تكتب وترفع صورة مع بعض."}
         </p>
 
         {previewSrc ? (
@@ -113,7 +119,7 @@ export function EssayInput({
             >
               <Image
                 src={previewSrc}
-                alt="صورة إجابتك"
+                alt={en ? "Photo of your answer" : "صورة إجابتك"}
                 width={800}
                 height={600}
                 unoptimized
@@ -128,7 +134,7 @@ export function EssayInput({
                 disabled={busy}
               >
                 <ImagePlus className="size-4" strokeWidth={1.5} />
-                استبدال الصورة
+                {en ? "Replace photo" : "استبدال الصورة"}
               </button>
               <button
                 type="button"
@@ -140,7 +146,7 @@ export function EssayInput({
                 disabled={busy}
               >
                 <Trash2 className="size-4" strokeWidth={1.5} />
-                حذف
+                {en ? "Delete" : "حذف"}
               </button>
             </div>
           </div>
@@ -156,7 +162,7 @@ export function EssayInput({
             ) : (
               <ImagePlus className="size-4" strokeWidth={1.5} />
             )}
-            {busy ? "جارٍ رفع الصورة…" : "ارفع صورة الإجابة"}
+            {busy ? (en ? "Uploading the photo…" : "جارٍ رفع الصورة…") : en ? "Upload a photo of the answer" : "ارفع صورة الإجابة"}
           </button>
         )}
 

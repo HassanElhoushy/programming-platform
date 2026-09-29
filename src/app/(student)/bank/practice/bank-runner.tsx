@@ -8,10 +8,11 @@ import { QuestionInput, type RunnerQuestion } from "../../exams/[examId]/questio
 import { checkBankAnswerAction, type BankResult } from "@/app/actions/bank";
 import { Badge } from "@/components/ui/primitives";
 import {
-  QUESTION_TIER_LABELS,
-  QUESTION_TYPE_LABELS,
+  questionTypeLabel,
+  tierLabel,
   choiceShortLabel,
   withChoiceList,
+  type UiLocale,
 } from "@/lib/format";
 import type { AnswerResponse, QuestionType } from "@/lib/types";
 
@@ -44,14 +45,15 @@ export function BankRunner({
   remaining,
   review = false,
   nextHref = "/bank/practice",
+  locale = "ar",
 }: {
   questions: BankQuestion[];
   remaining: number;
-  /** جلسة مراجعة لما سبق إتقانه — تبدأ بأسئلة التفريق وتنزل */
   review?: boolean;
-  /** رابط الجلسة القادمة بنفس النطاق. بدونه يعود الطالب إلى نطاق آخر. */
   nextHref?: string;
+  locale?: UiLocale;
 }) {
+  const en = locale === "en";
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<AnswerResponse>(null);
   const [result, setResult] = useState<BankResult | null>(null);
@@ -64,7 +66,7 @@ export function BankRunner({
 
   function submit() {
     if (answer === null) {
-      setError("اختار إجابة الأول.");
+      setError(en ? "Choose an answer first." : "اختار إجابة الأول.");
       return;
     }
     setError(null);
@@ -73,7 +75,7 @@ export function BankRunner({
       const outcome = await checkBankAnswerAction(question.id, answer);
 
       if (outcome.error || !outcome.result) {
-        setError(outcome.error ?? "حصلت مشكلة. حاول تاني.");
+        setError(outcome.error ?? (en ? "Something went wrong. Try again." : "حصلت مشكلة. حاول تاني."));
         return;
       }
 
@@ -96,9 +98,9 @@ export function BankRunner({
   if (done) {
     return (
       <div className="card px-5 py-8 text-center">
-        <p className="text-base font-medium text-ink">خلّصت الجلسة</p>
+        <p className="text-base font-medium text-ink">{en ? "Session finished" : "خلّصت الجلسة"}</p>
         <p className="tnum mt-2 text-sm text-ink-2">
-          {tally.right} صح · {tally.wrong} غلط
+          {en ? `${tally.right} right · ${tally.wrong} wrong` : `${tally.right} صح · ${tally.wrong} غلط`}
         </p>
         {/*
           الغلط لا يعود في الجلسة نفسها، فيُقال للطالب متى يعود. بدون هذا
@@ -106,24 +108,34 @@ export function BankRunner({
         */}
         <p className="mt-3 text-xs leading-relaxed text-ink-3">
           {tally.wrong > 0
-            ? "اللي غلطت فيه هتلاقيه أول الجلسة الجاية."
+            ? en
+              ? "What you missed will come back at the start of the next session."
+              : "اللي غلطت فيه هتلاقيه أول الجلسة الجاية."
             : review
-              ? "لسه فاكر كل حاجة."
-              : "كله صح."}
+              ? en
+                ? "You still remember all of it."
+                : "لسه فاكر كل حاجة."
+              : en
+                ? "All correct."
+                : "كله صح."}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-ink-3">
           {remaining > 0
-            ? `لسه فيه ${remaining} سؤال في النطاق ده.`
-            : "خلّصت كل اللي في النطاق ده."}
+            ? en
+              ? `${remaining} questions left in this range.`
+              : `لسه فيه ${remaining} سؤال في النطاق ده.`
+            : en
+              ? "You finished everything in this range."
+              : "خلّصت كل اللي في النطاق ده."}
         </p>
         <div className="mt-5 flex justify-center gap-2">
           {remaining > 0 ? (
             <Link href={nextHref} className="btn btn-primary text-sm">
-              جلسة تانية
+              {en ? "Another session" : "جلسة تانية"}
             </Link>
           ) : null}
           <Link href="/bank" className="btn btn-ghost text-sm">
-            رجوع للبنك
+            {en ? "Back to the bank" : "رجوع للبنك"}
           </Link>
         </div>
       </div>
@@ -145,10 +157,10 @@ export function BankRunner({
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <p className="tnum text-xs text-ink-3">
-          {index + 1} من {questions.length}
+          {en ? `${index + 1} of ${questions.length}` : `${index + 1} من ${questions.length}`}
         </p>
         <p className="tnum text-xs text-ink-3">
-          {tally.right} صح · {tally.wrong} غلط
+          {en ? `${tally.right} right · ${tally.wrong} wrong` : `${tally.right} صح · ${tally.wrong} غلط`}
         </p>
       </div>
 
@@ -158,21 +170,21 @@ export function BankRunner({
           بين مفهومين متقاربين يوجّه انتباهه، ولا يقول له الإجابة.
         */}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          <Badge tone="muted">{QUESTION_TYPE_LABELS[question.type]}</Badge>
+          <Badge tone="muted">{questionTypeLabel(question.type, locale)}</Badge>
           {question.tier ? (
-            <Badge tone="muted">{QUESTION_TIER_LABELS[question.tier]}</Badge>
+            <Badge tone="muted">{tierLabel(question.tier, locale)}</Badge>
           ) : null}
           {question.state === "wrong" ? (
-            <Badge tone="wait">غلطت فيه قبل كده</Badge>
+            <Badge tone="wait">{en ? "You missed this before" : "غلطت فيه قبل كده"}</Badge>
           ) : question.forgot ? (
-            <Badge tone="wait">كنت حالّه صح</Badge>
+            <Badge tone="wait">{en ? "You had this right" : "كنت حالّه صح"}</Badge>
           ) : null}
           <span className="truncate text-xs text-ink-3">{question.bank_title}</span>
         </div>
 
         {question.type !== "fill_blank" ? (
           <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-            {withChoiceList(question.type, question.body, question.options)}
+            {withChoiceList(question.type, question.body, question.options, locale)}
           </p>
         ) : null}
 
@@ -185,11 +197,12 @@ export function BankRunner({
             question={runnerQuestion}
             value={answer}
             onChange={setAnswer}
+            locale={locale}
           />
         </fieldset>
 
         {result ? (
-          <Verdict result={result} question={question} />
+          <Verdict result={result} question={question} locale={locale} />
         ) : (
           <>
             {error ? (
@@ -201,7 +214,7 @@ export function BankRunner({
               disabled={pending}
               className="btn btn-primary mt-4 w-full text-sm sm:w-auto"
             >
-              {pending ? "بيتصحّح…" : "تأكيد الإجابة"}
+              {pending ? (en ? "Checking…" : "بيتصحّح…") : en ? "Check the answer" : "تأكيد الإجابة"}
             </button>
           </>
         )}
@@ -213,7 +226,13 @@ export function BankRunner({
           onClick={next}
           className="btn btn-primary mt-3 w-full text-sm"
         >
-          {index + 1 === questions.length ? "إنهاء الجلسة" : "السؤال اللي بعده"}
+          {index + 1 === questions.length
+            ? en
+              ? "Finish the session"
+              : "إنهاء الجلسة"
+            : en
+              ? "Next question"
+              : "السؤال اللي بعده"}
         </button>
       ) : null}
     </>
@@ -229,10 +248,13 @@ export function BankRunner({
 function Verdict({
   result,
   question,
+  locale = "ar",
 }: {
   result: BankResult;
   question: BankQuestion;
+  locale?: UiLocale;
 }) {
+  const en = locale === "en";
   const partial =
     !result.is_correct && result.awarded > 0 && result.points > 0;
 
@@ -242,24 +264,24 @@ function Verdict({
         {result.is_correct ? (
           <>
             <Check className="size-4 text-ok" strokeWidth={2} />
-            <span className="text-sm font-medium text-ink">إجابة صحيحة</span>
+            <span className="text-sm font-medium text-ink">{en ? "Correct" : "إجابة صحيحة"}</span>
           </>
         ) : (
           <>
             <X className="size-4 text-bad" strokeWidth={2} />
             <span className="text-sm font-medium text-ink">
-              {partial ? "صح جزئياً" : "إجابة غير صحيحة"}
+              {partial ? (en ? "Partly correct" : "صح جزئياً") : en ? "Incorrect" : "إجابة غير صحيحة"}
             </span>
           </>
         )}
         {partial ? (
           <span className="tnum text-xs text-ink-3">
-            {result.awarded} من {result.points}
+            {en ? `${result.awarded} of ${result.points}` : `${result.awarded} من ${result.points}`}
           </span>
         ) : null}
       </div>
 
-      <CorrectAnswer result={result} question={question} />
+      <CorrectAnswer result={result} question={question} locale={locale} />
 
       {result.explanation ? (
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
@@ -274,10 +296,14 @@ function Verdict({
 function CorrectAnswer({
   result,
   question,
+  locale = "ar",
 }: {
   result: BankResult;
   question: BankQuestion;
+  locale?: UiLocale;
 }) {
+  const en = locale === "en";
+  const right = en ? "Correct" : "الصحيح";
   const key = result.correct;
   if (!key) return null;
 
@@ -291,17 +317,17 @@ function CorrectAnswer({
 
   if ("option_ids" in key) {
     return (
-      <Line label="الصحيح">{key.option_ids.map(bodyOf).join(" · ")}</Line>
+      <Line label={right}>{key.option_ids.map(bodyOf).join(" · ")}</Line>
     );
   }
 
   if ("value" in key) {
-    return <Line label="الصحيح">{key.value ? "صح" : "خطأ"}</Line>;
+    return <Line label={right}>{key.value ? (en ? "True" : "صح") : en ? "False" : "خطأ"}</Line>;
   }
 
   if ("blanks" in key) {
     return (
-      <Line label="الصحيح">
+      <Line label={right}>
         {key.blanks.map((accepted, i) => `${i + 1}. ${accepted[0]}`).join(" · ")}
       </Line>
     );
@@ -322,7 +348,7 @@ function CorrectAnswer({
             >
               <span className="min-w-0 flex-1 text-ink-2">{item.body}</span>
               <span className="text-ink">
-                {isOrdering ? `المكان ${value}` : bodyOf(String(value))}
+                {isOrdering ? (en ? `Place ${value}` : `المكان ${value}`) : bodyOf(String(value))}
               </span>
             </div>
           );

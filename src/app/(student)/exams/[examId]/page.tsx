@@ -6,12 +6,14 @@ import { StartExamButton } from "./start-exam";
 import { Badge, DataRow, EmptyState } from "@/components/ui/primitives";
 import { Lock } from "lucide-react";
 import {
-  EXAM_KIND_LABELS,
-  EXAM_LEVEL_LABELS,
+  examKindLabel,
+  examLevelLabel,
   formatPoints,
   kindDefinite,
   lessonPath,
+  type UiLocale,
 } from "@/lib/format";
+import { requireStudent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { AnswerResponse } from "@/lib/types";
 
@@ -19,6 +21,9 @@ export const dynamic = "force-dynamic";
 
 export default async function ExamPage({ params }: PageProps<"/exams/[examId]">) {
   const { examId } = await params;
+  const session = await requireStudent();
+  const locale: UiLocale = session.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
   const supabase = await createClient();
 
   // امتحان لا صلاحية عليه لا يعود من قاعدة البيانات — لا يظهر مقفولاً، بل لا يظهر.
@@ -45,8 +50,8 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
     chapters: { position: number; kind: string } | null;
   } | null;
 
-  const crumb = lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0, lesson?.kind, lesson?.chapters?.kind);
-  const noun = kindDefinite(exam.kind);
+  const crumb = lessonPath(lesson?.chapters?.position ?? 0, lesson?.position ?? 0, lesson?.kind, lesson?.chapters?.kind, locale);
+  const noun = kindDefinite(exam.kind, locale);
 
   const { data: attempt } = await supabase
     .from("exam_attempts")
@@ -82,36 +87,48 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
         {!exam.is_open ? (
           <EmptyState
             icon={Lock}
-            title={`${noun} ده مقفول دلوقتي`}
-            hint="المدرّس هو اللي بيفتح. تابع معاه."
+            title={
+              en
+                ? `This ${examKindLabel(exam.kind, "en").toLowerCase()} is closed right now`
+                : `${noun} ده مقفول دلوقتي`
+            }
+            hint={en ? "Your teacher opens it. Check with them." : "المدرّس هو اللي بيفتح. تابع معاه."}
           />
         ) : (
           <div className="card px-4 py-2 sm:px-5">
             <div className="divide-y-[0.5px] divide-line">
-              <DataRow label="النوع">{EXAM_KIND_LABELS[exam.kind]}</DataRow>
-              <DataRow label="المستوى">{EXAM_LEVEL_LABELS[exam.level]}</DataRow>
-              <DataRow label="عدد الأسئلة">{questions.length}</DataRow>
-              <DataRow label="مجموع الدرجات">{formatPoints(totalPoints)}</DataRow>
-              <DataRow label="المدة">
+              <DataRow label={en ? "Type" : "النوع"}>{examKindLabel(exam.kind, locale)}</DataRow>
+              <DataRow label={en ? "Level" : "المستوى"}>{examLevelLabel(exam.level, locale)}</DataRow>
+              <DataRow label={en ? "Questions" : "عدد الأسئلة"}>{questions.length}</DataRow>
+              <DataRow label={en ? "Total points" : "مجموع الدرجات"}>{formatPoints(totalPoints)}</DataRow>
+              <DataRow label={en ? "Time" : "المدة"}>
                 {exam.duration_minutes
-                  ? `${exam.duration_minutes} دقيقة`
-                  : "بدون وقت محدد"}
+                  ? en
+                    ? `${exam.duration_minutes} min`
+                    : `${exam.duration_minutes} دقيقة`
+                  : en
+                    ? "No time limit"
+                    : "بدون وقت محدد"}
               </DataRow>
             </div>
 
             <div className="divider mt-2 py-4">
               <p className="mb-4 text-sm leading-relaxed text-ink-2">
-                إجاباتك بتتحفظ أول بأول، فلو النت قطع أو الصفحة قفلت هترجع
-                تكمّل من نفس المكان.
+                {en
+                  ? "Your answers are saved as you go. If the connection drops or the page closes, you come back and continue from the same place."
+                  : "إجاباتك بتتحفظ أول بأول، فلو النت قطع أو الصفحة قفلت هترجع تكمّل من نفس المكان."}
                 {exam.duration_minutes
-                  ? " ولو الوقت خلص مش هيتقفل، هتكمّل عادي والمدرّس هيشوف الوقت اللي أخدته."
+                  ? en
+                    ? " If the time runs out it does not close. You can continue, and your teacher will see how long you took."
+                    : " ولو الوقت خلص مش هيتقفل، هتكمّل عادي والمدرّس هيشوف الوقت اللي أخدته."
                   : ""}{" "}
-                لما تسلّم مش هتقدر تحل تاني.
+                {en ? "After you submit, you cannot answer again." : "لما تسلّم مش هتقدر تحل تاني."}
               </p>
               <StartExamButton
                 examId={exam.id}
                 kind={exam.kind}
                 durationMinutes={exam.duration_minutes}
+                locale={locale}
               />
             </div>
           </div>
@@ -186,9 +203,9 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-lg font-semibold text-ink sm:text-xl">{exam.title}</h1>
           <Badge tone={exam.kind === "exam" ? "wait" : "accent"}>
-            {EXAM_KIND_LABELS[exam.kind]}
+            {examKindLabel(exam.kind, locale)}
           </Badge>
-          <Badge tone="muted">{EXAM_LEVEL_LABELS[exam.level]}</Badge>
+          <Badge tone="muted">{examLevelLabel(exam.level, locale)}</Badge>
         </div>
       </div>
 
@@ -204,6 +221,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
           إجاباته مكانها.
         */
         resuming={elapsed > 60}
+        locale={locale}
       />
     </>
   );

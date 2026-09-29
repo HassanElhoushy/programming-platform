@@ -4,10 +4,15 @@ import { ClipboardList, FileText, PlayCircle, Sparkles } from "lucide-react";
 import { ExamCard, FileRow } from "@/components/shared";
 import { Badge, EmptyState, SectionTitle } from "@/components/ui/primitives";
 import { requireStudent } from "@/lib/auth";
-import { formatScore } from "@/lib/format";
+import { formatScore, type UiLocale } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "الرئيسية · منصة البرمجة" };
+export async function generateMetadata() {
+  const session = await requireStudent();
+  return {
+    title: session.profile.track === "en" ? "Home · Programming" : "الرئيسية · منصة البرمجة",
+  };
+}
 export const dynamic = "force-dynamic";
 
 interface LessonRef {
@@ -87,11 +92,13 @@ export default async function DashboardPage() {
       : null;
 
   const firstName = session.profile.full_name.trim().split(/\s+/)[0];
+  const locale: UiLocale = session.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
 
   return (
     <>
       <h1 className="mb-6 text-xl font-semibold text-ink sm:text-2xl">
-        أهلاً {firstName}
+        {en ? `Hello, ${firstName}` : `أهلاً ${firstName}`}
       </h1>
 
       {/* أول ما يشوفه الطالب: الحاجة اللي محتاجة منه */}
@@ -106,13 +113,15 @@ export default async function DashboardPage() {
               <p className="text-sm font-medium text-ink">
                 {(inProgress.exams as unknown as { title: string })?.title}
               </p>
-              <Badge tone="wait">لسه ما اتسلّمش</Badge>
+              <Badge tone="wait">{en ? "Not submitted" : "لسه ما اتسلّمش"}</Badge>
             </div>
             <p className="mt-0.5 text-xs text-ink-3">
-              بدأت ده وما سلّمتوش. إجاباتك محفوظة زي ما سبتها.
+              {en
+                ? "You started this and have not submitted it. Your answers are saved as you left them."
+                : "بدأت ده وما سلّمتوش. إجاباتك محفوظة زي ما سبتها."}
             </p>
           </div>
-          <span className="shrink-0 text-sm font-medium text-accent">أكمل</span>
+          <span className="shrink-0 text-sm font-medium text-accent">{en ? "Continue" : "أكمل"}</span>
         </Link>
       ) : null}
 
@@ -127,33 +136,34 @@ export default async function DashboardPage() {
               <p className="text-sm font-medium text-ink">
                 {(newFeedback.exams as unknown as { title: string })?.title}
               </p>
-              <Badge tone="ok">تم التصحيح</Badge>
+              <Badge tone="ok">{en ? "Graded" : "تم التصحيح"}</Badge>
             </div>
             <p className="tnum mt-0.5 text-xs text-ink-3">
-              درجتك{" "}
+              {en ? "Your score" : "درجتك"}{" "}
               {formatScore(
                 Number(newFeedback.auto_score ?? 0) +
                   Number(newFeedback.manual_score ?? 0),
                 newFeedback.total_points,
+                locale,
               )}{" "}
-              · فيه تصحيح جديد لسه ما شفتوش
+              · {en ? "new feedback you have not opened" : "فيه تصحيح جديد لسه ما شفتوش"}
             </p>
           </div>
-          <span className="shrink-0 text-sm font-medium text-accent">اطّلع</span>
+          <span className="shrink-0 text-sm font-medium text-accent">{en ? "Open" : "اطّلع"}</span>
         </Link>
       ) : null}
 
       {/* ملخص بسيط */}
       {finished.length > 0 ? (
-        <div className="card mb-8 grid grid-cols-2 divide-x-[0.5px] divide-x-reverse divide-line">
+        <div className="card mb-8 grid grid-cols-2 divide-x-[0.5px] divide-line rtl:divide-x-reverse">
           <div className="px-4 py-3.5">
-            <p className="text-xs text-ink-2">حليتها</p>
+            <p className="text-xs text-ink-2">{en ? "Finished" : "حليتها"}</p>
             <p className="tnum mt-0.5 text-lg font-semibold text-ink">
               {finished.length}
             </p>
           </div>
           <div className="px-4 py-3.5">
-            <p className="text-xs text-ink-2">متوسط درجاتك</p>
+            <p className="text-xs text-ink-2">{en ? "Your average" : "متوسط درجاتك"}</p>
             <p className="tnum mt-0.5 text-lg font-semibold text-ink">
               {average === null ? "—" : `${average}%`}
             </p>
@@ -166,19 +176,23 @@ export default async function DashboardPage() {
           action={
             available.length > 0 ? (
               <Link href="/exams" className="text-xs text-ink-2 hover:text-ink">
-                الكل
+                {en ? "All" : "الكل"}
               </Link>
             ) : undefined
           }
         >
-          متاح لك دلوقتي
+          {en ? "Open for you now" : "متاح لك دلوقتي"}
         </SectionTitle>
 
         {available.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
-            title="مفيش حاجة جديدة دلوقتي"
-            hint="أول ما المدرّس يفتح حاجة جديدة هتلاقيها هنا."
+            title={en ? "Nothing new right now" : "مفيش حاجة جديدة دلوقتي"}
+            hint={
+              en
+                ? "When your teacher opens something new, it will show up here."
+                : "أول ما المدرّس يفتح حاجة جديدة هتلاقيها هنا."
+            }
           />
         ) : (
           <div className="flex flex-col gap-2">
@@ -196,7 +210,8 @@ export default async function DashboardPage() {
                   lessonPosition={lesson?.position ?? 0}
                   lessonKind={lesson?.kind}
                   chapterKind={lesson?.chapters?.kind}
-                  cta="ابدأ"
+                  cta={en ? "Start" : "ابدأ"}
+                  locale={locale}
                 />
               );
             })}
@@ -209,19 +224,23 @@ export default async function DashboardPage() {
           action={
             files.length > 0 ? (
               <Link href="/content" className="text-xs text-ink-2 hover:text-ink">
-                كل المحتوى
+                {en ? "All content" : "كل المحتوى"}
               </Link>
             ) : undefined
           }
         >
-          آخر الملفات
+          {en ? "Latest files" : "آخر الملفات"}
         </SectionTitle>
 
         {files.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="مفيش ملفات متاحة لك لسه"
-            hint="المدرّس هيفتح لك الدروس وملفاتها، وهتلاقيها هنا."
+            title={en ? "No files for you yet" : "مفيش ملفات متاحة لك لسه"}
+            hint={
+              en
+                ? "Your teacher will open the lessons and their files, and you will find them here."
+                : "المدرّس هيفتح لك الدروس وملفاتها، وهتلاقيها هنا."
+            }
           />
         ) : (
           <div className="flex flex-col gap-2">
@@ -240,6 +259,7 @@ export default async function DashboardPage() {
                     lessonKind: lesson?.kind,
                     chapterKind: lesson?.chapters?.kind,
                   }}
+                  locale={locale}
                 />
               );
             })}

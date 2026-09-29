@@ -3,11 +3,12 @@ import { FileText, Presentation, ChevronLeft, Download } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
 import {
-  EXAM_KIND_LABELS,
-  EXAM_LEVEL_LABELS,
-  FILE_KIND_LABELS,
+  examKindLabel,
+  examLevelLabel,
+  fileKindLabel,
   formatDate,
   lessonPath,
+  type UiLocale,
 } from "@/lib/format";
 import type { ExamKind, ExamLevel, FileKind } from "@/lib/types";
 
@@ -18,6 +19,7 @@ export function LessonCrumb({
   lessonKind = "lesson",
   chapterKind = "chapter",
   lessonTitle,
+  locale = "ar",
   className,
 }: {
   chapterPosition: number;
@@ -25,28 +27,29 @@ export function LessonCrumb({
   lessonKind?: string;
   chapterKind?: string;
   lessonTitle?: string;
+  locale?: UiLocale;
   className?: string;
 }) {
   return (
     <p className={className ?? "text-xs text-ink-3"}>
-      {lessonPath(chapterPosition, lessonPosition, lessonKind, chapterKind)}
+      {lessonPath(chapterPosition, lessonPosition, lessonKind, chapterKind, locale)}
       {lessonTitle ? ` · ${lessonTitle}` : null}
     </p>
   );
 }
 
-export function LevelBadge({ level }: { level: ExamLevel }) {
-  return <Badge tone="muted">{EXAM_LEVEL_LABELS[level]}</Badge>;
+export function LevelBadge({ level, locale = "ar" }: { level: ExamLevel; locale?: UiLocale }) {
+  return <Badge tone="muted">{examLevelLabel(level, locale)}</Badge>;
 }
 
 /**
  * تدريب أم امتحان — أول شارة على الكارت.
  * الطالب لازم يعرف ده قبل ما يفتح، لأن المحاولة واحدة لا تتكرر.
  */
-export function KindBadge({ kind }: { kind: ExamKind }) {
+export function KindBadge({ kind, locale = "ar" }: { kind: ExamKind; locale?: UiLocale }) {
   return (
     <Badge tone={kind === "exam" ? "wait" : "accent"}>
-      {EXAM_KIND_LABELS[kind]}
+      {examKindLabel(kind, locale)}
     </Badge>
   );
 }
@@ -63,11 +66,13 @@ export function FileRow({
   kind,
   createdAt,
   crumb,
+  locale = "ar",
 }: {
   id: string;
   title: string;
   kind: FileKind;
   createdAt?: string;
+  locale?: UiLocale;
   crumb?: {
     chapterPosition: number;
     lessonPosition: number;
@@ -78,7 +83,7 @@ export function FileRow({
   const Icon = kind === "slides" ? Presentation : FileText;
 
   return (
-    <div className="card card-hover flex items-center gap-1 pl-2 pr-4">
+    <div className="card card-hover flex items-center gap-1 pe-2 ps-4">
       <a
         href={`/files/${id}`}
         target="_blank"
@@ -91,10 +96,10 @@ export function FileRow({
           <p className="truncate text-sm font-medium text-ink">{title}</p>
           <p className="mt-0.5 truncate text-xs text-ink-3">
             {crumb
-              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition, crumb.lessonKind, crumb.chapterKind)} · `
+              ? `${lessonPath(crumb.chapterPosition, crumb.lessonPosition, crumb.lessonKind, crumb.chapterKind, locale)} · `
               : ""}
-            {FILE_KIND_LABELS[kind]}
-            {createdAt ? ` · ${formatDate(createdAt)}` : ""}
+            {fileKindLabel(kind, locale)}
+            {createdAt ? ` · ${formatDate(createdAt, locale)}` : ""}
           </p>
         </div>
       </a>
@@ -102,8 +107,8 @@ export function FileRow({
       <a
         href={`/files/${id}?download=1`}
         className="btn btn-ghost shrink-0 px-2"
-        aria-label={`تحميل ${title}`}
-        title="تحميل"
+        aria-label={locale === "en" ? `Download ${title}` : `تحميل ${title}`}
+        title={locale === "en" ? "Download" : "تحميل"}
       >
         <Download className="size-4" strokeWidth={1.5} />
       </a>
@@ -124,6 +129,7 @@ export function ExamCard({
   chapterKind = "chapter",
   right,
   cta,
+  locale = "ar",
 }: {
   href: string;
   title: string;
@@ -136,6 +142,7 @@ export function ExamCard({
   chapterKind?: string;
   right?: React.ReactNode;
   cta?: string;
+  locale?: UiLocale;
 }) {
   return (
     <Link href={href} className="card card-hover block px-4 py-3.5">
@@ -146,14 +153,21 @@ export function ExamCard({
             lessonPosition={lessonPosition}
             lessonKind={lessonKind}
             chapterKind={chapterKind}
+            locale={locale}
           />
           <p className="mt-1 text-sm font-medium text-ink">{title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <KindBadge kind={kind} />
-            <LevelBadge level={level} />
+            <KindBadge kind={kind} locale={locale} />
+            <LevelBadge level={level} locale={locale} />
             {kind !== "bank" ? (
               <Badge tone="muted">
-                {durationMinutes ? `${durationMinutes} دقيقة` : "بدون وقت محدد"}
+                {durationMinutes
+                  ? locale === "en"
+                    ? `${durationMinutes} min`
+                    : `${durationMinutes} دقيقة`
+                  : locale === "en"
+                    ? "No time limit"
+                    : "بدون وقت محدد"}
               </Badge>
             ) : null}
             {right}
@@ -163,7 +177,7 @@ export function ExamCard({
         {cta ? (
           <span className="shrink-0 text-sm font-medium text-accent">{cta}</span>
         ) : (
-          <ChevronLeft className="size-4 shrink-0 text-ink-3" strokeWidth={1.5} />
+          <ChevronLeft className="size-4 shrink-0 text-ink-3 ltr:rotate-180" strokeWidth={1.5} />
         )}
       </div>
     </Link>

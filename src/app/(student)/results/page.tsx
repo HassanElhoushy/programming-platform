@@ -2,10 +2,16 @@ import Link from "next/link";
 import { ChevronLeft, ClipboardCheck } from "lucide-react";
 
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
-import { formatDate, formatScore, lessonPath, percentage } from "@/lib/format";
+import { formatDate, formatScore, lessonPath, percentage, type UiLocale } from "@/lib/format";
+import { requireStudent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "النتائج · منصة البرمجة" };
+export async function generateMetadata() {
+  const session = await requireStudent();
+  return {
+    title: session.profile.track === "en" ? "Results · Programming" : "النتائج · منصة البرمجة",
+  };
+}
 export const dynamic = "force-dynamic";
 
 interface ExamRef {
@@ -14,6 +20,9 @@ interface ExamRef {
 }
 
 export default async function ResultsPage() {
+  const session = await requireStudent();
+  const locale: UiLocale = session.profile.track === "en" ? "en" : "ar";
+  const en = locale === "en";
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -29,13 +38,20 @@ export default async function ResultsPage() {
 
   return (
     <>
-      <PageHeader title="النتائج" subtitle="اللي حليته قبل كده ودرجاتك فيه" />
+      <PageHeader
+        title={en ? "Results" : "النتائج"}
+        subtitle={en ? "What you have submitted, and your scores" : "اللي حليته قبل كده ودرجاتك فيه"}
+      />
 
       {attempts.length === 0 ? (
         <EmptyState
           icon={ClipboardCheck}
-          title="ما حليتش حاجة لسه"
-          hint="أول ما تسلّم تدريب أو امتحان هتلاقي نتيجته هنا."
+          title={en ? "You have not submitted anything yet" : "ما حليتش حاجة لسه"}
+          hint={
+            en
+              ? "After you submit a practice or an exam, the result will show up here."
+              : "أول ما تسلّم تدريب أو امتحان هتلاقي نتيجته هنا."
+          }
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -58,6 +74,7 @@ export default async function ResultsPage() {
                       exam?.lessons?.position ?? 0,
                       exam?.lessons?.kind,
                       exam?.lessons?.chapters?.kind,
+                      locale,
                     )}
                   </p>
                   <p className="mt-0.5 truncate text-sm font-medium text-ink">
@@ -66,31 +83,31 @@ export default async function ResultsPage() {
 
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     {graded ? (
-                      <Badge tone="ok">تم التصحيح</Badge>
+                      <Badge tone="ok">{en ? "Graded" : "تم التصحيح"}</Badge>
                     ) : (
-                      <Badge tone="wait">بانتظار التصحيح</Badge>
+                      <Badge tone="wait">{en ? "Waiting to be graded" : "بانتظار التصحيح"}</Badge>
                     )}
                     {attempt.exceeded_duration ? (
-                      <Badge tone="muted">تجاوز الوقت</Badge>
+                      <Badge tone="muted">{en ? "Over time" : "تجاوز الوقت"}</Badge>
                     ) : null}
                     <span className="text-xs text-ink-3">
-                      {formatDate(attempt.submitted_at)}
+                      {formatDate(attempt.submitted_at, locale)}
                     </span>
                   </div>
                 </div>
 
-                <div className="shrink-0 text-left">
+                <div className="shrink-0 text-end">
                   {graded ? (
                     <>
                       <p className="tnum text-sm font-semibold text-ink">
                         {percentage(earned, attempt.total_points)}
                       </p>
                       <p className="tnum text-xs text-ink-3">
-                        {formatScore(earned, attempt.total_points)}
+                        {formatScore(earned, attempt.total_points, locale)}
                       </p>
                     </>
                   ) : (
-                    <ChevronLeft className="size-4 text-ink-3" strokeWidth={1.5} />
+                    <ChevronLeft className="size-4 text-ink-3 ltr:rotate-180" strokeWidth={1.5} />
                   )}
                 </div>
               </Link>
