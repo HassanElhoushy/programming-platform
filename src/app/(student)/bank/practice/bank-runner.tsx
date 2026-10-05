@@ -244,6 +244,9 @@ export function BankRunner({
  *
  * الشرح يظهر في الحالتين لا عند الخطأ وحده: من أصاب بالتخمين يحتاج أن يعرف
  * لماذا أصاب بقدر حاجة من أخطأ.
+ *
+ * سطر «الصحيح» يظهر عند الخطأ والصح الجزئي فقط. من أجاب صح لا يُعاد عليه
+ * نفس اختياره.
  */
 function Verdict({
   result,
@@ -281,7 +284,9 @@ function Verdict({
         ) : null}
       </div>
 
-      <CorrectAnswer result={result} question={question} locale={locale} />
+      {result.is_correct ? null : (
+        <CorrectAnswer result={result} question={question} locale={locale} />
+      )}
 
       {result.explanation ? (
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
