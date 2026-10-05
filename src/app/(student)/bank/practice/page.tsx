@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { BankRunner, type BankQuestion } from "./bank-runner";
+import { QueryError } from "@/components/ui/primitives";
 import { requireStudent } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { UiLocale } from "@/lib/format";
@@ -69,7 +70,7 @@ export default async function BankPracticePage({
   if (lessonParam) banksQuery = banksQuery.in("lesson_id", lessonParam);
 
   const { data: bankRows, error: banksError } = await banksQuery;
-  if (banksError) return <NothingHere review={review} locale={locale} />;
+  if (banksError) return <QueryError message={banksError.message} locale={locale} />;
 
   const banks = (bankRows ?? []).filter((b) => {
     if (!chapterParam) return true;
@@ -83,7 +84,13 @@ export default async function BankPracticePage({
     return <NothingHere review={review} locale={locale} />;
   }
 
-  const [questionsRes, optionsRes, progressRes] = await Promise.all([
+  /*
+   * الاختيارات لا تُجلب مع الأسئلة. صلاحية كل صف اختيار تستدعي دالة على
+   * الامتحان، وجلب كل اختيارات المسار (آلاف الصفوف) كان يعلّق الصفحة ثم
+   * يسقط الطلب، فتظهر «مفيش أسئلة» وبنك الدرس فيه أسئلة. نجلب أسئلة
+   * النطاق أولاً، ثم اختيارات الجلسة وحدها بعد قصّها.
+   */
+  const [questionsRes, progressRes] = await Promise.all([
     supabase
       .from("questions")
       .select("id, exam_id, type, body, points, blank_count, tier, position")
@@ -91,17 +98,12 @@ export default async function BankPracticePage({
       .neq("type", "essay")
       .order("position"),
     supabase
-      .from("question_options")
-      .select("id, question_id, position, body, role")
-      .order("position"),
-    supabase
       .from("bank_progress")
       .select("question_id, state, forgot, updated_at"),
   ]);
 
-  if (questionsRes.error || optionsRes.error || progressRes.error) {
-    return <NothingHere review={review} locale={locale} />;
-  }
+  if (questionsRes.error) return <QueryError message={questionsRes.error.message} locale={locale} />;
+  if (progressRes.error) return <QueryError message={progressRes.error.message} locale={locale} />;
 
   const progressOf = new Map<string, Progress>(
     (progressRes.data ?? []).map((p) => [
@@ -109,20 +111,6 @@ export default async function BankPracticePage({
       { state: p.state as string, forgot: !!p.forgot, updated_at: p.updated_at },
     ]),
   );
-
-  const optionsByQuestion = new Map<
-    string,
-    { id: string; body: string; role: "item" | "choice" }[]
-  >();
-  for (const option of optionsRes.data ?? []) {
-    const list = optionsByQuestion.get(option.question_id) ?? [];
-    list.push({
-      id: option.id,
-      body: option.body,
-      role: option.role === "item" ? "item" : "choice",
-    });
-    optionsByQuestion.set(option.question_id, list);
-  }
 
   const titleOf = new Map(banks.map((b) => [b.id, b.title]));
 
@@ -137,7 +125,7 @@ export default async function BankPracticePage({
       blank_count: q.blank_count,
       tier: q.tier as string | null,
       bank_title: titleOf.get(q.exam_id) ?? "",
-      options: optionsByQuestion.get(q.id) ?? [],
+      options: [] as { id: string; body: string; role: "item" | "choice" }[],
       state: progress?.state ?? null,
       forgot: progress?.forgot ?? false,
       seen_at: progress?.updated_at ?? null,
@@ -149,6 +137,34 @@ export default async function BankPracticePage({
   const session = ordered.slice(0, SESSION_SIZE);
 
   if (session.length === 0) return <NothingHere review={review} locale={locale} />;
+
+  const optionsRes = await supabase
+    .from("question_options")
+    .select("id, question_id, position, body, role")
+    .in(
+      "question_id",
+      session.map((q) => q.id),
+    )
+    .order("position");
+
+  if (optionsRes.error) return <QueryError message={optionsRes.error.message} locale={locale} />;
+
+  const optionsByQuestion = new Map<
+    string,
+    { id: string; body: string; role: "item" | "choice" }[]
+  >();
+  for (const option of optionsRes.data ?? []) {
+    const list = optionsByQuestion.get(option.question_id) ?? [];
+    list.push({
+      id: option.id,
+      body: option.body,
+      role: option.role === "item" ? "item" : "choice",
+    });
+    optionsByQuestion.set(option.question_id, list);
+  }
+  for (const question of session) {
+    question.options = optionsByQuestion.get(question.id) ?? [];
+  }
 
   /*
    * "جلسة تانية" لازم ترجع بالنطاق نفسه. بدون هذا كان من يتدرّب على فصل
