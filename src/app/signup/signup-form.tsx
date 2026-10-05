@@ -65,6 +65,23 @@ export function SignupForm() {
         />
       </div>
 
+      <fieldset>
+        <legend className="label">إنت طالب عربي ولا لغات؟</legend>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex cursor-pointer items-center gap-2 rounded-[6px] border-[0.5px] border-line px-3 py-2.5 text-sm text-ink has-checked:border-accent-line has-checked:bg-accent-bg">
+            <input type="radio" name="track" value="ar" required className="accent-[var(--color-accent)]" />
+            عربي
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-[6px] border-[0.5px] border-line px-3 py-2.5 text-sm text-ink has-checked:border-accent-line has-checked:bg-accent-bg">
+            <input type="radio" name="track" value="en" required className="accent-[var(--color-accent)]" />
+            لغات
+          </label>
+        </div>
+        <p className="mt-1.5 text-xs text-ink-3">
+          هتشوف محتوى المسار ده بس. المدرّس يقدر يعدّله قبل ما يوافق.
+        </p>
+      </fieldset>
+
       <div>
         <label className="label" htmlFor="password">
           كلمة المرور

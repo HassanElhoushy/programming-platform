@@ -27,13 +27,14 @@ export async function signUpAction(
     phone: formData.get("phone"),
     email: formData.get("email"),
     password: formData.get("password"),
+    track: formData.get("track"),
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "تحقق من البيانات المدخلة" };
   }
 
-  const { full_name, phone, email, password } = parsed.data;
+  const { full_name, phone, email, password, track } = parsed.data;
   const admin = createAdminClient();
 
   const { data: existingPhone } = await admin
@@ -46,7 +47,7 @@ export async function signUpAction(
     return { error: "رقم الموبايل ده مسجّل بحساب تاني. لو الحساب بتاعك كلّم المدرّس." };
   }
 
-  const { error: createError } = await admin.auth.admin.createUser({
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -62,6 +63,24 @@ export async function signUpAction(
       return { error: "رقم الموبايل أو البريد مستخدم بالفعل." };
     }
     return { error: "حصلت مشكلة أثناء إنشاء الحساب. حاول تاني." };
+  }
+
+  /*
+   * المسار لا يُؤخذ من user_metadata: الطالب يقدر يعدّل البيانات دي بعد
+   * التسجيل. الاختيار يصل من النموذج، ويُكتب هنا بمفتاح الخدمة على ملفه
+   * بعد ما الـ trigger ينشئ الصف بحالة «بانتظار الموافقة».
+   */
+  const { data: profile, error: trackError } = await admin
+    .from("profiles")
+    .update({ track })
+    .eq("id", created.user.id)
+    .select("id")
+    .maybeSingle();
+
+  if (trackError || !profile) {
+    return {
+      error: "اتعمل الحساب، بس المسار ما اتسجلش. كلّم المدرّس قبل ما يوافق على الطلب.",
+    };
   }
 
   const supabase = await createClient();

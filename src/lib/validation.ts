@@ -17,6 +17,7 @@ export const signUpSchema = z.object({
     .regex(PHONE_RE, "رقم الموبايل غير صحيح. اكتبه 11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015"),
   email: z.email("البريد الإلكتروني غير صحيح").trim().toLowerCase(),
   password: z.string().min(8, "كلمة المرور لازم تكون 8 حروف أو أرقام على الأقل"),
+  track: z.enum(["ar", "en"], "اختار عربي أو لغات"),
 });
 
 export const signInSchema = z.object({

@@ -189,8 +189,8 @@ export default async function StudentDetailPage({
           <div>
             <p className="text-sm font-medium text-ink">المسار</p>
             <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-              عربي أو لغات. الطالب يشوف محتوى مساره بس، حتى لو فتحت له كل
-              الصلاحيات. اختاره قبل ما تفعّل الحساب.
+              الطالب اختاره وهو بيسجّل. بيشوف محتوى المسار ده بس، حتى لو
+              فتحت له كل الصلاحيات. تقدر تغيّره قبل ما تفعّل الحساب.
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <ActionButton
