@@ -3,8 +3,6 @@ import { ClipboardCheck, FileText, Layers, PenLine } from "lucide-react";
 
 import { LogoWordmark } from "@/components/logo";
 
-import { LandingPreview } from "./landing-preview";
-
 /**
  * أرقام مسار واحد، مش مجموع العربي واللغات. كل طالب يشوف مسارًا واحدًا.
  * ٧ فصول و٢٣ درسًا، و٣٨٩ سؤال تدريب، و٨٥٨ سؤال بنك.
@@ -63,7 +61,7 @@ export function Landing() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-3xl px-5 pb-40 pt-12 sm:pt-16">
+        <div className="mx-auto w-full max-w-3xl px-5 pb-16 pt-12 sm:pt-16">
           <p className="inline-flex rounded-[6px] border-[0.5px] border-band-line px-2.5 py-1 text-xs text-band-ink-2">
             الصف الثاني الثانوي · البكالوريا المصرية
           </p>
@@ -101,10 +99,6 @@ export function Landing() {
             ))}
           </dl>
         </div>
-      </div>
-
-      <div className="mx-auto -mt-32 w-full max-w-3xl px-5">
-        <LandingPreview />
       </div>
 
       <main className="mx-auto w-full max-w-5xl px-5 pb-16 pt-16">
