@@ -5,6 +5,7 @@ import { LogoWordmark } from "@/components/logo";
 
 import { LandingField } from "./landing-field";
 import { Reveal } from "./landing-reveal";
+import { StartSteps } from "./landing-steps";
 
 /**
  * أرقام مسار واحد، مش مجموع العربي واللغات. كل طالب يشوف مسارًا واحدًا.
@@ -124,24 +125,7 @@ export function Landing() {
 
         <section className="mt-16">
           <h2 className="text-xl font-semibold text-ink">إزاي تبدأ</h2>
-          <ol className="mt-8 flex max-w-4xl flex-col gap-10">
-            {STEPS.map((step, i) => (
-              <Reveal key={step} as="li" variant="step" className="relative flex items-start gap-5">
-                {i < STEPS.length - 1 ? (
-                  <span
-                    aria-hidden
-                    className="absolute top-11 bottom-[-2.5rem] start-[21.75px] w-[0.5px] bg-line"
-                  />
-                ) : null}
-                <span className="tnum relative z-10 flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-semibold text-white">
-                  {i + 1}
-                </span>
-                <p className="pt-2 text-lg leading-relaxed text-ink sm:text-xl">
-                  {step}
-                </p>
-              </Reveal>
-            ))}
-          </ol>
+          <StartSteps steps={STEPS} />
         </section>
 
         <section className="mt-16">

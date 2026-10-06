@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { createElement, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,9 @@ export function Reveal({
   as = "div",
   delay = 0,
   variant = "card",
+  line,
+  step,
+  onShow,
   className,
   children,
 }: {
@@ -18,26 +21,36 @@ export function Reveal({
   delay?: number;
   /** الخطوة تظهر لما توصل لأعلى الشاشة، عشان كل رقم يبان لوحده مع النزول */
   variant?: "card" | "step";
+  /** نسبة ارتفاع الشاشة. أكبر يعني يظهر والعنصر لسه أقرب لأسفل الشاشة */
+  line?: number;
+  step?: number;
+  onShow?: () => void;
   className?: string;
   children: ReactNode;
 }) {
   const [node, setNode] = useState<HTMLElement | null>(null);
   const [shown, setShown] = useState(false);
+  const onShowRef = useRef(onShow);
+  onShowRef.current = onShow;
 
   useEffect(() => {
     if (!node) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const finish = () => {
       setShown(true);
+      onShowRef.current?.();
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finish();
       return;
     }
-    const line = variant === "step" ? 0.72 : 0.9;
+    const edge = line ?? (variant === "step" ? 0.8 : 0.9);
     let revealed = false;
     const reveal = () => {
       if (revealed) return;
       const rect = node.getBoundingClientRect();
-      if (rect.top >= window.innerHeight * line) return;
+      if (rect.top >= window.innerHeight * edge) return;
       revealed = true;
-      setShown(true);
+      finish();
       window.removeEventListener("scroll", reveal);
       window.removeEventListener("resize", reveal);
     };
@@ -48,7 +61,7 @@ export function Reveal({
       window.removeEventListener("scroll", reveal);
       window.removeEventListener("resize", reveal);
     };
-  }, [node, variant]);
+  }, [node, variant, line]);
 
   const style: CSSProperties = { transitionDelay: shown ? `${delay}ms` : "0ms" };
 
@@ -57,6 +70,7 @@ export function Reveal({
     {
       ref: setNode,
       style,
+      ...(step === undefined ? {} : { "data-step": step }),
       className: cn(
         "motion-safe:transition-[opacity,transform] motion-safe:duration-700 motion-safe:ease-out",
         shown

@@ -234,3 +234,37 @@
     border-top: 0.5px solid var(--color-line);
   }
 }
+
+/* روبوت صفحة الزائر: يطفو، وإيده تمد ناحية الخطوة اللي ظهرت */
+@keyframes guide-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes guide-point {
+  0% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(14px);
+  }
+  100% {
+    transform: translateX(6px);
+  }
+}
+.guide-float {
+  animation: guide-float 2.6s ease-in-out infinite;
+}
+.guide-point {
+  animation: guide-point 0.65s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-float,
+  .guide-point {
+    animation: none;
+  }
+}
