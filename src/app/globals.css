@@ -155,7 +155,7 @@
   }
 
   .btn-invert-ghost {
-    background-color: transparent;
+    background-color: var(--color-band);
     border-color: var(--color-band-line);
     color: var(--color-band-ink);
   }

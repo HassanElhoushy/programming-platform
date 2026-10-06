@@ -3,6 +3,8 @@ import { ClipboardCheck, FileText, Layers, PenLine } from "lucide-react";
 
 import { LogoWordmark } from "@/components/logo";
 
+import { LandingField } from "./landing-field";
+
 /**
  * أرقام مسار واحد، مش مجموع العربي واللغات. كل طالب يشوف مسارًا واحدًا.
  * ٧ فصول و٢٣ درسًا، و٣٨٩ سؤال تدريب، و٨٥٨ سؤال بنك.
@@ -45,9 +47,11 @@ const STEPS = [
 
 export function Landing() {
   return (
-    <div className="min-h-dvh">
-      <div className="on-band bg-band text-band-ink">
-        <header>
+    <div className="relative min-h-dvh">
+      <LandingField tone="light" />
+      <div data-band className="on-band relative z-10 bg-band text-band-ink">
+        <LandingField tone="dark" />
+        <header className="relative z-10">
           <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 py-4">
             <LogoWordmark tone="invert" />
             <div className="flex items-center gap-2">
@@ -61,7 +65,7 @@ export function Landing() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-3xl px-5 pb-16 pt-12 sm:pt-16">
+        <div className="relative z-10 mx-auto w-full max-w-3xl px-5 pb-16 pt-12 sm:pt-16">
           <p className="inline-flex rounded-[6px] border-[0.5px] border-band-line px-2.5 py-1 text-xs text-band-ink-2">
             الصف الثاني الثانوي · البكالوريا المصرية
           </p>
@@ -101,7 +105,7 @@ export function Landing() {
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-5xl px-5 pb-16 pt-16">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-5 pb-16 pt-16">
         <section>
           <h2 className="text-lg font-semibold text-ink">جوه المنصة</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -183,7 +187,7 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="border-t-[0.5px] border-line">
+      <footer className="relative z-10 border-t-[0.5px] border-line">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
           <LogoWordmark />
           <p className="text-xs leading-relaxed text-ink-3">
