@@ -9,13 +9,14 @@ import { StartSteps } from "./landing-steps";
 
 /**
  * أرقام مسار واحد، مش مجموع العربي واللغات. كل طالب يشوف مسارًا واحدًا.
- * ٧ فصول و٢٣ درسًا، و٣٨٩ سؤال تدريب، و٨٥٨ سؤال بنك.
+ * ٧ فصول و٢٣ درسًا، و٢٣ تدريبًا و٣٦ امتحانًا،
+ * و١٩٠٥ سؤال: تدريب وامتحان وبنك.
  */
 const FACTS = [
   { value: "7", label: "فصول" },
   { value: "23", label: "درس" },
-  { value: "389", label: "سؤال تدريب" },
-  { value: "858", label: "سؤال في البنك" },
+  { value: "59", label: "تدريب وامتحان" },
+  { value: "1905", label: "سؤال" },
 ];
 
 const INSIDE = [
@@ -174,15 +175,13 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t-[0.5px] border-line">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="relative z-10 border-t-[0.5px] border-line bg-page">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 px-5 py-8 text-center">
           <LogoWordmark />
+          <p className="text-sm font-medium text-ink">البرمجة والذكاء الاصطناعي</p>
           <p className="text-xs leading-relaxed text-ink-3">
-            منصة مذاكرة لمادة البرمجة والذكاء الاصطناعي، الصف الثاني الثانوي.
+            الصف الثاني الثانوي · البكالوريا المصرية
           </p>
-          <Link href="/login" className="text-sm text-ink-2 hover:text-ink">
-            تسجيل الدخول
-          </Link>
         </div>
       </footer>
     </div>
