@@ -249,11 +249,11 @@
   0% {
     transform: translateX(0);
   }
-  40% {
-    transform: translateX(14px);
+  42% {
+    transform: translateX(8px);
   }
   100% {
-    transform: translateX(6px);
+    transform: translateX(3px);
   }
 }
 .guide-float {
