@@ -5,14 +5,15 @@ import { AuthShell } from "@/components/auth-shell";
 
 import { SignupForm } from "./signup-form";
 
-export const metadata = { title: "حساب جديد · منصة البرمجة" };
+export const metadata = { title: "انشئ حساب جديد · منصة البرمجة" };
 
 export default function SignupPage() {
   return (
     <div className="relative min-h-dvh">
       <LandingField tone="light" />
       <AuthShell
-        title="حساب جديد"
+        title="انشئ حساب جديد"
+        quietTitle
         subtitle="بعد التسجيل هيراجع المدرّس حسابك ويفتح لك المحتوى"
         footer={
           <>

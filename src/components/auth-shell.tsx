@@ -8,11 +8,13 @@ const BRAND = "منصة البرمجة";
 export function AuthShell({
   title,
   subtitle,
+  quietTitle = false,
   children,
   footer,
 }: {
   title: string;
   subtitle?: string;
+  quietTitle?: boolean;
   children: ReactNode;
   footer?: ReactNode;
 }) {
@@ -36,7 +38,9 @@ export function AuthShell({
             subtitle ? <p className="text-sm text-ink-2">{subtitle}</p> : null
           ) : (
             <div>
-              <h1 className="text-lg font-semibold text-ink">{title}</h1>
+              <h1 className={quietTitle ? "text-sm text-ink-2" : "text-lg font-semibold text-ink"}>
+                {title}
+              </h1>
               {subtitle ? (
                 <p className="mt-1 text-sm text-ink-2">{subtitle}</p>
               ) : null}
