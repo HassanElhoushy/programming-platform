@@ -3,8 +3,6 @@ import { ClipboardCheck, FileText, Layers } from "lucide-react";
 
 import { LogoWordmark } from "@/components/logo";
 
-import { SampleQuestion } from "./sample-question";
-
 /**
  * أرقام مسار واحد، مش مجموع العربي واللغات. كل طالب يشوف مسارًا واحدًا.
  * ٧ فصول و٢٣ درسًا، و٣٨٩ سؤال تدريب، و٨٥٨ سؤال بنك.
@@ -58,26 +56,22 @@ export function Landing() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-5 py-12 sm:py-16">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <p className="text-sm text-ink-3">الصف الثاني الثانوي · البكالوريا المصرية</p>
-            <h1 className="mt-3 text-3xl font-semibold leading-snug text-ink sm:text-4xl">
-              ذاكر البرمجة والذكاء الاصطناعي صح
-            </h1>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-2 sm:text-base">
-              الشرح، والحل، والدرجة في مكان واحد. مسار للعربي ومسار للغات، وكل طالب يشوف مساره بس.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/signup" className="btn btn-primary">
-                ابدأ بحساب جديد
-              </Link>
-              <Link href="/login" className="btn btn-secondary">
-                عندي حساب
-              </Link>
-            </div>
+        <div className="max-w-xl">
+          <p className="text-sm text-ink-3">الصف الثاني الثانوي · البكالوريا المصرية</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-snug text-ink sm:text-4xl">
+            ذاكر البرمجة والذكاء الاصطناعي صح
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-ink-2 sm:text-base">
+            الشرح، والحل، والدرجة في مكان واحد. مسار للعربي ومسار للغات، وكل طالب يشوف مساره بس.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link href="/signup" className="btn btn-primary">
+              ابدأ بحساب جديد
+            </Link>
+            <Link href="/login" className="btn btn-secondary">
+              عندي حساب
+            </Link>
           </div>
-
-          <SampleQuestion />
         </div>
 
         <dl className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border-[0.5px] border-line bg-line sm:grid-cols-4">
