@@ -235,21 +235,38 @@
   }
 }
 
-/* روبوت صفحة الزائر: يطفو، وإيده تمد ناحية الخطوة اللي ظهرت */
+/* روبوت «إزاي تبدأ»: الجسم يطفو، والإيد بتتحرك وهي بتشوّر */
 @keyframes guide-float {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
+  }
+}
+@keyframes guide-point {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  70% {
+    transform: rotate(-2deg);
   }
 }
 .guide-float {
   animation: guide-float 2.6s ease-in-out infinite;
 }
+.guide-point {
+  transform-origin: 34% 20%;
+  animation: guide-point 1.7s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .guide-float {
+  .guide-float,
+  .guide-point {
     animation: none;
   }
 }

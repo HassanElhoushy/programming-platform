@@ -4,7 +4,6 @@ import { ClipboardCheck, FileText, Layers, PenLine } from "lucide-react";
 import { LogoWordmark } from "@/components/logo";
 
 import { LandingField } from "./landing-field";
-import { LandingGuide } from "./landing-guide";
 import { Reveal } from "./landing-reveal";
 import { StartSteps } from "./landing-steps";
 
@@ -52,7 +51,6 @@ export function Landing() {
   return (
     <div className="relative min-h-dvh">
       <LandingField tone="light" />
-      <LandingGuide />
       <header className="relative z-20 border-b-[0.5px] border-line bg-page">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 py-4">
           <LogoWordmark />
@@ -69,10 +67,7 @@ export function Landing() {
       <div data-band className="on-band relative z-10 bg-band text-band-ink">
         <LandingField tone="dark" />
 
-        <div
-          data-guide="hero"
-          className="relative z-10 mx-auto w-full max-w-3xl px-5 pb-16 pt-12 sm:pt-16 xl:translate-x-8"
-        >
+        <div className="relative z-10 mx-auto w-full max-w-3xl px-5 pb-16 pt-12 sm:pt-16">
           <p className="inline-flex rounded-[6px] border-[0.5px] border-band-line px-2.5 py-1 text-xs text-band-ink-2">
             الصف الثاني الثانوي · البكالوريا المصرية
           </p>
@@ -113,7 +108,7 @@ export function Landing() {
       </div>
 
       <main className="relative z-10 mx-auto w-full max-w-5xl px-5 pb-16 pt-16">
-        <section data-guide="inside">
+        <section>
           <h2 className="text-lg font-semibold text-ink">جوه المنصة</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {INSIDE.map((item, i) => (
@@ -128,12 +123,12 @@ export function Landing() {
           </ul>
         </section>
 
-        <section data-guide="steps" className="mt-16">
+        <section className="mt-16">
           <h2 className="text-xl font-semibold text-ink">إزاي تبدأ</h2>
           <StartSteps steps={STEPS} />
         </section>
 
-        <section data-guide="tracks" className="mt-16">
+        <section className="mt-16">
           <h2 className="text-lg font-semibold text-ink">عربي، أو لغات</h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-2">
             بتختار المسار وأنت بتعمل الحساب. كل طالب يشوف محتوى مساره بس.
