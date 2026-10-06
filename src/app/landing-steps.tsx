@@ -10,8 +10,7 @@ import { Reveal } from "./landing-reveal";
 const HAND = 0.181;
 
 /**
- * خطوات «إزاي تبدأ». الروبوت هنا بس، وبينزل على كل خطوة
- * وإيده بتتحرك وهي بتشوّر عليها.
+ * خطوات «إزاي تبدأ». الروبوت هنا بس، وبينزل على كل خطوة من غير مرجحة.
  */
 export function StartSteps({ steps }: { steps: string[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -46,16 +45,14 @@ export function StartSteps({ steps }: { steps: string[] }) {
         data-robot
         aria-hidden
         className={cn(
-          "pointer-events-none absolute left-0 z-10 hidden w-44 lg:block",
+          "pointer-events-none absolute left-8 z-10 hidden w-44 lg:block",
           active >= 0 ? "opacity-100" : "opacity-0",
           travel ? "transition-[transform,opacity] duration-700 ease-out" : "transition-opacity duration-500",
         )}
         style={{ transform: `translateY(${top}px)` }}
       >
-        <div className="guide-point">
-          <div className="guide-float">
-            <img src="/guide-robot.png" alt="" className="aspect-[3/4] h-auto w-full" />
-          </div>
+        <div className="guide-float">
+          <img src="/guide-robot.png" alt="" className="aspect-[3/4] h-auto w-full" />
         </div>
       </div>
       <ol className="flex max-w-4xl flex-col gap-10 lg:me-52">
