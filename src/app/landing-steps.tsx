@@ -139,7 +139,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
     setTop(target.offsetTop + target.offsetHeight / 2 - hand);
     setActive(next);
     if (next === steps.length - 1) {
-      settleTimer.current = window.setTimeout(() => setSettled(true), 900);
+      settleTimer.current = window.setTimeout(() => setSettled(true), 1400);
     }
   }
 
@@ -170,19 +170,20 @@ export function StartSteps({ steps }: { steps: string[] }) {
           <img
             src="/guide-robot.png"
             alt=""
-            className={cn(
-              "aspect-[3/4] h-auto w-full transition-opacity duration-[1600ms] ease-in-out",
-              settled ? "opacity-0" : "opacity-100",
-              !settled && "guide-float",
-            )}
+            className={cn("aspect-[3/4] h-auto w-full", !settled && "guide-float")}
+            style={{
+              opacity: settled ? 0 : 1,
+              transition: "opacity 4s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
           />
           <img
             src="/guide-robot-rest.png"
             alt=""
-            className={cn(
-              "absolute inset-0 aspect-[3/4] h-auto w-full transition-opacity duration-[1600ms] ease-in-out",
-              settled ? "opacity-100" : "opacity-0",
-            )}
+            className="absolute inset-0 aspect-[3/4] h-auto w-full"
+            style={{
+              opacity: settled ? 1 : 0,
+              transition: "opacity 4s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
           />
           {settled && !open ? (
             <span className="pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 translate-y-1 rounded-[10px] border-[0.5px] border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
