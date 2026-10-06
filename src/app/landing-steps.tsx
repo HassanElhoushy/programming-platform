@@ -139,7 +139,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
     setTop(target.offsetTop + target.offsetHeight / 2 - hand);
     setActive(next);
     if (next === steps.length - 1) {
-      settleTimer.current = window.setTimeout(() => setSettled(true), 1400);
+      settleTimer.current = window.setTimeout(() => setSettled(true), 500);
     }
   }
 
@@ -173,7 +173,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
             className={cn("aspect-[3/4] h-auto w-full", !settled && "guide-float")}
             style={{
               opacity: settled ? 0 : 1,
-              transition: "opacity 4s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
           <img
@@ -182,7 +182,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
             className="absolute inset-0 aspect-[3/4] h-auto w-full"
             style={{
               opacity: settled ? 1 : 0,
-              transition: "opacity 4s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
           {settled && !open ? (
