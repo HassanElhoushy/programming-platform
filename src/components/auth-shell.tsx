@@ -14,7 +14,7 @@ export function AuthShell({
   footer?: ReactNode;
 }) {
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-10">
+    <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-7 flex flex-col items-center gap-3 text-center">
           <Logo className="size-9 text-[13px]" />
