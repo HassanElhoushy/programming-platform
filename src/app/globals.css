@@ -4,6 +4,7 @@
    منصة البرمجة — الهوية البصرية
    وضع فاتح فقط. لا تدرجات، ولا ظلال إلا حلقة التركيز، وحدود 0.5px.
    التسلسل الهرمي من حجم الخط ووزنه والمسافات، لا من اللون.
+   الاستثناء الوحيد: شريط صفحة الزائر (--color-band). ليس وضعاً ليلياً — انظر HANDOFF.
 --------------------------------------------------------------------------- */
 
 @theme {
@@ -19,6 +20,12 @@
   --color-accent: #2b4257;
   --color-accent-line: #c9d2db;
   --color-accent-bg: #edf1f4;
+
+  /* شريط صفحة الزائر وحده. ليس وضعاً ليلياً — انظر HANDOFF */
+  --color-band: #16212c;
+  --color-band-ink: #ffffff;
+  --color-band-ink-2: #aebccb;
+  --color-band-line: #2f3d4a;
   /*
      لون التحديد. لا يجوز أن يكون accent-bg: صندوق الإجابة النموذجية
      خلفيته accent-bg نفسه، فكان المدرّس يحدّد النص فلا يرى شيئاً ويظن
@@ -58,6 +65,11 @@
     outline: none;
     box-shadow: 0 0 0 2px var(--color-page), 0 0 0 4px var(--color-accent-line);
     border-radius: var(--radius-control);
+  }
+
+  /* حلقة التركيز على الشريط الغامق، وإلا بان الفراغ الداخلي بلون الصفحة الفاتح */
+  .on-band :focus-visible {
+    box-shadow: 0 0 0 2px var(--color-band), 0 0 0 4px var(--color-band-line);
   }
 
   ::selection {
@@ -131,6 +143,24 @@
   .btn-ghost:not(:disabled):hover {
     color: var(--color-ink);
     background-color: var(--color-accent-bg);
+  }
+
+  /* زرا الشريط الغامق في صفحة الزائر فقط */
+  .btn-invert {
+    background-color: var(--color-band-ink);
+    color: var(--color-band);
+  }
+  .btn-invert:not(:disabled):hover {
+    background-color: #e8edf2;
+  }
+
+  .btn-invert-ghost {
+    background-color: transparent;
+    border-color: var(--color-band-line);
+    color: var(--color-band-ink);
+  }
+  .btn-invert-ghost:not(:disabled):hover {
+    border-color: #4a5a68;
   }
 
   .btn-danger {
