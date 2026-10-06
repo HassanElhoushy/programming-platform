@@ -89,6 +89,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
   const [top, setTop] = useState(0);
   const [travel, setTravel] = useState(false);
   const [settled, setSettled] = useState(false);
+  const settleTimer = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
 
@@ -97,6 +98,12 @@ export function StartSteps({ steps }: { steps: string[] }) {
     const id = requestAnimationFrame(() => setTravel(true));
     return () => cancelAnimationFrame(id);
   }, [active, travel]);
+
+  useEffect(() => {
+    return () => {
+      if (settleTimer.current !== null) window.clearTimeout(settleTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -131,7 +138,9 @@ export function StartSteps({ steps }: { steps: string[] }) {
     const hand = robot.offsetHeight * HAND || 42;
     setTop(target.offsetTop + target.offsetHeight / 2 - hand);
     setActive(next);
-    if (next === steps.length - 1) setSettled(true);
+    if (next === steps.length - 1) {
+      settleTimer.current = window.setTimeout(() => setSettled(true), 900);
+    }
   }
 
   return (
@@ -162,7 +171,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
             src="/guide-robot.png"
             alt=""
             className={cn(
-              "aspect-[3/4] h-auto w-full transition-opacity duration-500",
+              "aspect-[3/4] h-auto w-full transition-opacity duration-[1600ms] ease-in-out",
               settled ? "opacity-0" : "opacity-100",
               !settled && "guide-float",
             )}
@@ -171,7 +180,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
             src="/guide-robot-rest.png"
             alt=""
             className={cn(
-              "absolute inset-0 aspect-[3/4] h-auto w-full transition-opacity duration-500",
+              "absolute inset-0 aspect-[3/4] h-auto w-full transition-opacity duration-[1600ms] ease-in-out",
               settled ? "opacity-100" : "opacity-0",
             )}
           />
