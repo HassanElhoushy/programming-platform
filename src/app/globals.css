@@ -245,26 +245,11 @@
     transform: translateY(-6px);
   }
 }
-@keyframes guide-point {
-  0% {
-    transform: translateX(0);
-  }
-  42% {
-    transform: translateX(8px);
-  }
-  100% {
-    transform: translateX(3px);
-  }
-}
 .guide-float {
   animation: guide-float 2.6s ease-in-out infinite;
 }
-.guide-point {
-  animation: guide-point 0.65s ease-out both;
-}
 @media (prefers-reduced-motion: reduce) {
-  .guide-float,
-  .guide-point {
+  .guide-float {
     animation: none;
   }
 }
