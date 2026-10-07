@@ -98,6 +98,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
   const [top, setTop] = useState(0);
   const [travel, setTravel] = useState(false);
   const [settled, setSettled] = useState(false);
+  const [hint, setHint] = useState(false);
   const settleTimer = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
@@ -113,6 +114,16 @@ export function StartSteps({ steps }: { steps: string[] }) {
       if (settleTimer.current !== null) window.clearTimeout(settleTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!settled) return;
+    const show = window.setTimeout(() => setHint(true), 1250);
+    const hide = window.setTimeout(() => setHint(false), 1250 + 2000);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, [settled]);
 
   useEffect(() => {
     if (!open) return;
@@ -204,7 +215,12 @@ export function StartSteps({ steps }: { steps: string[] }) {
             }}
           />
           {settled && !open ? (
-            <span className="pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 translate-y-1 rounded-[10px] border-[0.5px] border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+            <span
+              className={cn(
+                "pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 rounded-[10px] border-[0.5px] border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink transition duration-200 group-hover:translate-y-0 group-hover:opacity-100",
+                hint ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0",
+              )}
+            >
               عندك أسئلة؟
             </span>
           ) : null}
