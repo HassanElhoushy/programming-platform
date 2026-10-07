@@ -163,7 +163,7 @@ export function Landing() {
         </section>
 
         <section className="mt-20 text-center">
-          <h2 className="text-2xl font-semibold text-ink">جاهز تبدأ معانا</h2>
+          <h2 className="text-2xl font-semibold text-ink">جاهز تبدأ معانا؟</h2>
           <div className="mt-6">
             <Link href="/signup" className="btn btn-primary">
               انشئ حساب جديد
