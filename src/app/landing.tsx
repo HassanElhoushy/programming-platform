@@ -88,11 +88,11 @@ export function Landing() {
           <h1 className="mt-5 text-[2.1rem] font-semibold leading-[1.12] tracking-tight text-band-ink sm:text-5xl lg:text-6xl">
             البرمجة والذكاء الاصطناعي
             <span className="mt-2 block text-balance text-band-ink-2">
-              من الشرح للحل للدرجة، في مكان واحد
+              نظام تعليمي متكامل لضمان تفوقك في البرمجة
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-balance text-sm leading-relaxed text-band-ink-2 sm:text-base">
-            منصة شاملة لمادة البرمجة والذكاء الاصطناعي. لطلاب العربي، وطلاب اللغات.
+            نقدم لك شرحاً دقيقاً، حصصاً تفاعلية أسبوعية، ومتابعة شخصية تقيس مستواك الحقيقي، لطلاب المسارين العربي واللغات.
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link href="/signup" className="btn btn-invert">
