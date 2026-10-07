@@ -176,11 +176,24 @@ export function Landing() {
       </main>
 
       <footer className="relative z-10 mt-16 border-t-[0.5px] border-line bg-page">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 sm:flex-row">
-          <LogoWordmark />
-          <p className="text-xs leading-relaxed text-ink-3">
-            الصف الثاني الثانوي · البكالوريا المصرية
-          </p>
+        <div className="mx-auto flex w-full max-w-5xl items-start justify-between gap-6 px-5 py-5">
+          <div className="flex flex-col items-start gap-1">
+            <LogoWordmark />
+            <p className="text-xs leading-relaxed text-ink-3">
+              الصف الثاني الثانوي · البكالوريا المصرية
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-sm font-medium text-ink">تواصل معي</p>
+            <a
+              href="https://wa.me/201501584998"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-ink-2 underline-offset-4 hover:text-ink hover:underline"
+            >
+              واتساب
+            </a>
+          </div>
         </div>
       </footer>
     </div>

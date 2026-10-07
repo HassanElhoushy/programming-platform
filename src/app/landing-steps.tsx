@@ -61,10 +61,19 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     ),
   },
   {
-    q: "في اشتراك أو فلوس؟",
+    q: "اشترك ازاي؟",
     a: (
       <p>
-        لا. مفيش اشتراك ولا دفع. بتعمل حساب، والمدرّس بيراجعه ويفتح لك الدروس.
+        تواصل مع المدرّس على{" "}
+        <a
+          href="https://wa.me/201501584998"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-accent underline-offset-4 hover:underline"
+        >
+          واتساب
+        </a>
+        ، وهو يراجع حسابك ويفتح لك الدروس.
       </p>
     ),
   },
