@@ -79,7 +79,7 @@ export function Landing() {
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-balance text-sm leading-relaxed text-band-ink-2 sm:text-base">
-            منصة مذاكرة لمادة البرمجة والذكاء الاصطناعي. لطلاب العربي، وطلاب اللغات.
+            منصة شاملة لمادة البرمجة والذكاء الاصطناعي. لطلاب العربي، وطلاب اللغات.
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link href="/signup" className="btn btn-invert">
