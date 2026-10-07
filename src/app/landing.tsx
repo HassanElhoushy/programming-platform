@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck, FileText, Layers, PenLine } from "lucide-react";
+import { ClipboardCheck, FileText, Layers, MessageCircle, PenLine, Video } from "lucide-react";
 
 import { LogoWordmark } from "@/components/logo";
 
@@ -39,6 +39,19 @@ const INSIDE = [
     icon: PenLine,
     title: "تصحيح المقالي",
     body: "المقالي يراجعه المدرّس بنفسه، ويكتب لك ملاحظته على إجابتك.",
+  },
+];
+
+const OUTSIDE = [
+  {
+    icon: Video,
+    title: "حصة لايف أسبوعية",
+    body: "المدرّس بيشرح الدرس كامل، ويتابع مستواك، ويديك فيدباك على أدائك.",
+  },
+  {
+    icon: MessageCircle,
+    title: "واتساب",
+    body: "بتكلّم المدرّس في أي وقت، وهو بيرد عليك ويفضل متابعك.",
   },
 ];
 
@@ -113,6 +126,21 @@ export function Landing() {
           <h2 className="text-lg font-semibold text-ink">جوه المنصة</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {INSIDE.map((item, i) => (
+              <Reveal key={item.title} as="li" delay={i * 110} className="card card-hover p-5">
+                <span className="flex size-9 items-center justify-center rounded-[6px] border-[0.5px] border-line">
+                  <item.icon className="size-4 text-ink-2" strokeWidth={1.5} />
+                </span>
+                <p className="mt-4 text-sm font-medium text-ink">{item.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-2">{item.body}</p>
+              </Reveal>
+            ))}
+          </ul>
+        </section>
+
+        <section className="mt-16">
+          <h2 className="text-lg font-semibold text-ink">بره المنصة</h2>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {OUTSIDE.map((item, i) => (
               <Reveal key={item.title} as="li" delay={i * 110} className="card card-hover p-5">
                 <span className="flex size-9 items-center justify-center rounded-[6px] border-[0.5px] border-line">
                   <item.icon className="size-4 text-ink-2" strokeWidth={1.5} />
