@@ -162,23 +162,22 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="mt-16 card px-5 py-10 text-center">
-          <h2 className="text-xl font-semibold text-ink">ابدأ من أول درس</h2>
-          <div className="mt-5">
+        <section className="mt-20 text-center">
+          <h2 className="text-2xl font-semibold text-ink">جاهز تبدأ معانا</h2>
+          <div className="mt-6">
             <Link href="/signup" className="btn btn-primary">
-              حساب جديد
+              انشئ حساب جديد
             </Link>
           </div>
           <p className="mt-4 text-xs leading-relaxed text-ink-3">
-            بعد التسجيل، المدرّس بيراجع الحساب ويفتح المحتوى.
+            بعد التسجيل، المدرّس بيراجع الحساب ويفتح لك المحتوى.
           </p>
         </section>
       </main>
 
-      <footer className="relative z-10 border-t-[0.5px] border-line bg-page">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 px-5 py-8 text-center">
+      <footer className="relative z-10 mt-16 border-t-[0.5px] border-line bg-page">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 sm:flex-row">
           <LogoWordmark />
-          <p className="text-sm font-medium text-ink">البرمجة والذكاء الاصطناعي</p>
           <p className="text-xs leading-relaxed text-ink-3">
             الصف الثاني الثانوي · البكالوريا المصرية
           </p>
