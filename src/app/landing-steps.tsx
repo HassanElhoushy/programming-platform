@@ -205,7 +205,7 @@ export function StartSteps({ steps }: { steps: string[] }) {
           />
           {settled && !open ? (
             <span className="pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 translate-y-1 rounded-[10px] border-[0.5px] border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-              عايز تسأل؟
+              عندك أسئلة؟
             </span>
           ) : null}
         </button>
