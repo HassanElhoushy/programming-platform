@@ -136,10 +136,19 @@ export function StartSteps({ steps }: { steps: string[] }) {
     if (!target || !robot) return;
     activeRef.current = next;
     const hand = robot.offsetHeight * HAND || 42;
-    setTop(target.offsetTop + target.offsetHeight / 2 - hand);
+    const beside = target.offsetTop + target.offsetHeight / 2 - hand;
+    setTop(beside);
     setActive(next);
     if (next === steps.length - 1) {
-      settleTimer.current = window.setTimeout(() => setSettled(true), 500);
+      const card = box.closest("section")?.nextElementSibling?.querySelector<HTMLElement>(".card");
+      settleTimer.current = window.setTimeout(() => {
+        if (card) {
+          const boxTop = box.getBoundingClientRect().top;
+          const cardTop = card.getBoundingClientRect().top;
+          setTop(cardTop - boxTop - robot.offsetHeight + 18);
+        }
+        setSettled(true);
+      }, 500);
     }
   }
 
