@@ -242,7 +242,7 @@ for (const [file, sql] of clean) {
 /* ------------------------------------------------------------------ */
 {
   const withPolicy = new Set(
-    [...allSql.matchAll(/create policy \w+ on public\.(\w+)/gi)].map((m) => m[1]),
+    [...allSql.matchAll(/create policy \w+\s+on\s+public\.(\w+)/gi)].map((m) => m[1]),
   );
   for (const table of tables.keys()) {
     if (!withPolicy.has(table)) {

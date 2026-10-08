@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -196,18 +197,22 @@ export function StartSteps({ steps }: { steps: string[] }) {
             setPicked(null);
           }}
         >
-          <img
+          <Image
             src="/guide-robot.png"
             alt=""
+            width={720}
+            height={960}
             className={cn("aspect-[3/4] h-auto w-full", !settled && "guide-float")}
             style={{
               opacity: settled ? 0 : 1,
               transition: "opacity 1.25s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
-          <img
+          <Image
             src="/guide-robot-rest.png"
             alt=""
+            width={720}
+            height={960}
             className="absolute inset-0 aspect-[3/4] h-auto w-full"
             style={{
               opacity: settled ? 1 : 0,

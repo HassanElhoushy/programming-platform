@@ -31,7 +31,9 @@ export function Reveal({
   const [node, setNode] = useState<HTMLElement | null>(null);
   const [shown, setShown] = useState(false);
   const onShowRef = useRef(onShow);
-  onShowRef.current = onShow;
+  useEffect(() => {
+    onShowRef.current = onShow;
+  }, [onShow]);
 
   useEffect(() => {
     if (!node) return;

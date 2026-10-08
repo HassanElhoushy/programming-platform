@@ -19,6 +19,11 @@ import type { AnswerResponse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+/** وقت السيرفر لحظة فتح الصفحة. العدّ بعدها يمشي في المتصفح. */
+function elapsedSeconds(startedAt: string) {
+  return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+}
+
 export default async function ExamPage({ params }: PageProps<"/exams/[examId]">) {
   const { examId } = await params;
   const session = await requireStudent();
@@ -190,11 +195,7 @@ export default async function ExamPage({ params }: PageProps<"/exams/[examId]">)
     ]),
   );
 
-  // الزمن يُحسب على السيرفر ثم يمشي محلياً، حتى لا تختلف ساعة الجهاز عن الحقيقة
-  const elapsed = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(attempt.started_at).getTime()) / 1000),
-  );
+  const elapsed = elapsedSeconds(attempt.started_at);
 
   return (
     <>
