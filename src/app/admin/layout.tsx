@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/app-shell";
+import { MotionBackdrop } from "@/components/motion-backdrop";
 import { requireAdmin } from "@/lib/auth";
+import { motionBackgroundEnabled } from "@/lib/motion-background";
 
 const NAV = [
   { href: "/admin", label: "نظرة عامة" },
@@ -12,10 +14,14 @@ const NAV = [
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const session = await requireAdmin();
+  const motion = await motionBackgroundEnabled();
 
   return (
-    <AppShell items={NAV} userName={session.profile.full_name} homeHref="/admin">
-      {children}
-    </AppShell>
+    <div className="relative min-h-dvh">
+      <MotionBackdrop enabled={motion} />
+      <AppShell items={NAV} userName={session.profile.full_name} homeHref="/admin">
+        {children}
+      </AppShell>
+    </div>
   );
 }

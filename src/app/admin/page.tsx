@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ChevronLeft, HardDrive } from "lucide-react";
 
+import { MotionSwitch } from "@/components/motion-switch";
 import { PageHeader } from "@/components/ui/primitives";
+import { motionBackgroundEnabled } from "@/lib/motion-background";
 import { formatFileSize } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -16,8 +18,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage() {
   const supabase = await createClient();
 
-  const [usage, [pendingRes, ungradedRes, openExamsRes, activeRes]] = await Promise.all([
+  const [usage, motion, counts] = await Promise.all([
     readStorageUsage(),
+    motionBackgroundEnabled(),
     Promise.all([
     supabase
       .from("profiles")
@@ -41,6 +44,7 @@ export default async function AdminHomePage() {
       .eq("status", "active"),
     ]),
   ]);
+  const [pendingRes, ungradedRes, openExamsRes, activeRes] = counts;
 
   const cards = [
     {
@@ -71,6 +75,7 @@ export default async function AdminHomePage() {
 
   return (
     <>
+      <MotionSwitch enabled={motion} />
       <PageHeader title="نظرة عامة" subtitle="اللي محتاج منك دلوقتي" />
 
       {/*

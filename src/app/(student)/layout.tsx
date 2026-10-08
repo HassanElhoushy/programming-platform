@@ -1,6 +1,8 @@
 import { AppShell } from "@/components/app-shell";
+import { MotionBackdrop } from "@/components/motion-backdrop";
 import { requireStudent } from "@/lib/auth";
 import type { UiLocale } from "@/lib/format";
+import { motionBackgroundEnabled } from "@/lib/motion-background";
 
 const NAV: Record<UiLocale, { href: string; label: string }[]> = {
   ar: [
@@ -20,9 +22,11 @@ const NAV: Record<UiLocale, { href: string; label: string }[]> = {
 export default async function StudentLayout({ children }: LayoutProps<"/">) {
   const session = await requireStudent();
   const locale: UiLocale = session.profile.track === "en" ? "en" : "ar";
+  const motion = await motionBackgroundEnabled();
 
   return (
-    <div lang={locale === "en" ? "en" : "ar"} dir={locale === "en" ? "ltr" : "rtl"} className="min-h-dvh">
+    <div lang={locale === "en" ? "en" : "ar"} dir={locale === "en" ? "ltr" : "rtl"} className="relative min-h-dvh">
+      <MotionBackdrop enabled={motion} hideWhileSolving />
       <AppShell
         items={NAV[locale]}
         userName={session.profile.full_name}
