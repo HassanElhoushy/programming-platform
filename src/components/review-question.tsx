@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Minus, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/primitives";
 import { isQuestionAnswered } from "@/lib/answered";
+import { splitModelAnswer } from "@/lib/model-answer";
 import {
   choiceShortLabel,
   formatPoints,
@@ -170,23 +171,42 @@ export function ReviewQuestionCard({
  * يُصيَّر هذا العنصر إطلاقاً. الغرض من الطي أن يقرأ الطالب ملاحظة مدرّسه
  * ويراجع إجابته قبل أن يرى النموذج.
  *
+ * توزيع الدرجات طيّ ثانٍ داخل الإجابة حتى لا يُقرأ كأنه بقية المطلوب.
  * details/summary لا يحتاج جافاسكربت، فيبقى المكوّن على الخادم، ويعمل
  * بلوحة المفاتيح ومع قارئات الشاشة بلا كود إضافي.
  */
 function ModelAnswer({ text, locale = "ar" }: { text: string; locale?: UiLocale }) {
+  const { answer, scheme } = splitModelAnswer(text);
+  const en = locale === "en";
+
   return (
-    <details className="group divider mt-4 pt-3">
+    <details className="group/answer divider mt-4 pt-3">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-accent [&::-webkit-details-marker]:hidden">
         <ChevronLeft
-          className="size-3.5 transition-transform ltr:rotate-180 group-open:-rotate-90"
+          className="size-3.5 transition-transform ltr:rotate-180 group-open/answer:-rotate-90"
           strokeWidth={2}
         />
-        {locale === "en" ? "Model answer" : "الإجابة النموذجية"}
+        {en ? "Model answer" : "الإجابة النموذجية"}
       </summary>
 
       <p className="mt-2 whitespace-pre-wrap rounded-[6px] border-[0.5px] border-accent-line bg-accent-bg px-3 py-2.5 text-sm leading-relaxed text-ink">
-        {text}
+        {answer}
       </p>
+
+      {scheme ? (
+        <details className="group/scheme mt-2">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-ink-2 [&::-webkit-details-marker]:hidden">
+            <ChevronLeft
+              className="size-3.5 transition-transform ltr:rotate-180 group-open/scheme:-rotate-90"
+              strokeWidth={2}
+            />
+            {en ? "Mark scheme" : "توزيع الدرجات"}
+          </summary>
+          <p className="mt-2 whitespace-pre-wrap rounded-[6px] border-[0.5px] border-line px-3 py-2.5 text-sm leading-relaxed text-ink-2">
+            {scheme}
+          </p>
+        </details>
+      ) : null}
     </details>
   );
 }
